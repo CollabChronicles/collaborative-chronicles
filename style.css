@@ -2,13 +2,50 @@
 body {
   font-family: 'Georgia', serif;
   background-color: #f9f5e3;
-  background-image: url('https://i.imgur.com/4Ph6fPM.png'); /* subtle parchment texture */
+  background-image: url('https://www.transparenttextures.com/patterns/pw-pattern.png'); /* subtle parchment texture */
   background-repeat: repeat;
-  background-size: 200px 200px;
+  background-size: 150px 150px;
   color: #222;
   margin: 0;
   padding: 0 20px;
   line-height: 1.6;
+}
+
+/* Decorative vine border for main content */
+main {
+  max-width: 900px;
+  margin: 40px auto 60px auto;
+  background-color: #fff8e1;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  border: 8px solid transparent;
+  position: relative;
+  font-family: 'Georgia', serif;
+  /* Vine pattern border using SVG */
+}
+
+main::before, main::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  width: 40px;
+  height: 100%;
+  top: 0;
+  background-repeat: repeat-y;
+  background-size: contain;
+  opacity: 0.15;
+}
+
+main::before {
+  left: 0;
+  background-image: url('https://i.imgur.com/RSc1j7x.png'); /* vine pattern left */
+}
+
+main::after {
+  right: 0;
+  background-image: url('https://i.imgur.com/RSc1j7x.png'); /* vine pattern right (same image mirrored) */
+  transform: scaleX(-1);
 }
 
 /* Header styles */
@@ -20,6 +57,23 @@ header {
   margin-bottom: 40px;
   border-bottom: 3px solid #b69f4b;
   box-shadow: 0 3px 10px rgba(78, 52, 46, 0.4);
+  position: relative;
+}
+
+/* Decorative scroll/banner behind header */
+header::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 80px;
+  background-image: url('https://i.imgur.com/0KZsx4O.png'); /* medieval scroll/banner */
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.15;
+  z-index: 0;
 }
 
 header h1 {
@@ -28,6 +82,8 @@ header h1 {
   font-family: 'MedievalSharp', cursive;
   letter-spacing: 3px;
   text-shadow: 1px 1px 3px rgba(78, 52, 46, 0.7);
+  position: relative;
+  z-index: 1;
 }
 
 /* Navigation */
@@ -38,6 +94,8 @@ nav a {
   font-weight: 600;
   font-family: 'MedievalSharp', cursive;
   transition: color 0.3s ease, text-shadow 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 nav a:hover {
@@ -46,100 +104,8 @@ nav a:hover {
   text-decoration: underline;
 }
 
-/* Main content */
-main {
-  max-width: 900px;
-  margin: 40px auto 60px auto;
-  background-color: #fff8e1;
-  padding: 30px 40px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  border: 2px solid #b69f4b;
-  font-family: 'Georgia', serif;
-}
-
 /* Section headings */
 h2 {
   color: #4e342e;
   margin-top: 40px;
-  letter-spacing: 1.5px;
-  text-shadow: 1px 1px 1px rgba(78, 52, 46, 0.4);
-  font-family: 'MedievalSharp', cursive;
-  font-size: 2rem;
-}
-
-/* Lists */
-ul {
-  list-style-type: square;
-  padding-left: 25px;
-  margin-top: 10px;
-  color: #4e342e;
-}
-
-/* Footer */
-footer {
-  text-align: center;
-  color: #777;
-  padding: 20px 0;
-  border-top: 1px solid #ddd;
-  margin-top: 40px;
-  font-size: 0.9rem;
-  font-family: 'Georgia', serif;
-}
-
-/* Buttons (for later) */
-button, .btn {
-  background: linear-gradient(135deg, #7a1f1f, #b69f4b);
-  border: none;
-  border-radius: 8px;
-  color: #fff8e1;
-  padding: 10px 20px;
-  cursor: pointer;
-  box-shadow: 0 0 8px rgba(182, 159, 75, 0.8);
-  transition: background 0.3s ease;
-  font-family: 'MedievalSharp', cursive;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-button:hover, .btn:hover {
-  background: linear-gradient(135deg, #b69f4b, #7a1f1f);
-}
-
-/* Links in main content */
-main a {
-  color: #7a1f1f;
-  text-decoration: none;
-  border-bottom: 1px dotted #b69f4b;
-  transition: color 0.3s ease;
-}
-
-main a:hover {
-  color: #b69f4b;
-  border-bottom: 1px solid #b69f4b;
-}
-
-/* Small decorative accents */
-blockquote {
-  font-style: italic;
-  color: #6b4c3b;
-  border-left: 5px solid #b69f4b;
-  margin: 20px 0;
-  padding-left: 20px;
-  font-family: 'Georgia', serif;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  main {
-    padding: 20px;
-    margin: 20px auto 40px auto;
-  }
-  header h1 {
-    font-size: 2rem;
-  }
-  nav a {
-    margin: 0 8px;
-    font-size: 0.9rem;
-  }
-}
+  l
