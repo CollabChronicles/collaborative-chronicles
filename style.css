@@ -1,8 +1,8 @@
-/* style.css */
+@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f9f9f9;
+  font-family: 'MedievalSharp', serif;
+  background-color: #f9f5e3;
   color: #222;
   margin: 0;
   padding: 0 20px;
@@ -10,8 +10,8 @@ body {
 }
 
 header {
-  background-color: #283593;
-  color: white;
+  background-color: #4e342e;
+  color: #fff8e1;
   padding: 20px 0;
   text-align: center;
   margin-bottom: 40px;
@@ -23,24 +23,28 @@ header h1 {
 }
 
 nav a {
-  color: #c5cae9;
+  color: #ffe0b2;
   text-decoration: none;
   margin: 0 10px;
   font-weight: 600;
 }
 
 nav a:hover {
-  color: #fff;
+  color: #fff8e1;
   text-decoration: underline;
 }
 
 main {
   max-width: 800px;
   margin: 0 auto 60px auto;
+  background-color: #fff8e1;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 h2 {
-  color: #283593;
+  color: #4e342e;
   margin-top: 40px;
 }
 
