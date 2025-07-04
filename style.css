@@ -1,111 +1,141 @@
-/* Base body styles */
+/* Base body styles with leafy green parchment vibe */
 body {
   font-family: 'Georgia', serif;
-  background-color: #f9f5e3;
-  background-image: url('https://www.transparenttextures.com/patterns/pw-pattern.png'); /* subtle parchment texture */
-  background-repeat: repeat;
-  background-size: 150px 150px;
-  color: #222;
+  background-color: #e8f0e5;
+  background-image: linear-gradient(135deg, #e8f0e5 0%, #d8e8d0 100%);
+  color: #2d3a2d;
   margin: 0;
   padding: 0 20px;
   line-height: 1.6;
 }
 
-/* Decorative vine border for main content */
-main {
-  max-width: 900px;
-  margin: 40px auto 60px auto;
-  background-color: #fff8e1;
-  padding: 30px 40px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  border: 8px solid transparent;
-  position: relative;
-  font-family: 'Georgia', serif;
-  /* Vine pattern border using SVG */
-}
-
-main::before, main::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  width: 40px;
-  height: 100%;
-  top: 0;
-  background-repeat: repeat-y;
-  background-size: contain;
-  opacity: 0.15;
-}
-
-main::before {
-  left: 0;
-  background-image: url('https://i.imgur.com/RSc1j7x.png'); /* vine pattern left */
-}
-
-main::after {
-  right: 0;
-  background-image: url('https://i.imgur.com/RSc1j7x.png'); /* vine pattern right (same image mirrored) */
-  transform: scaleX(-1);
-}
-
-/* Header styles */
+/* Header styles with earthy green-brown colors */
 header {
-  background-color: #4e342e;
-  color: #fff8e1;
+  background-color: #3b5d3b;
+  color: #f0f7ec;
   padding: 20px 0;
   text-align: center;
   margin-bottom: 40px;
-  border-bottom: 3px solid #b69f4b;
-  box-shadow: 0 3px 10px rgba(78, 52, 46, 0.4);
-  position: relative;
-}
-
-/* Decorative scroll/banner behind header */
-header::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 80px;
-  background-image: url('https://i.imgur.com/0KZsx4O.png'); /* medieval scroll/banner */
-  background-repeat: no-repeat;
-  background-size: contain;
-  opacity: 0.15;
-  z-index: 0;
+  border-bottom: 4px solid #9bbf7c;
+  box-shadow: 0 3px 10px rgba(59, 93, 59, 0.5);
 }
 
 header h1 {
   margin: 0;
-  font-size: 3rem;
-  font-family: 'MedievalSharp', cursive;
-  letter-spacing: 3px;
-  text-shadow: 1px 1px 3px rgba(78, 52, 46, 0.7);
-  position: relative;
-  z-index: 1;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  font-family: 'Georgia', serif;
+  text-shadow: 1px 1px 2px #2d3a2d;
 }
 
 /* Navigation */
 nav a {
-  color: #ffe0b2;
+  color: #dff2da;
   text-decoration: none;
   margin: 0 15px;
   font-weight: 600;
-  font-family: 'MedievalSharp', cursive;
   transition: color 0.3s ease, text-shadow 0.3s ease;
-  position: relative;
-  z-index: 1;
 }
 
 nav a:hover {
-  color: #b69f4b;
-  text-shadow: 0 0 8px #b69f4b;
+  color: #9bbf7c;
+  text-shadow: 0 0 5px #9bbf7c;
   text-decoration: underline;
 }
 
-/* Section headings */
+/* Main content container with leafy border and subtle gradient */
+main {
+  max-width: 900px;
+  margin: 40px auto 60px auto;
+  background: linear-gradient(to bottom right, #f5f9f3, #e0f0dc);
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  border: 6px solid #9bbf7c;
+  position: relative;
+}
+
+/* Section headings with greenish-brown accent */
 h2 {
-  color: #4e342e;
+  color: #3b5d3b;
   margin-top: 40px;
-  l
+  letter-spacing: 1.5px;
+  text-shadow: 1px 1px 1px rgba(59, 93, 59, 0.4);
+  font-size: 2rem;
+}
+
+/* Lists */
+ul {
+  list-style-type: square;
+  padding-left: 25px;
+  margin-top: 10px;
+  color: #3b5d3b;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  color: #777;
+  padding: 20px 0;
+  border-top: 1px solid #cbdac2;
+  margin-top: 40px;
+  font-size: 0.9rem;
+}
+
+/* Buttons */
+button, .btn {
+  background: linear-gradient(135deg, #4d6b4d, #9bbf7c);
+  border: none;
+  border-radius: 8px;
+  color: #f0f7ec;
+  padding: 10px 20px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(59, 93, 59, 0.6);
+  transition: background 0.3s ease;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+button:hover, .btn:hover {
+  background: linear-gradient(135deg, #9bbf7c, #4d6b4d);
+}
+
+/* Links in main content */
+main a {
+  color: #4d6b4d;
+  text-decoration: none;
+  border-bottom: 1px dotted #9bbf7c;
+  transition: color 0.3s ease;
+}
+
+main a:hover {
+  color: #9bbf7c;
+  border-bottom: 1px solid #9bbf7c;
+}
+
+/* Blockquotes */
+blockquote {
+  font-style: italic;
+  color: #4d6b4d;
+  border-left: 5px solid #9bbf7c;
+  margin: 20px 0;
+  padding-left: 20px;
+  background-color: #f0f7ec;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  main {
+    padding: 20px;
+    margin: 20px auto 40px auto;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  nav a {
+    margin: 0 8px;
+    font-size: 0.9rem;
+  }
+}
