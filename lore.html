@@ -51,6 +51,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
+    // Initialize Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
@@ -64,56 +65,83 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const loreList = document.getElementById('lore-list');
+    const loreListDiv = document.getElementById('lore-list');
     const categoryFilter = document.getElementById('categoryFilter');
     const searchInput = document.getElementById('searchInput');
 
-    function displayLore(docs) {
-      if (docs.length === 0) {
-        loreList.innerHTML = "<p><em>No matching lore found.</em></p>";
+    let allLoreData = [];
+
+    // Utility to sanitize HTML
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+
+    function renderLore(entries) {
+      if (!entries.length) {
+        loreListDiv.innerHTML = '<p><em>No lore entries found for this filter.</em></p>';
         return;
       }
 
-      loreList.innerHTML = '';
-      docs.forEach(doc => {
-        const data = doc.data();
-        const card = document.createElement('div');
-        card.style.padding = "15px";
-        card.style.marginBottom = "20px";
-        card.style.backgroundColor = "#fff8e1";
-        card.style.borderLeft = "6px solid #4e342e";
-        card.style.boxShadow = "0 0 5px rgba(0,0,0,0.1)";
-        card.innerHTML = `
-          <h3>${data.name}</h3>
-          <p><strong>Category:</strong> ${data.category}</p>
-          <p>${data.description}</p>
-          ${data.references && data.references.length > 0 ? `<p><strong>References:</strong> ${data.references.join(", ")}</p>` : ''}
-        `;
-        loreList.appendChild(card);
+      let content = '';
+      let categorized = {};
+
+      entries.forEach(data => {
+        const category = data.category || 'Miscellaneous';
+        if (!categorized[category]) {
+          categorized[category] = [];
+        }
+        categorized[category].push(data);
       });
-    }
 
-    function fetchAndFilterLore() {
-      const selectedCategory = categoryFilter.value;
-      const searchText = searchInput.value.toLowerCase();
-
-      db.collection("lore").orderBy("timestamp", "desc").get().then(snapshot => {
-        const filtered = snapshot.docs.filter(doc => {
-          const data = doc.data();
-          const matchCategory = selectedCategory === "All" || data.category === selectedCategory;
-          const matchSearch = data.name.toLowerCase().includes(searchText) || data.description.toLowerCase().includes(searchText);
-          return matchCategory && matchSearch;
+      for (const category in categorized) {
+        content += `<h3>${escapeHtml(category)}</h3><ul>`;
+        categorized[category].forEach(data => {
+          content += `<li>
+            <strong>${escapeHtml(data.name)}</strong>: ${escapeHtml(data.description)}
+            ${data.references && data.references.length ? `<br><em>References: ${escapeHtml(data.references.join(', '))}</em>` : ''}
+          </li>`;
         });
+        content += `</ul>`;
+      }
 
-        displayLore(filtered);
-      });
+      loreListDiv.innerHTML = content;
     }
 
-    categoryFilter.addEventListener('change', fetchAndFilterLore);
-    searchInput.addEventListener('input', fetchAndFilterLore);
+    function applyFilters() {
+      const selectedCategory = categoryFilter.value;
+      const searchTerm = searchInput.value.toLowerCase();
 
-    // Initial load
-    fetchAndFilterLore();
+      const filtered = allLoreData.filter(data => {
+        const matchesCategory = selectedCategory === 'All' || data.category === selectedCategory;
+        const matchesSearch = data.name.toLowerCase().includes(searchTerm) ||
+                              data.description.toLowerCase().includes(searchTerm);
+        return matchesCategory && matchesSearch;
+      });
+
+      renderLore(filtered);
+    }
+
+    // Fetch and display all lore
+    db.collection("lore").get().then(snapshot => {
+      const docs = snapshot.docs;
+
+      docs.sort((a, b) => {
+        const ta = a.data().timestamp ? a.data().timestamp.toMillis() : 0;
+        const tb = b.data().timestamp ? b.data().timestamp.toMillis() : 0;
+        return tb - ta;
+      }).reverse();
+
+      allLoreData = docs.map(doc => doc.data());
+      renderLore(allLoreData);
+    }).catch(error => {
+      console.error('Error fetching lore:', error);
+      loreListDiv.innerHTML = '<p style="color:red;">Error loading lore. Please try again later.</p>';
+    });
+
+    categoryFilter.addEventListener('change', applyFilters);
+    searchInput.addEventListener('input', applyFilters);
   </script>
 </body>
 </html>
