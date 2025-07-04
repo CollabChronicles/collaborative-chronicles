@@ -1,88 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - Write!</title>
-  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-
-</head>
-<body>
-  <header>
-    <h1>Collaborative Chronicles</h1>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="story.html">The Story</a> |
-      <a href="lore.html">The Lore</a> |
-      <a href="write.html">Write!</a>
-    </nav>
-  </header>
-
-  <main>
-    <section id="submission">
-      <h2>Submit Your Contribution</h2>
-      <p>
-        Ready to expand the world? Use this form to submit your characters, locations,
-        or story segments. Your donation supports literacy initiatives!
-      </p>
-      <form>
-        <label for="contribution">Your Contribution:</label><br />
-        <textarea id="contribution" name="contribution" rows="8" cols="50" placeholder="Write your piece here..."></textarea><br /><br />
-        <button type="submit" disabled>Submit (Coming Soon)</button>
-      </form>
-    </section>
-    <section id="submission-form">
-  <h2>Submit New Lore</h2>
-  <form id="loreForm">
-    <label>
-      Name:<br />
-      <input type="text" id="name" required />
-    </label>
-    <br /><br />
-    <label>
-      Category:<br />
-      <select id="category" required>
-        <option value="" disabled selected>Select category</option>
-        <option value="Character">Character</option>
-        <option value="Place">Place</option>
-        <option value="Faction">Faction</option>
-        <option value="Object">Object</option>
-        <option value="Tale">Tale</option>
-        <!-- Add more categories here if you want -->
-      </select>
-    </label>
-    <br /><br />
-    <label>
-      Description:<br />
-      <textarea id="description" rows="4" required></textarea>
-    </label>
-    <br /><br />
-    <label>
-      References (comma-separated):<br />
-      <input type="text" id="references" placeholder="Other lore names referenced" />
-    </label>
-    <br /><br />
-    <button type="submit">Submit Lore</button>
-  </form>
-
-  <p id="statusMessage"></p>
-</section>
-
-  </main>
-
-  <footer>
-    <p>&copy; 2025 Collaborative Chronicles</p>
-  </footer>
-  <!-- Add this before your closing </body> tag -->
-
-<!-- Firebase App (the core Firebase SDK) -->
+<!-- Firebase SDK scripts (already in your file) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-
-<!-- Firebase Firestore -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // Your Firebase configuration object
+  // Your Firebase config & initialization
   const firebaseConfig = {
     apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
     authDomain: "collaborative-chronicles.firebaseapp.com",
@@ -93,59 +14,47 @@
     measurementId: "G-0HXV6NGHQP"
   };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-
-  // Initialize Firestore
   const db = firebase.firestore();
 
-  // Now you can use 'db' to read/write to your Firestore database
-</script>
-
+  // Now the lore form handling code:
   const loreForm = document.getElementById('loreForm');
-const statusMessage = document.getElementById('statusMessage');
+  const statusMessage = document.getElementById('statusMessage');
 
-loreForm.addEventListener('submit', (e) => {
-  e.preventDefault();
+  loreForm.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-  // Get form values
-  const name = document.getElementById('name').value.trim();
-  const category = document.getElementById('category').value;
-  const description = document.getElementById('description').value.trim();
-  const referencesRaw = document.getElementById('references').value.trim();
+    const name = document.getElementById('name').value.trim();
+    const category = document.getElementById('category').value;
+    const description = document.getElementById('description').value.trim();
+    const referencesRaw = document.getElementById('references').value.trim();
 
-  // Split references by comma, trim spaces, filter out empty strings
-  const references = referencesRaw
-    ? referencesRaw.split(',').map(ref => ref.trim()).filter(ref => ref.length > 0)
-    : [];
+    const references = referencesRaw
+      ? referencesRaw.split(',').map(ref => ref.trim()).filter(ref => ref.length > 0)
+      : [];
 
-  // Simple validation (already required on inputs, but double-check)
-  if (!name || !category || !description) {
-    statusMessage.textContent = 'Please fill in all required fields.';
-    statusMessage.style.color = 'red';
-    return;
-  }
+    if (!name || !category || !description) {
+      statusMessage.textContent = 'Please fill in all required fields.';
+      statusMessage.style.color = 'red';
+      return;
+    }
 
-  // Create a new lore document in Firestore
-  db.collection('lore').add({
-    name,
-    category,
-    description,
-    references,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  })
-  .then(() => {
-    statusMessage.textContent = 'Lore submitted successfully!';
-    statusMessage.style.color = 'green';
-    loreForm.reset();
-  })
-  .catch((error) => {
-    console.error('Error adding document: ', error);
-    statusMessage.textContent = 'Error submitting lore. Please try again.';
-    statusMessage.style.color = 'red';
+    db.collection('lore').add({
+      name,
+      category,
+      description,
+      references,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+      statusMessage.textContent = 'Lore submitted successfully!';
+      statusMessage.style.color = 'green';
+      loreForm.reset();
+    })
+    .catch((error) => {
+      console.error('Error adding document: ', error);
+      statusMessage.textContent = 'Error submitting lore. Please try again.';
+      statusMessage.style.color = 'red';
+    });
   });
-});
-
-
-</body>
-</html>
+</script>
