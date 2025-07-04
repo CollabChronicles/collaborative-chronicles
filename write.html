@@ -31,6 +31,43 @@
         <button type="submit" disabled>Submit (Coming Soon)</button>
       </form>
     </section>
+    <section id="submission-form">
+  <h2>Submit New Lore</h2>
+  <form id="loreForm">
+    <label>
+      Name:<br />
+      <input type="text" id="name" required />
+    </label>
+    <br /><br />
+    <label>
+      Category:<br />
+      <select id="category" required>
+        <option value="" disabled selected>Select category</option>
+        <option value="Character">Character</option>
+        <option value="Place">Place</option>
+        <option value="Faction">Faction</option>
+        <option value="Object">Object</option>
+        <option value="Tale">Tale</option>
+        <!-- Add more categories here if you want -->
+      </select>
+    </label>
+    <br /><br />
+    <label>
+      Description:<br />
+      <textarea id="description" rows="4" required></textarea>
+    </label>
+    <br /><br />
+    <label>
+      References (comma-separated):<br />
+      <input type="text" id="references" placeholder="Other lore names referenced" />
+    </label>
+    <br /><br />
+    <button type="submit">Submit Lore</button>
+  </form>
+
+  <p id="statusMessage"></p>
+</section>
+
   </main>
 
   <footer>
