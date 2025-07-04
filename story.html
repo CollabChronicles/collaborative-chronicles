@@ -6,28 +6,39 @@
   <title>Collaborative Chronicles - The Story</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
   <style>
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff8e1;
+      font-family: serif;
+    }
+    header h1 {
+      color: #4e342e;
+    }
+    main {
+      padding-top: 20px;
+    }
     #searchInput {
       width: 100%;
       padding: 10px;
       margin-bottom: 20px;
       font-size: 1rem;
-      border-radius: 6px;
+      border-radius: 5px;
       border: 1px solid #ccc;
+      font-family: serif;
     }
     #story-content {
-      white-space: pre-wrap;
-      line-height: 1.6;
-      font-size: 1.1rem;
-      max-width: 800px;
-      margin: 0 auto;
-      background-color: #fff8e1;
+      background: #fffbe6;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      white-space: pre-wrap;
+      line-height: 1.5;
     }
-    .glow-button {
-      display: block;
-      margin: 40px auto 0 auto;
+    #helpButton {
+      display: inline-block;
+      margin-top: 30px;
       padding: 15px 30px;
       font-size: 1.2rem;
       font-weight: bold;
@@ -37,13 +48,12 @@
       border-radius: 8px;
       cursor: pointer;
       box-shadow: 0 0 8px #1f8a70, 0 0 20px #13547a;
-      transition: box-shadow 0.3s ease;
-      text-align: center;
-      max-width: 300px;
       text-decoration: none;
+      text-align: center;
+      transition: box-shadow 0.3s ease;
     }
-    .glow-button:hover {
-      box-shadow: 0 0 12px #1f8a70, 0 0 30px #13547a;
+    #helpButton:hover {
+      box-shadow: 0 0 15px #1f8a70, 0 0 35px #13547a;
     }
   </style>
 </head>
@@ -59,18 +69,15 @@
   </header>
 
   <main>
-    <section id="story">
-      <h2>The Story Archive</h2>
-      <input type="text" id="searchInput" placeholder="Search stories..." />
+    <h2>The Growing Story</h2>
+    <p>Explore the ongoing collaborative tale below. Use the search to find parts by content, title, or reference.</p>
+    <input type="text" id="searchInput" placeholder="Search the story by content, name, or references...">
 
-      <div id="story-content">
-        <p><em>Loading story entries...</em></p>
-      </div>
+    <div id="story-content">
+      <p><em>Loading story entries...</em></p>
+    </div>
 
-      <a href="write.html" class="glow-button" id="helpGrowBtn">
-        Help this world grow!
-      </a>
-    </section>
+    <a id="helpButton" href="write.html">Help this world grow!</a>
   </main>
 
   <footer>
@@ -100,35 +107,55 @@
 
     let allStories = [];
 
+    // Utility for cleaning text for comparison
+    function cleanText(text) {
+      return text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
+    }
+
+    // Display stories stitched together
     function displayStories(stories) {
       if (stories.length === 0) {
-        storyContentDiv.innerHTML = '<p><em>No story entries match your search.</em></p>';
+        storyContentDiv.innerHTML = '<p><em>No matching story entries found.</em></p>';
         return;
       }
-      // Join all story contents together with a couple line breaks
-      const combined = stories.map(s => s.content).join('\n\n');
+      let combined = stories.map(s => s.content.trim()).join("\n\n");
       storyContentDiv.textContent = combined;
     }
 
+    // Fetch and render
     function loadStories() {
-      db.collection("story").orderBy("timestamp", "asc").get()
+      db.collection("story")
+        .orderBy("timestamp")
+        .get()
         .then(snapshot => {
-          allStories = snapshot.docs.map(doc => doc.data());
+          allStories = snapshot.docs.map(doc => doc.data()).filter(d => d.content);
           displayStories(allStories);
         })
         .catch(error => {
-          console.error('Error loading story entries:', error);
+          console.error('Error loading stories:', error);
           storyContentDiv.innerHTML = '<p style="color:red;">Error loading story entries. Please try again later.</p>';
         });
     }
 
+    // Search handler
     searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase();
-      const filtered = allStories.filter(s => s.content.toLowerCase().includes(query));
+      const query = cleanText(searchInput.value);
+      if (!query) {
+        displayStories(allStories);
+        return;
+      }
+
+      const filtered = allStories.filter(s => {
+        const nameMatch = s.name && cleanText(s.name).includes(query);
+        const contentMatch = cleanText(s.content).includes(query);
+        const refMatch = (s.references || []).some(r => cleanText(r).includes(query));
+        return nameMatch || contentMatch || refMatch;
+      });
+
       displayStories(filtered);
     });
 
-    loadStories();
+    window.addEventListener('DOMContentLoaded', loadStories);
   </script>
 </body>
 </html>
