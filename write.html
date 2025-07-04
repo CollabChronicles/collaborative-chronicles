@@ -1,65 +1,131 @@
-<!-- Firebase SDK scripts -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Write!</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Collaborative Chronicles</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a>
+    </nav>
+  </header>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
-    authDomain: "collaborative-chronicles.firebaseapp.com",
-    projectId: "collaborative-chronicles",
-    storageBucket: "collaborative-chronicles.firebasestorage.app",
-    messagingSenderId: "127752938400",
-    appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-    measurementId: "G-0HXV6NGHQP"
-  };
+  <main>
+    <section id="submission-form">
+      <h2>Submit New Lore</h2>
+      <form id="loreForm">
+        <label>
+          Name:<br />
+          <input type="text" id="name" required />
+        </label>
+        <br /><br />
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+        <label>
+          Category:<br />
+          <select id="category" required>
+            <option value="" disabled selected>Select category</option>
+            <option value="Character">Character</option>
+            <option value="Place">Place</option>
+            <option value="Faction">Faction</option>
+            <option value="Object">Object</option>
+            <option value="Tale">Tale</option>
+          </select>
+        </label>
+        <br /><br />
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const loreForm = document.getElementById('loreForm');
-    const statusMessage = document.getElementById('statusMessage');
+        <label>
+          Description:<br />
+          <textarea id="description" rows="4" required></textarea>
+        </label>
+        <br /><br />
 
-    if (!loreForm) {
-      console.error('Lore form not found.');
-      return;
-    }
+        <label>
+          References (comma-separated):<br />
+          <input type="text" id="references" placeholder="Other lore names referenced" />
+        </label>
+        <br /><br />
 
-    loreForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+        <button type="submit">Submit Lore</button>
+      </form>
+      <p id="statusMessage"></p>
+    </section>
+  </main>
 
-      const name = document.getElementById('name').value.trim();
-      const category = document.getElementById('category').value;
-      const description = document.getElementById('description').value.trim();
-      const referencesRaw = document.getElementById('references').value.trim();
+  <footer>
+    <p>&copy; 2025 Collaborative Chronicles</p>
+  </footer>
 
-      const references = referencesRaw
-        ? referencesRaw.split(',').map(ref => ref.trim()).filter(ref => ref.length > 0)
-        : [];
+  <!-- Firebase SDK scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-      if (!name || !category || !description) {
-        statusMessage.textContent = 'Please fill in all required fields.';
-        statusMessage.style.color = 'red';
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const loreForm = document.getElementById('loreForm');
+      const statusMessage = document.getElementById('statusMessage');
+
+      if (!loreForm) {
+        console.error('Lore form not found.');
         return;
       }
 
-      db.collection('lore').add({
-        name,
-        category,
-        description,
-        references,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        statusMessage.textContent = 'Lore submitted successfully!';
-        statusMessage.style.color = 'green';
-        loreForm.reset();
-      })
-      .catch((error) => {
-        console.error('Error adding document: ', error);
-        statusMessage.textContent = 'Error submitting lore. Please try again.';
-        statusMessage.style.color = 'red';
+      loreForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const category = document.getElementById('category').value;
+        const description = document.getElementById('description').value.trim();
+        const referencesRaw = document.getElementById('references').value.trim();
+
+        const references = referencesRaw
+          ? referencesRaw.split(',').map(ref => ref.trim()).filter(ref => ref.length > 0)
+          : [];
+
+        if (!name || !category || !description) {
+          statusMessage.textContent = 'Please fill in all required fields.';
+          statusMessage.style.color = 'red';
+          return;
+        }
+
+        db.collection('lore').add({
+          name,
+          category,
+          description,
+          references,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+          statusMessage.textContent = 'Lore submitted successfully!';
+          statusMessage.style.color = 'green';
+          loreForm.reset();
+        })
+        .catch((error) => {
+          console.error('Error adding document: ', error);
+          statusMessage.textContent = 'Error submitting lore. Please try again.';
+          statusMessage.style.color = 'red';
+        });
       });
     });
-  });
-</script>
+  </script>
+</body>
+</html>
