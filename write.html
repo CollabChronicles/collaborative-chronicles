@@ -11,6 +11,7 @@
       margin: 0 auto;
       padding: 20px;
       background-color: #fff8e1;
+      font-family: serif;
     }
     h2 {
       color: #4e342e;
@@ -32,7 +33,6 @@
       cursor: pointer;
       box-shadow: 0 0 8px #1f8a70, 0 0 20px #13547a;
       transition: box-shadow 0.3s ease;
-      flex-grow: 1;
       text-align: center;
     }
     .glow-button.active {
@@ -47,6 +47,7 @@
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
     label {
       display: block;
@@ -63,11 +64,15 @@
       font-family: serif;
     }
     textarea {
-      font-family: serif;
       resize: vertical;
     }
-    button.submit-btn {
+    .form-buttons {
       margin-top: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    button.submit-btn {
       padding: 12px 25px;
       font-size: 1.1rem;
       background: linear-gradient(45deg, #1f8a70, #13547a);
@@ -85,10 +90,13 @@
       margin-top: 15px;
       font-weight: bold;
     }
-    #paymentNote {
+    #paymentNote, #wordCount {
       margin-top: 10px;
       font-style: italic;
       color: #4e342e;
+    }
+    .donate-link {
+      text-decoration: none;
     }
   </style>
 </head>
@@ -134,7 +142,12 @@
 
       <p id="loreStatusMessage"></p>
       <p id="paymentNote">Suggested donation: $1 per lore entry to support literacy charities.</p>
-      <button type="submit" class="submit-btn">Submit Lore</button>
+      <div class="form-buttons">
+        <button type="submit" class="submit-btn">Submit Lore</button>
+        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" class="donate-link">
+          <button type="button" class="submit-btn">Donate</button>
+        </a>
+      </div>
     </form>
 
     <!-- Story Form -->
@@ -145,13 +158,19 @@
 
       <label for="storyContent">Story Content (required):</label>
       <textarea id="storyContent" rows="8" required></textarea>
+      <p id="wordCount">Word count: 0 | Suggested donation: $0.00</p>
 
       <label for="storyReferences">References (comma-separated, required):</label>
       <input type="text" id="storyReferences" placeholder="Must reference existing lore names" required />
 
       <p id="storyStatusMessage"></p>
-      <p id="paymentNote">Suggested donation: $0.01 per word to support literacy charities.</p>
-      <button type="submit" class="submit-btn">Submit Story</button>
+      <p id="paymentNote">Suggested donation rate: $0.01 per word to support literacy charities.</p>
+      <div class="form-buttons">
+        <button type="submit" class="submit-btn">Submit Story</button>
+        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" class="donate-link">
+          <button type="button" class="submit-btn">Donate</button>
+        </a>
+      </div>
     </form>
   </main>
 
@@ -184,6 +203,8 @@
     const storyForm = document.getElementById('storyForm');
     const loreStatus = document.getElementById('loreStatusMessage');
     const storyStatus = document.getElementById('storyStatusMessage');
+    const storyContentInput = document.getElementById('storyContent');
+    const wordCountDisplay = document.getElementById('wordCount');
 
     loreBtn.addEventListener('click', () => {
       loreBtn.classList.add('active');
@@ -203,12 +224,19 @@
       storyStatus.textContent = '';
     });
 
+    // Live word count & suggested donation for story
+    storyContentInput.addEventListener('input', () => {
+      const text = storyContentInput.value.trim();
+      const wordCount = text ? text.split(/\s+/).filter(w => w.length > 0).length : 0;
+      const donation = (wordCount * 0.01).toFixed(2);
+      wordCountDisplay.textContent = `Word count: ${wordCount} | Suggested donation: $${donation}`;
+    });
+
     // Helper: clean string for case-insensitive and punctuation-ignored matching
     function cleanText(text) {
       return text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
     }
 
-    // Validate references appear in content
     function referencesInContent(references, content) {
       const cleanedContent = cleanText(content);
       return references.every(ref => cleanedContent.includes(cleanText(ref)));
@@ -291,6 +319,7 @@
         storyStatus.textContent = 'Story submitted successfully!';
         storyStatus.style.color = 'green';
         storyForm.reset();
+        wordCountDisplay.textContent = 'Word count: 0 | Suggested donation: $0.00';
       })
       .catch(error => {
         console.error('Error adding story:', error);
