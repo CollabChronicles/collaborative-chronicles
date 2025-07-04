@@ -203,13 +203,6 @@
       storyStatus.textContent = '';
     });
 
-    // Utility to sanitize HTML (optional, if you plan to display feedback)
-    function escapeHtml(text) {
-      var div = document.createElement("div");
-      div.appendChild(document.createTextNode(text));
-      return div.innerHTML;
-    }
-
     // Helper: clean string for case-insensitive and punctuation-ignored matching
     function cleanText(text) {
       return text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
@@ -240,8 +233,6 @@
         loreStatus.style.color = 'red';
         return;
       }
-
-      // For lore, no hard reference check since first entry can exist; you can add later rules
 
       db.collection('lore').add({
         name,
@@ -284,7 +275,6 @@
 
       const references = referencesRaw.split(',').map(r => r.trim()).filter(r => r.length > 0);
 
-      // Check references appear in content
       if (!referencesInContent(references, content)) {
         storyStatus.textContent = 'Your story content must include all the references you list.';
         storyStatus.style.color = 'red';
@@ -303,4 +293,11 @@
         storyForm.reset();
       })
       .catch(error => {
-        console.error('Error adding story:', error
+        console.error('Error adding story:', error);
+        storyStatus.textContent = 'Error submitting story. Please try again.';
+        storyStatus.style.color = 'red';
+      });
+    });
+  </script>
+</body>
+</html>
