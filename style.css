@@ -7,7 +7,7 @@
 
 body {
   font-family: 'Merriweather', serif;
-  background: linear-gradient(#fdf6e3, #eee8d5);
+  background: linear-gradient(to bottom right, #fdf6e3, #eee8d5, #fef9e7);
   color: #4e342e;
   line-height: 1.6;
   max-width: 900px;
@@ -20,12 +20,14 @@ header {
   margin-bottom: 20px;
   border-bottom: 3px double #bfa06b;
   padding-bottom: 10px;
+  background: linear-gradient(to right, #fef9e7, #fdf6e3);
+  border-radius: 8px;
 }
 
 header h1 {
   font-family: 'Cinzel', serif;
   font-size: 2.5rem;
-  color: #3e7e55;
+  color: #3e7e55 !important; /* FORCE the correct green color */
   margin-bottom: 5px;
 }
 
@@ -89,7 +91,7 @@ textarea {
   border: 1px solid #bfa06b;
   font-size: 1rem;
   font-family: serif;
-  background-color: #fdf6e3;
+  background-color: #fef9e7;
   color: #4e342e;
 }
 
@@ -168,7 +170,7 @@ button:disabled {
   border-radius: 5px;
   border: 1px solid #bfa06b;
   font-size: 1rem;
-  background-color: #fdf6e3;
+  background-color: #fef9e7;
   color: #4e342e;
 }
 
