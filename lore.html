@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - Write Lore</title>
+  <title>Collaborative Chronicles - The Lore</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
 </head>
 <body>
@@ -18,55 +18,38 @@
   </header>
 
   <main>
-    <section id="submission-form">
-      <h2>Submit New Lore</h2>
-      <p>Describe your character, place, faction, object, or tale. Include at least one reference to existing lore!</p>
+    <section id="lore">
+      <h2>The Lore Archive</h2>
+      <p>Browse the growing canon of characters, places, factions, and artifacts.</p>
 
-      <form id="loreForm">
-        <label>
-          Name:<br />
-          <input type="text" id="name" required />
-        </label><br /><br />
+      <label for="categoryFilter"><strong>Filter by Category:</strong></label>
+      <select id="categoryFilter">
+        <option value="All">All</option>
+        <option value="Character">Character</option>
+        <option value="Place">Place</option>
+        <option value="Faction">Faction</option>
+        <option value="Object">Object</option>
+        <option value="Tale">Tale</option>
+        <option value="Miscellaneous">Miscellaneous</option>
+      </select>
 
-        <label>
-          Category:<br />
-          <select id="category" required>
-            <option value="" disabled selected>Select category</option>
-            <option value="Character">Character</option>
-            <option value="Place">Place</option>
-            <option value="Faction">Faction</option>
-            <option value="Object">Object</option>
-            <option value="Tale">Tale</option>
-          </select>
-        </label><br /><br />
+      <br /><br />
+      <input type="text" id="searchInput" placeholder="Search lore..." style="width: 100%; padding: 8px;" />
 
-        <label>
-          Description:<br />
-          <textarea id="description" rows="6" required></textarea>
-        </label><br /><br />
-
-        <label>
-          References (comma-separated):<br />
-          <input type="text" id="references" placeholder="Other lore names referenced" required />
-        </label><br /><br />
-
-        <button type="submit">Submit Lore</button>
-      </form>
-
-      <p id="statusMessage"></p>
+      <div id="lore-list" style="margin-top: 20px;">
+        <p><em>Loading lore entries...</em></p>
+      </div>
     </section>
   </main>
 
   <footer>
+    <button class="glow-button" onclick="location.href='write.html'">Help this world grow!</button>
     <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_AUTH_DOMAIN",
@@ -78,61 +61,52 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Utility for smart matching
-    function normalizeText(str) {
-      return str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+    const loreListDiv = document.getElementById('lore-list');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    let allLore = [];
+
+    function escapeHtml(text) {
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
     }
 
-    function allReferencesPresent(text, references) {
-      const cleanText = normalizeText(text);
-      return references.every(ref => {
-        const cleanRef = normalizeText(ref);
-        return cleanRef && cleanText.includes(cleanRef);
+    function renderLore(data) {
+      let content = '';
+      if (data.length === 0) {
+        loreListDiv.innerHTML = '<p><em>No matching lore found.</em></p>';
+        return;
+      }
+      data.forEach(entry => {
+        content += `<div style="margin-bottom:20px;">
+          <strong>${escapeHtml(entry.name)}</strong> (${escapeHtml(entry.category)}):<br/>
+          ${escapeHtml(entry.description)}
+          ${entry.references && entry.references.length ? `<br><em>References: ${escapeHtml(entry.references.join(", "))}</em>` : ""}
+        </div>`;
       });
+      loreListDiv.innerHTML = content;
     }
 
-    // Form handler
-    document.getElementById('loreForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById('name').value.trim();
-      const category = document.getElementById('category').value;
-      const description = document.getElementById('description').value.trim();
-      const referencesRaw = document.getElementById('references').value.trim();
-      const references = referencesRaw.split(',').map(r => r.trim()).filter(r => r);
-
-      const statusMessage = document.getElementById('statusMessage');
-
-      if (!name || !category || !description || references.length === 0) {
-        statusMessage.textContent = 'Please fill in all required fields and at least one reference.';
-        statusMessage.style.color = 'red';
-        return;
-      }
-
-      if (!allReferencesPresent(description, references)) {
-        statusMessage.textContent = 'Each reference must appear in the description text.';
-        statusMessage.style.color = 'red';
-        return;
-      }
-
-      db.collection('lore').add({
-        name,
-        category,
-        description,
-        references,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        statusMessage.textContent = 'Lore submitted successfully!';
-        statusMessage.style.color = 'green';
-        document.getElementById('loreForm').reset();
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        statusMessage.textContent = 'Error submitting lore. Please try again.';
-        statusMessage.style.color = 'red';
+    function filterLore() {
+      const search = searchInput.value.toLowerCase();
+      const category = categoryFilter.value;
+      const filtered = allLore.filter(entry => {
+        const matchesCategory = category === "All" || entry.category === category;
+        const matchesSearch = entry.name.toLowerCase().includes(search) || entry.description.toLowerCase().includes(search);
+        return matchesCategory && matchesSearch;
       });
+      renderLore(filtered);
+    }
+
+    db.collection("lore").orderBy("timestamp", "desc").get().then(snapshot => {
+      allLore = snapshot.docs.map(doc => doc.data());
+      renderLore(allLore);
     });
+
+    searchInput.addEventListener("input", filterLore);
+    categoryFilter.addEventListener("change", filterLore);
   </script>
 </body>
 </html>
