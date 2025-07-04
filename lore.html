@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - The Lore</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-
 </head>
 <body>
   <header>
@@ -21,19 +20,100 @@
   <main>
     <section id="lore">
       <h2>The Lore Archive</h2>
-      <p>
-        Browse the growing canon of characters, locations, factions, and artifacts.
-        Use the search below to explore our world.
-      </p>
-      <input type="text" placeholder="Search lore..." />
-      <div id="lore-list">
-        <p><em>Lore entries will appear here as they are added.</em></p>
+      <p>Browse the growing canon of characters, locations, factions, and artifacts.</p>
+
+      <label for="categoryFilter"><strong>Filter by Category:</strong></label>
+      <select id="categoryFilter">
+        <option value="All">All</option>
+        <option value="Character">Character</option>
+        <option value="Place">Place</option>
+        <option value="Faction">Faction</option>
+        <option value="Object">Object</option>
+        <option value="Tale">Tale</option>
+        <option value="Miscellaneous">Miscellaneous</option>
+      </select>
+
+      <br /><br />
+      <input type="text" id="searchInput" placeholder="Search lore..." style="width: 100%; padding: 8px;" />
+
+      <div id="lore-list" style="margin-top: 20px;">
+        <p><em>Loading lore entries...</em></p>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Collaborative Chronicles</p>
+    <p>2025 Collaborative Chronicles</p>
   </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const loreList = document.getElementById('lore-list');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchInput');
+
+    function displayLore(docs) {
+      if (docs.length === 0) {
+        loreList.innerHTML = "<p><em>No matching lore found.</em></p>";
+        return;
+      }
+
+      loreList.innerHTML = '';
+      docs.forEach(doc => {
+        const data = doc.data();
+        const card = document.createElement('div');
+        card.style.padding = "15px";
+        card.style.marginBottom = "20px";
+        card.style.backgroundColor = "#fff8e1";
+        card.style.borderLeft = "6px solid #4e342e";
+        card.style.boxShadow = "0 0 5px rgba(0,0,0,0.1)";
+        card.innerHTML = `
+          <h3>${data.name}</h3>
+          <p><strong>Category:</strong> ${data.category}</p>
+          <p>${data.description}</p>
+          ${data.references && data.references.length > 0 ? `<p><strong>References:</strong> ${data.references.join(", ")}</p>` : ''}
+        `;
+        loreList.appendChild(card);
+      });
+    }
+
+    function fetchAndFilterLore() {
+      const selectedCategory = categoryFilter.value;
+      const searchText = searchInput.value.toLowerCase();
+
+      db.collection("lore").orderBy("timestamp", "desc").get().then(snapshot => {
+        const filtered = snapshot.docs.filter(doc => {
+          const data = doc.data();
+          const matchCategory = selectedCategory === "All" || data.category === selectedCategory;
+          const matchSearch = data.name.toLowerCase().includes(searchText) || data.description.toLowerCase().includes(searchText);
+          return matchCategory && matchSearch;
+        });
+
+        displayLore(filtered);
+      });
+    }
+
+    categoryFilter.addEventListener('change', fetchAndFilterLore);
+    searchInput.addEventListener('input', fetchAndFilterLore);
+
+    // Initial load
+    fetchAndFilterLore();
+  </script>
 </body>
 </html>
