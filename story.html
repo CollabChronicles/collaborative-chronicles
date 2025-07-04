@@ -5,6 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - The Story</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+  <style>
+    #searchInput {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #story-content {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff8e1;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .glow-button {
+      display: block;
+      margin: 40px auto 0 auto;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(45deg, #1f8a70, #13547a);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #1f8a70, 0 0 20px #13547a;
+      transition: box-shadow 0.3s ease;
+      text-align: center;
+      max-width: 300px;
+      text-decoration: none;
+    }
+    .glow-button:hover {
+      box-shadow: 0 0 12px #1f8a70, 0 0 30px #13547a;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -20,15 +61,15 @@
   <main>
     <section id="story">
       <h2>The Story Archive</h2>
-      <p>Browse the collaborative narrative, growing with every contribution.</p>
+      <input type="text" id="searchInput" placeholder="Search stories..." />
 
-      <div id="story-list" style="margin-top: 20px;">
+      <div id="story-content">
         <p><em>Loading story entries...</em></p>
       </div>
 
-      <button id="helpGrowBtn" class="glow-button" onclick="location.href='write.html'">
+      <a href="write.html" class="glow-button" id="helpGrowBtn">
         Help this world grow!
-      </button>
+      </a>
     </section>
   </main>
 
@@ -41,7 +82,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
@@ -55,62 +95,40 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const storyListDiv = document.getElementById('story-list');
+    const storyContentDiv = document.getElementById('story-content');
+    const searchInput = document.getElementById('searchInput');
 
-    // Escape HTML utility
-    function escapeHtml(text) {
-      var div = document.createElement("div");
-      div.appendChild(document.createTextNode(text));
-      return div.innerHTML;
+    let allStories = [];
+
+    function displayStories(stories) {
+      if (stories.length === 0) {
+        storyContentDiv.innerHTML = '<p><em>No story entries match your search.</em></p>';
+        return;
+      }
+      // Join all story contents together with a couple line breaks
+      const combined = stories.map(s => s.content).join('\n\n');
+      storyContentDiv.textContent = combined;
     }
 
-    // Fetch and display story entries
-    db.collection("story").orderBy("timestamp", "desc").get()
-      .then(snapshot => {
-        const docs = snapshot.docs;
-
-        if (docs.length === 0) {
-          storyListDiv.innerHTML = '<p><em>No story entries yet. Be the first to add one!</em></p>';
-          return;
-        }
-
-        let content = '<ul>';
-        docs.forEach(doc => {
-          const data = doc.data();
-          content += `
-            <li>
-              <strong>${escapeHtml(data.name || "Unnamed Entry")}</strong>: 
-              ${escapeHtml(data.content || "(No story content provided)")}
-              ${data.references && data.references.length ? `<br><em>References: ${escapeHtml(data.references.join(', '))}</em>` : ''}
-            </li>`;
+    function loadStories() {
+      db.collection("story").orderBy("timestamp", "asc").get()
+        .then(snapshot => {
+          allStories = snapshot.docs.map(doc => doc.data());
+          displayStories(allStories);
+        })
+        .catch(error => {
+          console.error('Error loading story entries:', error);
+          storyContentDiv.innerHTML = '<p style="color:red;">Error loading story entries. Please try again later.</p>';
         });
-        content += '</ul>';
+    }
 
-        storyListDiv.innerHTML = content;
-      })
-      .catch(error => {
-        console.error('Error loading story entries:', error);
-        storyListDiv.innerHTML = '<p style="color:red;">Error loading story entries. Please try again later.</p>';
-      });
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      const filtered = allStories.filter(s => s.content.toLowerCase().includes(query));
+      displayStories(filtered);
+    });
+
+    loadStories();
   </script>
-
-  <style>
-    .glow-button {
-      margin-top: 30px;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #fff;
-      background: linear-gradient(45deg, #1f8a70, #13547a);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 8px #1f8a70, 0 0 20px #13547a;
-      transition: box-shadow 0.3s ease;
-    }
-    .glow-button:hover {
-      box-shadow: 0 0 12px #1f8a70, 0 0 30px #13547a;
-    }
-  </style>
 </body>
 </html>
