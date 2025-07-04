@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - The Story</title>
+  <title>Collaborative Chronicles - Write Story</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-
 </head>
 <body>
   <header>
@@ -19,20 +18,100 @@
   </header>
 
   <main>
-    <section id="story-feed">
-      <h2>The Story So Far</h2>
-      <p>
-        This section will display the ongoing, real-time collaborative story, updated as new
-        submissions are added. Check back often to see how the world evolves!
-      </p>
-      <div id="story-archive">
-        <p><em>Story entries will appear here as they are submitted.</em></p>
-      </div>
+    <section id="story-submission">
+      <h2>Expand the Story</h2>
+      <p>Write the next part of the collaborative narrative. Must reference at least one piece of registered lore!</p>
+
+      <form id="storyForm">
+        <label>
+          Story Content:<br />
+          <textarea id="storyContent" rows="8" required></textarea>
+        </label><br /><br />
+
+        <label>
+          References (comma-separated):<br />
+          <input type="text" id="storyReferences" placeholder="Referenced lore" required />
+        </label><br /><br />
+
+        <button type="submit">Submit Story</button>
+      </form>
+
+      <p id="storyStatus"></p>
     </section>
   </main>
 
   <footer>
     <p>2025 Collaborative Chronicles</p>
   </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Utility for smart matching
+    function normalizeText(str) {
+      return str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+    }
+
+    function allReferencesPresent(text, references) {
+      const cleanText = normalizeText(text);
+      return references.every(ref => {
+        const cleanRef = normalizeText(ref);
+        return cleanRef && cleanText.includes(cleanRef);
+      });
+    }
+
+    // Form handler
+    document.getElementById('storyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const content = document.getElementById('storyContent').value.trim();
+      const referencesRaw = document.getElementById('storyReferences').value.trim();
+      const references = referencesRaw.split(',').map(r => r.trim()).filter(r => r);
+
+      const storyStatus = document.getElementById('storyStatus');
+
+      if (!content || references.length === 0) {
+        storyStatus.textContent = 'Please fill in all fields and at least one reference.';
+        storyStatus.style.color = 'red';
+        return;
+      }
+
+      if (!allReferencesPresent(content, references)) {
+        storyStatus.textContent = 'Each reference must appear in the story text.';
+        storyStatus.style.color = 'red';
+        return;
+      }
+
+      db.collection('story').add({
+        content,
+        references,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        storyStatus.textContent = 'Story submitted successfully!';
+        storyStatus.style.color = 'green';
+        document.getElementById('storyForm').reset();
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        storyStatus.textContent = 'Error submitting story. Please try again.';
+        storyStatus.style.color = 'red';
+      });
+    });
+  </script>
 </body>
 </html>
