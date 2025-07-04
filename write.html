@@ -5,6 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+  <style>
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff8e1;
+    }
+    h2 {
+      color: #4e342e;
+    }
+    .toggle-buttons {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+    .glow-button {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(45deg, #1f8a70, #13547a);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #1f8a70, 0 0 20px #13547a;
+      transition: box-shadow 0.3s ease;
+      flex-grow: 1;
+      text-align: center;
+    }
+    .glow-button.active {
+      background: linear-gradient(45deg, #3baea0, #217c72);
+      box-shadow: 0 0 15px #3baea0, 0 0 35px #217c72;
+    }
+    .glow-button:hover {
+      box-shadow: 0 0 12px #1f8a70, 0 0 30px #13547a;
+    }
+    form {
+      background: #fff8e1;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      font-family: serif;
+    }
+    textarea {
+      font-family: serif;
+      resize: vertical;
+    }
+    button.submit-btn {
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: 1.1rem;
+      background: linear-gradient(45deg, #1f8a70, #13547a);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #1f8a70, 0 0 25px #13547a;
+      transition: box-shadow 0.3s ease;
+    }
+    button.submit-btn:hover {
+      box-shadow: 0 0 15px #1f8a70, 0 0 40px #13547a;
+    }
+    #statusMessage {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    #paymentNote {
+      margin-top: 10px;
+      font-style: italic;
+      color: #4e342e;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -18,127 +104,144 @@
   </header>
 
   <main>
-    <section id="write">
-      <h2>Contribute to Collaborative Chronicles</h2>
-      <p>Your contributions grow our shared world. Please consider donating to support literacy—suggested, not required for now.</p>
-    </section>
+    <div class="toggle-buttons">
+      <button id="loreBtn" class="glow-button active">Submit New Lore</button>
+      <button id="storyBtn" class="glow-button">Expand the Story</button>
+    </div>
 
-    <hr />
-
-    <section id="lore-submission">
+    <!-- Lore Form -->
+    <form id="loreForm">
       <h2>Submit New Lore</h2>
-      <p>Define new characters, places, factions, or artifacts. You must reference existing lore in your description.</p>
-      <form id="loreForm">
-        <label>
-          Name:<br />
-          <input type="text" id="loreName" required />
-        </label><br /><br />
+      <label for="loreName">Name (required):</label>
+      <input type="text" id="loreName" required />
 
-        <label>
-          Category:<br />
-          <select id="loreCategory" required>
-            <option value="" disabled selected>Select category</option>
-            <option value="Character">Character</option>
-            <option value="Place">Place</option>
-            <option value="Faction">Faction</option>
-            <option value="Object">Object</option>
-            <option value="Tale">Tale</option>
-          </select>
-        </label><br /><br />
+      <label for="loreCategory">Category (required):</label>
+      <select id="loreCategory" required>
+        <option value="" disabled selected>Select category</option>
+        <option value="Character">Character</option>
+        <option value="Place">Place</option>
+        <option value="Faction">Faction</option>
+        <option value="Object">Object</option>
+        <option value="Tale">Tale</option>
+        <option value="Miscellaneous">Miscellaneous</option>
+      </select>
 
-        <label>
-          Description:<br />
-          <textarea id="loreDescription" rows="6" required></textarea>
-        </label><br /><br />
+      <label for="loreDescription">Description (required):</label>
+      <textarea id="loreDescription" rows="4" required></textarea>
 
-        <label>
-          References (comma-separated):<br />
-          <input type="text" id="loreReferences" placeholder="Other lore names referenced" required />
-        </label><br /><br />
+      <label for="loreReferences">References (comma-separated, optional):</label>
+      <input type="text" id="loreReferences" placeholder="Other lore names referenced" />
 
-        <button type="submit" class="glow-button">Submit Lore</button>
-      </form>
-      <p id="loreStatus"></p>
-    </section>
+      <p id="loreStatusMessage"></p>
+      <p id="paymentNote">Suggested donation: $1 per lore entry to support literacy charities.</p>
+      <button type="submit" class="submit-btn">Submit Lore</button>
+    </form>
 
-    <hr />
-
-    <section id="story-submission">
+    <!-- Story Form -->
+    <form id="storyForm" style="display:none;">
       <h2>Expand the Story</h2>
-      <p>Continue the collaborative narrative. Your text must include references to existing lore.</p>
-      <form id="storyForm">
-        <label>
-          Story Content:<br />
-          <textarea id="storyContent" rows="8" required></textarea>
-        </label><br /><br />
+      <label for="storyName">Name (optional):</label>
+      <input type="text" id="storyName" placeholder="Optional" />
 
-        <label>
-          References (comma-separated):<br />
-          <input type="text" id="storyReferences" placeholder="Referenced lore" required />
-        </label><br /><br />
+      <label for="storyContent">Story Content (required):</label>
+      <textarea id="storyContent" rows="8" required></textarea>
 
-        <button type="submit" class="glow-button">Submit Story</button>
-      </form>
-      <p id="storyStatus"></p>
-    </section>
+      <label for="storyReferences">References (comma-separated, required):</label>
+      <input type="text" id="storyReferences" placeholder="Must reference existing lore names" required />
+
+      <p id="storyStatusMessage"></p>
+      <p id="paymentNote">Suggested donation: $0.01 per word to support literacy charities.</p>
+      <button type="submit" class="submit-btn">Submit Story</button>
+    </form>
   </main>
 
   <footer>
     <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Utility for smart reference checking
-    function normalizeText(str) {
-      return str.toLowerCase().replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim();
+    // Toggle forms
+    const loreBtn = document.getElementById('loreBtn');
+    const storyBtn = document.getElementById('storyBtn');
+    const loreForm = document.getElementById('loreForm');
+    const storyForm = document.getElementById('storyForm');
+    const loreStatus = document.getElementById('loreStatusMessage');
+    const storyStatus = document.getElementById('storyStatusMessage');
+
+    loreBtn.addEventListener('click', () => {
+      loreBtn.classList.add('active');
+      storyBtn.classList.remove('active');
+      loreForm.style.display = 'block';
+      storyForm.style.display = 'none';
+      loreStatus.textContent = '';
+      storyStatus.textContent = '';
+    });
+
+    storyBtn.addEventListener('click', () => {
+      storyBtn.classList.add('active');
+      loreBtn.classList.remove('active');
+      storyForm.style.display = 'block';
+      loreForm.style.display = 'none';
+      loreStatus.textContent = '';
+      storyStatus.textContent = '';
+    });
+
+    // Utility to sanitize HTML (optional, if you plan to display feedback)
+    function escapeHtml(text) {
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
     }
 
-    function allReferencesPresent(text, references) {
-      const cleanText = normalizeText(text);
-      return references.every(ref => {
-        const cleanRef = normalizeText(ref);
-        return cleanRef && cleanText.includes(cleanRef);
-      });
+    // Helper: clean string for case-insensitive and punctuation-ignored matching
+    function cleanText(text) {
+      return text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
     }
 
-    // Lore Form Handler
-    document.getElementById('loreForm').addEventListener('submit', (e) => {
+    // Validate references appear in content
+    function referencesInContent(references, content) {
+      const cleanedContent = cleanText(content);
+      return references.every(ref => cleanedContent.includes(cleanText(ref)));
+    }
+
+    // Submit lore
+    loreForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      loreStatus.textContent = '';
 
       const name = document.getElementById('loreName').value.trim();
       const category = document.getElementById('loreCategory').value;
       const description = document.getElementById('loreDescription').value.trim();
       const referencesRaw = document.getElementById('loreReferences').value.trim();
-      const references = referencesRaw.split(',').map(r => r.trim()).filter(r => r);
-      const statusMessage = document.getElementById('loreStatus');
 
-      if (!name || !category || !description || references.length === 0) {
-        statusMessage.textContent = 'Please fill in all fields and at least one reference.';
-        statusMessage.style.color = 'red';
+      const references = referencesRaw
+        ? referencesRaw.split(',').map(r => r.trim()).filter(r => r.length > 0)
+        : [];
+
+      if (!name || !category || !description) {
+        loreStatus.textContent = 'Please fill in all required fields.';
+        loreStatus.style.color = 'red';
         return;
       }
 
-      if (!allReferencesPresent(description, references)) {
-        statusMessage.textContent = 'Each reference must appear in the description text.';
-        statusMessage.style.color = 'red';
-        return;
-      }
+      // For lore, no hard reference check since first entry can exist; you can add later rules
 
       db.collection('lore').add({
         name,
@@ -148,39 +251,48 @@
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       })
       .then(() => {
-        statusMessage.textContent = 'Lore submitted successfully!';
-        statusMessage.style.color = 'green';
-        document.getElementById('loreForm').reset();
+        loreStatus.textContent = 'Lore submitted successfully!';
+        loreStatus.style.color = 'green';
+        loreForm.reset();
       })
-      .catch((error) => {
-        console.error('Error:', error);
-        statusMessage.textContent = 'Error submitting lore. Please try again.';
-        statusMessage.style.color = 'red';
+      .catch(error => {
+        console.error('Error adding lore:', error);
+        loreStatus.textContent = 'Error submitting lore. Please try again.';
+        loreStatus.style.color = 'red';
       });
     });
 
-    // Story Form Handler
-    document.getElementById('storyForm').addEventListener('submit', (e) => {
+    // Submit story
+    storyForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      storyStatus.textContent = '';
 
+      const name = document.getElementById('storyName').value.trim();
       const content = document.getElementById('storyContent').value.trim();
       const referencesRaw = document.getElementById('storyReferences').value.trim();
-      const references = referencesRaw.split(',').map(r => r.trim()).filter(r => r);
-      const storyStatus = document.getElementById('storyStatus');
 
-      if (!content || references.length === 0) {
-        storyStatus.textContent = 'Please fill in all fields and at least one reference.';
+      if (!content) {
+        storyStatus.textContent = 'Story content is required.';
+        storyStatus.style.color = 'red';
+        return;
+      }
+      if (!referencesRaw) {
+        storyStatus.textContent = 'At least one reference is required.';
         storyStatus.style.color = 'red';
         return;
       }
 
-      if (!allReferencesPresent(content, references)) {
-        storyStatus.textContent = 'Each reference must appear in the story text.';
+      const references = referencesRaw.split(',').map(r => r.trim()).filter(r => r.length > 0);
+
+      // Check references appear in content
+      if (!referencesInContent(references, content)) {
+        storyStatus.textContent = 'Your story content must include all the references you list.';
         storyStatus.style.color = 'red';
         return;
       }
 
       db.collection('story').add({
+        name: name || null,
         content,
         references,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -188,14 +300,7 @@
       .then(() => {
         storyStatus.textContent = 'Story submitted successfully!';
         storyStatus.style.color = 'green';
-        document.getElementById('storyForm').reset();
+        storyForm.reset();
       })
-      .catch((error) => {
-        console.error('Error:', error);
-        storyStatus.textContent = 'Error submitting story. Please try again.';
-        storyStatus.style.color = 'red';
-      });
-    });
-  </script>
-</body>
-</html>
+      .catch(error => {
+        console.error('Error adding story:', error
