@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - Home</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-
 </head>
 <body>
   <header>
@@ -19,22 +18,80 @@
   </header>
 
   <main>
-    <section id="mission">
-      <h2>Our Mission</h2>
+    <section>
+      <h2>Welcome to Collaborative Chronicles</h2>
       <p>
-        Collaborative Chronicles is a community-driven worldbuilding and storytelling project.
-        We aim to create a rich, shared universe where anyone can help write the story,
-        design the lore, and build a living, evolving world.
+        Collaborative Chronicles is an experiment in collective worldbuilding. Here, anyone can add to the shared lore—characters, places, factions, objects—and help weave a story that belongs to everyone.
       </p>
       <p>
-        Every contribution expands the world and supports literacy charities through donations.
-        Together, we tell one story.
+        Your voice matters. Your creativity matters. Whether you want to invent new lore or continue the unfolding narrative, you're part of a growing tapestry of ideas contributed by people all over the world.
       </p>
+      <p>
+        This project has just started, and the website is intentionally simple right now. As our community grows, we'll evolve toward a cleaner, more robust platform. For now, this raw, open canvas is here for everyone to help shape something special.
+      </p>
+      <p>
+        Together, let's write a world.
+      </p>
+    </section>
+
+    <section style="margin-top: 40px; text-align: center;">
+      <h2>Current Story Word Count</h2>
+      <div id="wordCountDisplay" style="font-size: 2.5rem; font-weight: bold; color: #5e3d2c; margin: 20px 0;">
+        Loading...
+      </div>
+      <a class="donate-link" href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">
+        Support Literacy
+      </a>
     </section>
   </main>
 
   <footer>
     <p>2025 Collaborative Chronicles</p>
   </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const wordCountDisplay = document.getElementById('wordCountDisplay');
+
+    function countWords(text) {
+      if (!text) return 0;
+      return text.trim().split(/\s+/).length;
+    }
+
+    function updateWordCount() {
+      db.collection('story').get().then(snapshot => {
+        let totalWords = 0;
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.content) {
+            totalWords += countWords(data.content);
+          }
+        });
+        wordCountDisplay.textContent = totalWords.toLocaleString() + " words so far";
+      }).catch(error => {
+        console.error("Error fetching word count:", error);
+        wordCountDisplay.textContent = "Error loading word count.";
+      });
+    }
+
+    updateWordCount();
+  </script>
 </body>
 </html>
