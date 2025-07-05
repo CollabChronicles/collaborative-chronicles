@@ -10,7 +10,7 @@
       max-width: 900px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #fff8e1;
+      background: linear-gradient(135deg, #fff8e1, #fce4c1);
       font-family: serif;
     }
     h2 {
@@ -33,21 +33,19 @@
       cursor: pointer;
       box-shadow: 0 0 8px #1f8a70, 0 0 20px #13547a;
       transition: box-shadow 0.3s ease;
+      flex-grow: 1;
       text-align: center;
     }
     .glow-button.active {
       background: linear-gradient(45deg, #3baea0, #217c72);
       box-shadow: 0 0 15px #3baea0, 0 0 35px #217c72;
     }
-    .glow-button:hover {
-      box-shadow: 0 0 12px #1f8a70, 0 0 30px #13547a;
-    }
     form {
-      background: #fff8e1;
+      background: #fffef3;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
+      margin-bottom: 40px;
     }
     label {
       display: block;
@@ -66,13 +64,8 @@
     textarea {
       resize: vertical;
     }
-    .form-buttons {
+    button.submit-btn, a.donate-btn {
       margin-top: 20px;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    button.submit-btn {
       padding: 12px 25px;
       font-size: 1.1rem;
       background: linear-gradient(45deg, #1f8a70, #13547a);
@@ -82,21 +75,35 @@
       cursor: pointer;
       box-shadow: 0 0 10px #1f8a70, 0 0 25px #13547a;
       transition: box-shadow 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
     }
-    button.submit-btn:hover {
+    button.submit-btn:hover, a.donate-btn:hover {
       box-shadow: 0 0 15px #1f8a70, 0 0 40px #13547a;
     }
-    #statusMessage {
+    #statusMessage, #loreStatusMessage, #storyStatusMessage {
       margin-top: 15px;
       font-weight: bold;
     }
-    #paymentNote, #wordCount {
+    #paymentNote {
       margin-top: 10px;
       font-style: italic;
       color: #4e342e;
     }
-    .donate-link {
-      text-decoration: none;
+    #requiredReferencesList {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f5f0da;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    #wordCountDisplay {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #4e342e;
     }
   </style>
 </head>
@@ -142,35 +149,30 @@
 
       <p id="loreStatusMessage"></p>
       <p id="paymentNote">Suggested donation: $1 per lore entry to support literacy charities.</p>
-      <div class="form-buttons">
-        <button type="submit" class="submit-btn">Submit Lore</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" class="donate-link">
-          <button type="button" class="submit-btn">Donate</button>
-        </a>
-      </div>
+      <button type="submit" class="submit-btn">Submit Lore</button>
+      <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="donate-btn" target="_blank">Donate</a>
     </form>
 
     <!-- Story Form -->
     <form id="storyForm" style="display:none;">
       <h2>Expand the Story</h2>
+      <p><strong>You must reference one of these recent themes to keep the narrative connected:</strong></p>
+      <div id="requiredReferencesList">Loading recent references...</div>
+
       <label for="storyName">Name (optional):</label>
       <input type="text" id="storyName" placeholder="Optional" />
 
       <label for="storyContent">Story Content (required):</label>
       <textarea id="storyContent" rows="8" required></textarea>
-      <p id="wordCount">Word count: 0 | Suggested donation: $0.00</p>
+      <div id="wordCountDisplay">Word Count: 0 | Suggested Donation: $0.00</div>
 
       <label for="storyReferences">References (comma-separated, required):</label>
       <input type="text" id="storyReferences" placeholder="Must reference existing lore names" required />
 
       <p id="storyStatusMessage"></p>
-      <p id="paymentNote">Suggested donation rate: $0.01 per word to support literacy charities.</p>
-      <div class="form-buttons">
-        <button type="submit" class="submit-btn">Submit Story</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" class="donate-link">
-          <button type="button" class="submit-btn">Donate</button>
-        </a>
-      </div>
+      <p id="paymentNote">Suggested donation: $0.01 per word to support literacy charities.</p>
+      <button type="submit" class="submit-btn">Submit Story</button>
+      <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="donate-btn" target="_blank">Donate</a>
     </form>
   </main>
 
@@ -196,15 +198,16 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Toggle forms
+    // Form toggling
     const loreBtn = document.getElementById('loreBtn');
     const storyBtn = document.getElementById('storyBtn');
     const loreForm = document.getElementById('loreForm');
     const storyForm = document.getElementById('storyForm');
     const loreStatus = document.getElementById('loreStatusMessage');
     const storyStatus = document.getElementById('storyStatusMessage');
-    const storyContentInput = document.getElementById('storyContent');
-    const wordCountDisplay = document.getElementById('wordCount');
+    const requiredRefsList = document.getElementById('requiredReferencesList');
+
+    let recentReferences = [];
 
     loreBtn.addEventListener('click', () => {
       loreBtn.classList.add('active');
@@ -222,17 +225,36 @@
       loreForm.style.display = 'none';
       loreStatus.textContent = '';
       storyStatus.textContent = '';
+      fetchRecentReferences();
     });
 
-    // Live word count & suggested donation for story
-    storyContentInput.addEventListener('input', () => {
-      const text = storyContentInput.value.trim();
-      const wordCount = text ? text.split(/\s+/).filter(w => w.length > 0).length : 0;
-      const donation = (wordCount * 0.01).toFixed(2);
-      wordCountDisplay.textContent = `Word count: ${wordCount} | Suggested donation: $${donation}`;
-    });
+    function fetchRecentReferences() {
+      requiredRefsList.innerHTML = 'Loading recent references...';
+      db.collection('story')
+        .orderBy('timestamp', 'desc')
+        .limit(20)
+        .get()
+        .then(snapshot => {
+          const refSet = new Set();
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            (data.references || []).forEach(ref => {
+              if (ref.trim()) refSet.add(ref.trim());
+            });
+          });
+          recentReferences = Array.from(refSet);
+          if (recentReferences.length) {
+            requiredRefsList.innerHTML = recentReferences.map(r => `<span>${r}</span>`).join(', ');
+          } else {
+            requiredRefsList.innerHTML = '<em>No recent references found yet.</em>';
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching recent references:', err);
+          requiredRefsList.innerHTML = '<span style="color:red;">Error loading references.</span>';
+        });
+    }
 
-    // Helper: clean string for case-insensitive and punctuation-ignored matching
     function cleanText(text) {
       return text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
     }
@@ -242,7 +264,7 @@
       return references.every(ref => cleanedContent.includes(cleanText(ref)));
     }
 
-    // Submit lore
+    // Lore form submission
     loreForm.addEventListener('submit', (e) => {
       e.preventDefault();
       loreStatus.textContent = '';
@@ -281,7 +303,18 @@
       });
     });
 
-    // Submit story
+    // Word count
+    const storyContentField = document.getElementById('storyContent');
+    const wordCountDisplay = document.getElementById('wordCountDisplay');
+
+    storyContentField.addEventListener('input', () => {
+      const words = storyContentField.value.trim().split(/\s+/).filter(w => w.length > 0);
+      const count = words.length;
+      const suggested = (count * 0.01).toFixed(2);
+      wordCountDisplay.textContent = `Word Count: ${count} | Suggested Donation: $${suggested}`;
+    });
+
+    // Story form submission
     storyForm.addEventListener('submit', (e) => {
       e.preventDefault();
       storyStatus.textContent = '';
@@ -309,6 +342,14 @@
         return;
       }
 
+      // Must include at least one recent reference
+      const matched = references.some(ref => recentReferences.map(r => cleanText(r)).includes(cleanText(ref)));
+      if (!matched) {
+        storyStatus.textContent = 'Your references must include at least one from the recent themes above.';
+        storyStatus.style.color = 'red';
+        return;
+      }
+
       db.collection('story').add({
         name: name || null,
         content,
@@ -319,7 +360,8 @@
         storyStatus.textContent = 'Story submitted successfully!';
         storyStatus.style.color = 'green';
         storyForm.reset();
-        wordCountDisplay.textContent = 'Word count: 0 | Suggested donation: $0.00';
+        wordCountDisplay.textContent = 'Word Count: 0 | Suggested Donation: $0.00';
+        fetchRecentReferences();
       })
       .catch(error => {
         console.error('Error adding story:', error);
