@@ -15,13 +15,24 @@ To provide a platform for anyone to contribute to a collaborative universe share
 # Log
 I only started logging a few days into the project so the first few days are approximate
 
-07-03-2025
-- Initial setup
+07-03-2025 ~ 07-05-2025
+- Initial setup of site and GoFundMe page
 - Set up HTML, CSS, JavaScript code
 - Connected to Firebase for data storage
 - Created form for submitting Lore
 - Displayed Lore entries on Lore page
 - Added search
+- Fixed bug with Lore entry displays (renamed Firebase collection from "Lore" to "lore" to match code)
+- Manually dded first Lore entry ("The Wanderer)
+- Updated "Write!" page to allow users to submit Lore and Story entries
+- Created "story" collection in Firebase
+- Required listed references in Story form to appear in the actual content section
+- Improved overall presentation of site
+- Lore page entries displayed grouped by category (Character, Place, Faction, Object, Tale, Miscellaneous)
+- Added ord counter and suggested donation feature on "Write!" page
+- Added total Story wordcount on the homepage
 
-07-04-2025
-- 
+07-06-2025
+- Expanded on README
+- Added Log
+- Ideas: - Make website style consistent across pages (color, buttons) - Require Story submissions to reference one piece of Lore from the last x number of Lore referenced in the Story (no duplicates) in order to encourage story flow and interconnectivity - Background art for different pages - Random prompt generator with dynamic slots to encourage creativity
