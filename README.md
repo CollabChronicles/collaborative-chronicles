@@ -13,3 +13,15 @@ To provide a platform for anyone to contribute to a collaborative universe share
 - ChatGPT to help with coding
 
 # Log
+I only started logging a few days into the project so the first few days are approximate
+
+07-03-2025
+- Initial setup
+- Set up HTML, CSS, JavaScript code
+- Connected to Firebase for data storage
+- Created form for submitting Lore
+- Displayed Lore entries on Lore page
+- Added search
+
+07-04-2025
+- 
