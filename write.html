@@ -78,6 +78,35 @@
       border: 2px solid #DAA520;
       box-shadow: 0 0 10px #DAA520;
     }
+
+    /* NEW: Unified button row style */
+    form .button-row {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-start;
+    }
+
+    form .button-row button,
+    form .button-row a {
+      text-decoration: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-family: Georgia, serif;
+      border: 2px solid #A0522D;
+      border-radius: 8px;
+      background-color: #fff1d6;
+      color: #5C3317;
+      transition: box-shadow 0.3s ease, background-color 0.3s ease;
+      cursor: pointer;
+    }
+
+    form .button-row button:hover,
+    form .button-row a:hover {
+      background-color: #f5deb3;
+      box-shadow: 0 0 8px #d2a679;
+    }
   </style>
 </head>
 <body>
@@ -122,8 +151,10 @@
 
       <p id="loreStatusMessage"></p>
       <p id="paymentNote">Suggested donation: $1 per lore entry to support literacy charities.</p>
-      <button type="submit" class="glow-button">Submit Lore</button>
-      <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="glow-button" target="_blank">Donate</a>
+      <div class="button-row">
+        <button type="submit">Submit Lore</button>
+        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">Donate</a>
+      </div>
     </form>
 
     <!-- Story Form -->
@@ -144,8 +175,10 @@
 
       <p id="storyStatusMessage"></p>
       <p id="paymentNote">Suggested donation: $0.01 per word to support literacy charities.</p>
-      <button type="submit" class="glow-button">Submit Story</button>
-      <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="glow-button" target="_blank">Donate</a>
+      <div class="button-row">
+        <button type="submit">Submit Story</button>
+        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">Donate</a>
+      </div>
     </form>
   </main>
 
