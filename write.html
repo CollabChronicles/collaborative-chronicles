@@ -74,13 +74,8 @@
       font-weight: bold;
       color: #5C3317;
     }
-    .glow-button.active {
-      border: 2px solid #DAA520;
-      box-shadow: 0 0 10px #DAA520;
-    }
 
-    /* NEW: Unified button row style */
-    form .button-row {
+    .button-row {
       margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
@@ -88,24 +83,20 @@
       justify-content: flex-start;
     }
 
-    form .button-row button,
-    form .button-row a {
+    .button-style {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #4e342e;
+      color: #ffe0b2;
       text-decoration: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      font-family: Georgia, serif;
-      border: 2px solid #A0522D;
       border-radius: 8px;
-      background-color: #fff1d6;
-      color: #5C3317;
-      transition: box-shadow 0.3s ease, background-color 0.3s ease;
+      font-weight: bold;
+      border: none;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-
-    form .button-row button:hover,
-    form .button-row a:hover {
-      background-color: #f5deb3;
-      box-shadow: 0 0 8px #d2a679;
+    .button-style:hover {
+      background-color: #3e2723;
     }
   </style>
 </head>
@@ -122,8 +113,8 @@
 
   <main>
     <div class="toggle-buttons">
-      <button id="loreBtn" class="glow-button active">Submit New Lore</button>
-      <button id="storyBtn" class="glow-button">Expand the Story</button>
+      <button id="loreBtn" class="button-style active">Submit New Lore</button>
+      <button id="storyBtn" class="button-style">Expand the Story</button>
     </div>
 
     <!-- Lore Form -->
@@ -152,8 +143,8 @@
       <p id="loreStatusMessage"></p>
       <p id="paymentNote">Suggested donation: $1 per lore entry to support literacy charities.</p>
       <div class="button-row">
-        <button type="submit">Submit Lore</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">Donate</a>
+        <button type="submit" class="button-style">Submit Lore</button>
+        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="button-style" target="_blank">Donate</a>
       </div>
     </form>
 
@@ -176,8 +167,8 @@
       <p id="storyStatusMessage"></p>
       <p id="paymentNote">Suggested donation: $0.01 per word to support literacy charities.</p>
       <div class="button-row">
-        <button type="submit">Submit Story</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">Donate</a>
+        <button type="submit" class="button-style">Submit Story</button>
+        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="button-style" target="_blank">Donate</a>
       </div>
     </form>
   </main>
@@ -191,29 +182,26 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Your Firebase config
+    // Initialize Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
       projectId: "collaborative-chronicles",
-      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      storageBucket: "collaborative-chronicles.appspot.com",
       messagingSenderId: "127752938400",
       appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
       measurementId: "G-0HXV6NGHQP"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // DOM Elements
     const loreBtn = document.getElementById('loreBtn');
     const storyBtn = document.getElementById('storyBtn');
     const loreForm = document.getElementById('loreForm');
     const storyForm = document.getElementById('storyForm');
     const requiredReferencesList = document.getElementById('requiredReferencesList');
 
-    // Toggle Buttons
     loreBtn.addEventListener('click', () => {
       loreBtn.classList.add('active');
       storyBtn.classList.remove('active');
@@ -228,7 +216,6 @@
       loreForm.style.display = 'none';
     });
 
-    // Load Recent References
     function loadRecentReferences() {
       requiredReferencesList.innerHTML = "Loading recent references...";
       db.collection('lore')
@@ -254,7 +241,6 @@
         });
     }
 
-    // Load on page start
     document.addEventListener('DOMContentLoaded', loadRecentReferences);
   </script>
 </body>
