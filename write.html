@@ -74,6 +74,10 @@
       font-weight: bold;
       color: #5C3317;
     }
+    .glow-button.active {
+      border: 2px solid #DAA520;
+      box-shadow: 0 0 10px #DAA520;
+    }
   </style>
 </head>
 <body>
@@ -154,25 +158,71 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-  const loreBtn = document.getElementById('loreBtn');
-  const storyBtn = document.getElementById('storyBtn');
-  const loreForm = document.getElementById('loreForm');
-  const storyForm = document.getElementById('storyForm');
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
 
-  loreBtn.addEventListener('click', () => {
-    loreBtn.classList.add('active');
-    storyBtn.classList.remove('active');
-    loreForm.style.display = 'block';
-    storyForm.style.display = 'none';
-  });
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  storyBtn.addEventListener('click', () => {
-    storyBtn.classList.add('active');
-    loreBtn.classList.remove('active');
-    storyForm.style.display = 'block';
-    loreForm.style.display = 'none';
-  });
-</script>
+    // DOM Elements
+    const loreBtn = document.getElementById('loreBtn');
+    const storyBtn = document.getElementById('storyBtn');
+    const loreForm = document.getElementById('loreForm');
+    const storyForm = document.getElementById('storyForm');
+    const requiredReferencesList = document.getElementById('requiredReferencesList');
 
+    // Toggle Buttons
+    loreBtn.addEventListener('click', () => {
+      loreBtn.classList.add('active');
+      storyBtn.classList.remove('active');
+      loreForm.style.display = 'block';
+      storyForm.style.display = 'none';
+    });
+
+    storyBtn.addEventListener('click', () => {
+      storyBtn.classList.add('active');
+      loreBtn.classList.remove('active');
+      storyForm.style.display = 'block';
+      loreForm.style.display = 'none';
+    });
+
+    // Load Recent References
+    function loadRecentReferences() {
+      requiredReferencesList.innerHTML = "Loading recent references...";
+      db.collection('lore')
+        .orderBy('timestamp', 'desc')
+        .limit(5)
+        .get()
+        .then((querySnapshot) => {
+          if (querySnapshot.empty) {
+            requiredReferencesList.innerHTML = "No recent references found.";
+            return;
+          }
+
+          let listHTML = '';
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            listHTML += `- ${data.name}<br>`;
+          });
+          requiredReferencesList.innerHTML = listHTML;
+        })
+        .catch((error) => {
+          console.error('Error loading references:', error);
+          requiredReferencesList.innerHTML = "Error loading references.";
+        });
+    }
+
+    // Load on page start
+    document.addEventListener('DOMContentLoaded', loadRecentReferences);
+  </script>
 </body>
 </html>
