@@ -154,7 +154,25 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // (same JS code you already have)
-  </script>
+  const loreBtn = document.getElementById('loreBtn');
+  const storyBtn = document.getElementById('storyBtn');
+  const loreForm = document.getElementById('loreForm');
+  const storyForm = document.getElementById('storyForm');
+
+  loreBtn.addEventListener('click', () => {
+    loreBtn.classList.add('active');
+    storyBtn.classList.remove('active');
+    loreForm.style.display = 'block';
+    storyForm.style.display = 'none';
+  });
+
+  storyBtn.addEventListener('click', () => {
+    storyBtn.classList.add('active');
+    loreBtn.classList.remove('active');
+    storyForm.style.display = 'block';
+    loreForm.style.display = 'none';
+  });
+</script>
+
 </body>
 </html>
