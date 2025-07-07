@@ -1,247 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - Write!</title>
-  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-  <style>
-    body {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-      background: linear-gradient(135deg, #f9f4e7, #fcefd8);
-      font-family: Georgia, serif;
-    }
-    h2 {
-      color: #5C3317;
-    }
-    .toggle-buttons {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 30px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    form {
-      background: #fff8e1;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 40px;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 600;
-    }
-    input[type="text"], select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: 5px;
-      border: 2px solid #A0522D;
-      font-size: 1rem;
-      font-family: Georgia, serif;
-      background: #fff8e1;
-      box-sizing: border-box;
-    }
-    textarea {
-      resize: vertical;
-    }
-    #statusMessage, #loreStatusMessage, #storyStatusMessage {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #8B4513;
-    }
-    #paymentNote {
-      margin-top: 10px;
-      font-style: italic;
-      color: #5C3317;
-    }
-    #requiredReferencesList {
-      margin-top: 10px;
-      padding: 10px;
-      background: #f5f0da;
-      border-radius: 5px;
-      font-size: 0.95rem;
-      line-height: 1.4;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-    #wordCountDisplay {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #5C3317;
-    }
+.button-standard,
+a.button-standard,
+.toggle-button,
+a.toggle-button {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #4e342e;
+  color: #ffe0b2;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.3s ease;
+}
 
-    .button-row {
-      margin-top: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: flex-start;
-    }
+.button-standard:hover,
+a.button-standard:hover,
+.toggle-button:hover,
+a.toggle-button:hover {
+  background-color: #3e2723;
+}
 
-    .button-style {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #4e342e;
-      color: #ffe0b2;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    .button-style:hover {
-      background-color: #3e2723;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Collaborative Chronicles</h1>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="story.html">The Story</a> |
-      <a href="lore.html">The Lore</a> |
-      <a href="write.html">Write!</a>
-    </nav>
-  </header>
+.button-standard:active,
+a.button-standard:active,
+.toggle-button:active,
+a.toggle-button:active {
+  background-color: #2e1b18;
+}
 
-  <main>
-    <div class="toggle-buttons">
-      <button id="loreBtn" class="button-style active">Submit New Lore</button>
-      <button id="storyBtn" class="button-style">Expand the Story</button>
-    </div>
-
-    <!-- Lore Form -->
-    <form id="loreForm">
-      <h2>Submit New Lore</h2>
-      <label for="loreName">Name (required):</label>
-      <input type="text" id="loreName" required />
-
-      <label for="loreCategory">Category (required):</label>
-      <select id="loreCategory" required>
-        <option value="" disabled selected>Select category</option>
-        <option value="Character">Character</option>
-        <option value="Place">Place</option>
-        <option value="Faction">Faction</option>
-        <option value="Object">Object</option>
-        <option value="Tale">Tale</option>
-        <option value="Miscellaneous">Miscellaneous</option>
-      </select>
-
-      <label for="loreDescription">Description (required):</label>
-      <textarea id="loreDescription" rows="4" required></textarea>
-
-      <label for="loreReferences">References (comma-separated, optional):</label>
-      <input type="text" id="loreReferences" placeholder="Other lore names referenced" />
-
-      <p id="loreStatusMessage"></p>
-      <p id="paymentNote">Suggested donation: $1 per lore entry to support literacy charities.</p>
-      <div class="button-row">
-        <button type="submit" class="button-style">Submit Lore</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="button-style" target="_blank">Donate</a>
-      </div>
-    </form>
-
-    <!-- Story Form -->
-    <form id="storyForm" style="display:none;">
-      <h2>Expand the Story</h2>
-      <p><strong>You must reference one of these recent themes to keep the narrative connected:</strong></p>
-      <div id="requiredReferencesList">Loading recent references...</div>
-
-      <label for="storyName">Name (optional):</label>
-      <input type="text" id="storyName" placeholder="Optional" />
-
-      <label for="storyContent">Story Content (required):</label>
-      <textarea id="storyContent" rows="8" required></textarea>
-      <div id="wordCountDisplay">Word Count: 0 | Suggested Donation: $0.00</div>
-
-      <label for="storyReferences">References (comma-separated, required):</label>
-      <input type="text" id="storyReferences" placeholder="Must reference existing lore names" required />
-
-      <p id="storyStatusMessage"></p>
-      <p id="paymentNote">Suggested donation: $0.01 per word to support literacy charities.</p>
-      <div class="button-row">
-        <button type="submit" class="button-style">Submit Story</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" class="button-style" target="_blank">Donate</a>
-      </div>
-    </form>
-  </main>
-
-  <footer>
-    <p>2025 Collaborative Chronicles</p>
-  </footer>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-  <script>
-    // Initialize Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
-      authDomain: "collaborative-chronicles.firebaseapp.com",
-      projectId: "collaborative-chronicles",
-      storageBucket: "collaborative-chronicles.appspot.com",
-      messagingSenderId: "127752938400",
-      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-      measurementId: "G-0HXV6NGHQP"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    const loreBtn = document.getElementById('loreBtn');
-    const storyBtn = document.getElementById('storyBtn');
-    const loreForm = document.getElementById('loreForm');
-    const storyForm = document.getElementById('storyForm');
-    const requiredReferencesList = document.getElementById('requiredReferencesList');
-
-    loreBtn.addEventListener('click', () => {
-      loreBtn.classList.add('active');
-      storyBtn.classList.remove('active');
-      loreForm.style.display = 'block';
-      storyForm.style.display = 'none';
-    });
-
-    storyBtn.addEventListener('click', () => {
-      storyBtn.classList.add('active');
-      loreBtn.classList.remove('active');
-      storyForm.style.display = 'block';
-      loreForm.style.display = 'none';
-    });
-
-    function loadRecentReferences() {
-      requiredReferencesList.innerHTML = "Loading recent references...";
-      db.collection('lore')
-        .orderBy('timestamp', 'desc')
-        .limit(5)
-        .get()
-        .then((querySnapshot) => {
-          if (querySnapshot.empty) {
-            requiredReferencesList.innerHTML = "No recent references found.";
-            return;
-          }
-
-          let listHTML = '';
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            listHTML += `- ${data.name}<br>`;
-          });
-          requiredReferencesList.innerHTML = listHTML;
-        })
-        .catch((error) => {
-          console.error('Error loading references:', error);
-          requiredReferencesList.innerHTML = "Error loading references.";
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', loadRecentReferences);
-  </script>
-</body>
-</html>
+.toggle-button.active {
+  background-color: #6a4f3b;
+  color: #fff0d1;
+}
