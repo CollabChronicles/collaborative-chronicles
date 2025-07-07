@@ -1,153 +1,195 @@
-/* === Global Styles === */
+/* General Body Styles */
 body {
   margin: 0;
+  padding: 0;
   font-family: 'Georgia', serif;
-  background: linear-gradient(180deg, #f7f1e1, #e4d5b7);
-  color: #3e2a1c;
-  line-height: 1.6;
+  background: linear-gradient(to bottom, #fff8e1, #f1e0c6);
+  color: #4e342e;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-header, footer {
-  background-color: #5e3d2c;
-  color: #f9e5c0;
-  padding: 20px;
+/* Header Styles */
+header {
   text-align: center;
+  padding: 20px 0;
+  background-color: #fff8e1;
 }
 
 header h1 {
-  margin: 0;
+  color: #4e342e;
+  font-family: 'Georgia', serif;
   font-size: 2.5rem;
-  letter-spacing: 1px;
+  margin: 0;
 }
 
 nav a {
-  color: #f9e5c0;
   text-decoration: none;
+  color: #4e342e;
   margin: 0 10px;
   font-weight: bold;
+  transition: color 0.3s ease;
 }
 
 nav a:hover {
-  text-decoration: underline;
+  color: #a0522d;
 }
 
-/* === Main Content === */
-main {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #fff8e1;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-h2, h3 {
-  color: #5e3d2c;
-  border-bottom: 2px solid #c29d75;
+/* Section Headings */
+main h2 {
+  color: #4e342e;
+  font-size: 2rem;
+  border-bottom: 2px solid #8b4513;
   padding-bottom: 5px;
+  margin-top: 30px;
 }
 
-p, label, input, select, textarea {
-  font-size: 1rem;
+/* Paragraphs */
+p {
+  line-height: 1.6;
 }
 
+/* Input and Textarea Styles */
 input[type="text"],
 select,
 textarea {
   width: 100%;
   padding: 10px;
-  margin-top: 8px;
-  border: 1px solid #c29d75;
+  margin-top: 6px;
   border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
   font-family: 'Georgia', serif;
-  background-color: #fff;
+  box-sizing: border-box;
+  background-color: #fffdf6;
 }
 
 textarea {
   resize: vertical;
 }
 
-/* === Buttons === */
-.glow-button, button.submit-btn {
-  display: inline-block;
-  padding: 12px 25px;
+/* Glowing Buttons and Consistency */
+.glow-button,
+button.submit-btn,
+.donate-btn {
+  padding: 12px 24px;
   font-size: 1.1rem;
   font-weight: bold;
-  color: #fff8e1;
-  background: linear-gradient(45deg, #8b4513, #b86b3a, #d4a05a);
+  color: #fff;
+  background: linear-gradient(45deg, #8B4513, #A0522D);
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 0 8px #b86b3a, 0 0 20px #d4a05a;
-  transition: box-shadow 0.3s ease, background 0.3s ease;
+  box-shadow: 0 0 10px #8B4513, 0 0 25px #A0522D;
+  transition: box-shadow 0.3s ease;
   text-align: center;
 }
 
-.glow-button:hover, button.submit-btn:hover {
-  box-shadow: 0 0 12px #b86b3a, 0 0 30px #d4a05a;
-  background: linear-gradient(45deg, #a0522d, #c0704f, #e0b46a);
+.glow-button:hover,
+button.submit-btn:hover,
+.donate-btn:hover {
+  box-shadow: 0 0 15px #A0522D, 0 0 35px #8B4513;
 }
 
 .glow-button.active {
-  background: linear-gradient(45deg, #a0522d, #c0704f, #e0b46a);
-  box-shadow: 0 0 15px #a0522d, 0 0 35px #e0b46a;
+  background: linear-gradient(45deg, #A0522D, #8B4513);
+  box-shadow: 0 0 15px #A0522D, 0 0 35px #8B4513;
 }
 
-/* === Lore / Story List === */
-#lore-list, #story-list {
+/* Toggle Buttons Container */
+.toggle-buttons {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Forms */
+form {
+  background: #fffdf6;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+/* Status Message */
+#statusMessage,
+#loreStatusMessage,
+#storyStatusMessage {
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+/* Donate Note */
+#paymentNote {
+  margin-top: 10px;
+  font-style: italic;
+  color: #4e342e;
+}
+
+/* Lore & Story List Display */
+#lore-list,
+#story-content {
   margin-top: 20px;
+  background: #fffdf6;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.05);
 }
 
-#lore-list ul, #story-list ul {
-  list-style: none;
+#lore-list ul,
+#story-content ul {
+  list-style-type: none;
   padding-left: 0;
 }
 
-#lore-list li, #story-list li {
-  background: #f7e6c4;
-  border: 1px solid #c29d75;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 10px;
+#lore-list li,
+#story-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #e0c8a0;
 }
 
-#lore-list li strong {
-  color: #5e3d2c;
+#lore-list li:last-child,
+#story-content li:last-child {
+  border-bottom: none;
 }
 
-/* === Search and Filter Inputs === */
-input[type="text"], select {
-  border: 1px solid #c29d75;
-}
-
-input[type="text"]:focus,
-select:focus,
-textarea:focus {
-  border-color: #b86b3a;
-  outline: none;
-  box-shadow: 0 0 5px #d4a05a;
-}
-
-/* === Footer === */
-footer p {
-  margin: 0;
+/* Footer */
+footer {
+  text-align: center;
+  padding: 20px 0;
   font-size: 0.9rem;
-  color: #f9e5c0;
+  color: #4e342e;
+  background-color: #fff8e1;
+  margin-top: 40px;
 }
 
-/* === Donate Link === */
-a.donate-link {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: linear-gradient(45deg, #8b4513, #b86b3a, #d4a05a);
-  color: #fff8e1;
-  text-decoration: none;
-  border-radius: 8px;
-  box-shadow: 0 0 8px #b86b3a, 0 0 20px #d4a05a;
-  transition: box-shadow 0.3s ease;
+/* Search Bar */
+#searchInput,
+#categoryFilter {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  font-family: 'Georgia', serif;
 }
 
-a.donate-link:hover {
-  box-shadow: 0 0 12px #b86b3a, 0 0 30px #d4a05a;
+/* Word Count on Homepage */
+#totalWordCount {
+  font-size: 2.5rem;
+  color: #8B4513;
+  font-weight: bold;
+  text-align: center;
+  margin: 30px 0;
 }
