@@ -1,36 +1,165 @@
-.button-standard,
-a.button-standard,
-.toggle-button,
-a.toggle-button {
-  display: inline-block;
-  padding: 12px 24px;
-  background-color: #4e342e;
-  color: #ffe0b2;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: bold;
-  border: none;
-  font-family: Georgia, serif;
-  cursor: pointer;
-  box-shadow: none;
-  transition: background-color 0.3s ease;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Write!</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Collaborative Chronicles</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a>
+    </nav>
+  </header>
 
-.button-standard:hover,
-a.button-standard:hover,
-.toggle-button:hover,
-a.toggle-button:hover {
-  background-color: #3e2723;
-}
+  <main>
+    <h2>Add to the World</h2>
+    <p>Contribute new lore entries or add to the ongoing story below.</p>
 
-.button-standard:active,
-a.button-standard:active,
-.toggle-button:active,
-a.toggle-button:active {
-  background-color: #2e1b18;
-}
+    <section id="toggleSection" class="toggle-buttons">
+      <button class="toggle-button active" id="loreToggle">Add Lore</button>
+      <button class="toggle-button" id="storyToggle">Add Story</button>
+    </section>
 
-.toggle-button.active {
-  background-color: #6a4f3b;
-  color: #fff0d1;
-}
+    <section id="loreFormSection">
+      <form id="loreForm">
+        <label for="loreName">Name:</label>
+        <input type="text" id="loreName" required />
+
+        <label for="loreCategory">Category:</label>
+        <select id="loreCategory" required>
+          <option value="Character">Character</option>
+          <option value="Place">Place</option>
+          <option value="Faction">Faction</option>
+          <option value="Object">Object</option>
+          <option value="Tale">Tale</option>
+          <option value="Miscellaneous">Miscellaneous</option>
+        </select>
+
+        <label for="loreDescription">Description:</label>
+        <textarea id="loreDescription" rows="5" required></textarea>
+
+        <label for="loreReferences">References (comma-separated):</label>
+        <input type="text" id="loreReferences" />
+
+        <input class="button-standard" type="submit" value="Submit Lore" />
+        <p id="loreStatusMessage"></p>
+      </form>
+    </section>
+
+    <section id="storyFormSection" style="display: none;">
+      <form id="storyForm">
+        <label for="storyName">Title (optional):</label>
+        <input type="text" id="storyName" />
+
+        <label for="storyContent">Content:</label>
+        <textarea id="storyContent" rows="10" required></textarea>
+
+        <label for="storyReferences">References (comma-separated):</label>
+        <input type="text" id="storyReferences" />
+
+        <input class="button-standard" type="submit" value="Submit Story" />
+        <p id="storyStatusMessage"></p>
+      </form>
+    </section>
+
+    <section style="margin-top: 40px; text-align: center;">
+      <a class="button-standard" href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">
+        Support Literacy
+      </a>
+      <p id="paymentNote">
+        Donations go directly to supporting literacy through Reading is Fundamental.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>2025 Collaborative Chronicles</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Toggle buttons
+    const loreToggle = document.getElementById('loreToggle');
+    const storyToggle = document.getElementById('storyToggle');
+    const loreFormSection = document.getElementById('loreFormSection');
+    const storyFormSection = document.getElementById('storyFormSection');
+
+    loreToggle.addEventListener('click', () => {
+      loreToggle.classList.add('active');
+      storyToggle.classList.remove('active');
+      loreFormSection.style.display = 'block';
+      storyFormSection.style.display = 'none';
+    });
+
+    storyToggle.addEventListener('click', () => {
+      storyToggle.classList.add('active');
+      loreToggle.classList.remove('active');
+      loreFormSection.style.display = 'none';
+      storyFormSection.style.display = 'block';
+    });
+
+    // Lore form submit
+    document.getElementById('loreForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('loreName').value.trim();
+      const category = document.getElementById('loreCategory').value;
+      const description = document.getElementById('loreDescription').value.trim();
+      const references = document.getElementById('loreReferences').value.split(',').map(r => r.trim()).filter(r => r);
+
+      const timestamp = new Date();
+
+      db.collection('lore').add({ name, category, description, references, timestamp })
+        .then(() => {
+          document.getElementById('loreStatusMessage').textContent = 'Lore entry added successfully!';
+          document.getElementById('loreForm').reset();
+        })
+        .catch((error) => {
+          console.error('Error adding lore:', error);
+          document.getElementById('loreStatusMessage').textContent = 'Error adding lore. Please try again.';
+        });
+    });
+
+    // Story form submit
+    document.getElementById('storyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('storyName').value.trim();
+      const content = document.getElementById('storyContent').value.trim();
+      const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(r => r);
+
+      const timestamp = new Date();
+
+      db.collection('story').add({ name, content, references, timestamp })
+        .then(() => {
+          document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
+          document.getElementById('storyForm').reset();
+        })
+        .catch((error) => {
+          console.error('Error adding story:', error);
+          document.getElementById('storyStatusMessage').textContent = 'Error adding story. Please try again.';
+        });
+    });
+  </script>
+</body>
+</html>
