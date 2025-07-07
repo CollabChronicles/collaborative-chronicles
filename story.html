@@ -5,57 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - The Story</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-  <style>
-    body {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-      background: linear-gradient(135deg, #f9f4e7, #fcefd8);
-      font-family: Georgia, serif;
-    }
-    main {
-      padding-top: 20px;
-    }
-    #searchInput {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 20px;
-      font-size: 1rem;
-      border-radius: 5px;
-      border: 2px solid #A0522D;
-      font-family: Georgia, serif;
-      box-sizing: border-box;
-    }
-    #story-content {
-      background: #fff8e1;
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid #A0522D;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-    .glow-button {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #fff;
-      background: linear-gradient(45deg, #8B4513, #A0522D);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 10px #8B4513, 0 0 25px #A0522D;
-      text-decoration: none;
-      text-align: center;
-      transition: box-shadow 0.3s ease, transform 0.2s;
-    }
-    .glow-button:hover {
-      box-shadow: 0 0 15px #A0522D, 0 0 35px #8B4513;
-      transform: scale(1.03);
-    }
-  </style>
 </head>
 <body>
   <header>
@@ -71,13 +20,13 @@
   <main>
     <h2>The Growing Story</h2>
     <p>Explore the ongoing collaborative tale below. Use the search to find parts by content, title, or reference.</p>
-    <input type="text" id="searchInput" placeholder="Search the story by content, name, or references...">
+    <input type="text" id="searchInput" placeholder="Search the story by content, name, or references..." />
 
     <div id="story-content">
       <p><em>Loading story entries...</em></p>
     </div>
 
-    <a class="glow-button" href="write.html">Help this world grow!</a>
+    <a class="button-standard" href="write.html">Help this world grow!</a>
   </main>
 
   <footer>
@@ -93,7 +42,7 @@
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
       projectId: "collaborative-chronicles",
-      storageBucket: "collaborative-chronicles.firebasestorage.app",
+      storageBucket: "collaborative-chronicles.appspot.com",
       messagingSenderId: "127752938400",
       appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
       measurementId: "G-0HXV6NGHQP"
@@ -107,12 +56,10 @@
 
     let allStories = [];
 
-    // Utility for cleaning text for comparison
     function cleanText(text) {
       return text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
     }
 
-    // Display stories stitched together
     function displayStories(stories) {
       if (stories.length === 0) {
         storyContentDiv.innerHTML = '<p><em>No matching story entries found.</em></p>';
@@ -122,7 +69,6 @@
       storyContentDiv.textContent = combined;
     }
 
-    // Fetch and render
     function loadStories() {
       db.collection("story")
         .orderBy("timestamp")
@@ -137,7 +83,6 @@
         });
     }
 
-    // Search handler
     searchInput.addEventListener('input', () => {
       const query = cleanText(searchInput.value);
       if (!query) {
