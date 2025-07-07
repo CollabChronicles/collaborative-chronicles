@@ -39,5 +39,7 @@ I only started logging a few days into the project so the first few days are app
 
 07-07-2025
 - Updated code to make site look uniform (buttons, fonts, colors, etc.)
-- Fixed issue with "Expand the Story" button on "Write!" page
+- Fixed issue with how "Expand the Story" button on "Write!" page looked
 - Fixed issue with recent references not loading on story submission form
+- Cleaning up site aesthetics
+- Ideas: - Sort Lore references by most referenced - Have each Lore entry link to its own page with its description and every other Lore and Story entry referencing it 
