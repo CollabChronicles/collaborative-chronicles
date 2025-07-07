@@ -36,3 +36,6 @@ I only started logging a few days into the project so the first few days are app
 - Expanded on README
 - Added Log
 - Ideas: - Make website style consistent across pages (color, buttons) - Require Story submissions to reference one piece of Lore from the last x number of Lore referenced in the Story (no duplicates) in order to encourage story flow and interconnectivity - Background art for different pages - Random prompt generator with dynamic slots to encourage creativity
+
+07-07-2025
+- Updated code to make site look uniform (buttons, fonts, colors, etc.)
