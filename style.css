@@ -74,68 +74,63 @@ textarea {
   resize: vertical;
 }
 
-/* Consistent Button Styling Everywhere */
+/* Unified Flat Button Styling for all buttons and links with button classes */
+.button-standard,
+a.button-standard,
+.toggle-button,
+a.toggle-button,
 button,
 input[type="submit"] {
+  display: inline-block;
   font-family: Georgia, serif;
   font-weight: bold;
   font-size: 1.1rem;
   padding: 12px 25px;
-  color: #fff;
-  background: linear-gradient(45deg, #8B4513, #A0522D);
+  color: #ffe0b2; /* light tan text */
+  background-color: #4e342e; /* flat dark brown */
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 0 10px #8B4513, 0 0 25px #A0522D;
-  transition: box-shadow 0.3s ease, transform 0.2s;
+  box-shadow: none;
+  text-decoration: none;
+  text-align: center;
+  transition: background-color 0.3s ease;
 }
 
+.button-standard:hover,
+a.button-standard:hover,
+.toggle-button:hover,
+a.toggle-button:hover,
 button:hover,
 input[type="submit"]:hover {
-  box-shadow: 0 0 15px #A0522D, 0 0 35px #8B4513;
-  transform: scale(1.03);
+  background-color: #3e2723; /* darker brown on hover */
+  box-shadow: none;
+  transform: none;
 }
 
+.button-standard:active,
+a.button-standard:active,
+.toggle-button:active,
+a.toggle-button:active,
+button:active,
+input[type="submit"]:active {
+  background-color: #2e1b18; /* darkest brown on click */
+}
+
+.button-standard:disabled,
+a.button-standard:disabled,
+.toggle-button:disabled,
+a.toggle-button:disabled,
 button:disabled,
 input[type="submit"]:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Glow Button variant (for special cases like toggle) */
-.glow-button {
-  background-color: #4e342e; /* Dark brown */
-  color: #ffe0b2;            /* Tan text */
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-weight: bold;
-  font-family: Georgia, serif;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  box-shadow: none;          /* Remove glow */
-  transition: background-color 0.3s ease;
-}
-
-.glow-button:hover {
-  background-color: #3e2723; /* Slightly darker brown on hover */
-  box-shadow: none;
-}
-
-.glow-button:active {
-  background-color: #2e1b18; /* Even darker brown on click */
-}
-
 /* Active state for toggle buttons */
-.glow-button.active {
-  background-color: #6a4f3b; /* A lighter brown for active */
+.toggle-button.active {
+  background-color: #6a4f3b; /* lighter brown */
   color: #fff0d1;
-  box-shadow: none;
-}
-
-.glow-button.active:hover {
-  background-color: #5b4031;
 }
 
 /* Toggle button container */
