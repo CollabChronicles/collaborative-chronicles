@@ -40,3 +40,4 @@ I only started logging a few days into the project so the first few days are app
 07-07-2025
 - Updated code to make site look uniform (buttons, fonts, colors, etc.)
 - Fixed issue with "Expand the Story" button on "Write!" page
+- Fixed issue with recent references not loading on story submission form
