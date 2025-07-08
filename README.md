@@ -47,3 +47,4 @@ I only started logging a few days into the project so the first few days are app
 
 07-08-2025
 - Tweaking site visuals
+- Set up account system by implementing sign in/out and usernames
