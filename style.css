@@ -234,3 +234,13 @@ form {
 .word-count-box {
   padding-left: 80px;
 }
+
+/* Story submission word count and donation line style with extra space below */
+#storyWordCount {
+  margin-top: 8px;
+  margin-bottom: 20px;  /* Extra space below */
+  font-style: italic;
+  color: #5C3317;
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+}
