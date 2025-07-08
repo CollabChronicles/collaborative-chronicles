@@ -5,6 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+  <style>
+    /* Override glow-button with flat button styling */
+
+    /* Use the same button styles you gave me */
+    .button-standard,
+    a.button-standard,
+    .toggle-button,
+    a.toggle-button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #4e342e;
+      color: #ffe0b2;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      box-shadow: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .button-standard:hover,
+    a.button-standard:hover,
+    .toggle-button:hover,
+    a.toggle-button:hover {
+      background-color: #3e2723;
+    }
+
+    .button-standard:active,
+    a.button-standard:active,
+    .toggle-button:active,
+    a.toggle-button:active {
+      background-color: #2e1b18;
+    }
+
+    .toggle-button.active {
+      background-color: #6a4f3b;
+      color: #fff0d1;
+    }
+  </style>
 </head>
 <body>
   <header>
