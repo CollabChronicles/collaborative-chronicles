@@ -52,6 +52,8 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+
 
     const storyContentDiv = document.getElementById('story-content');
     const searchInput = document.getElementById('searchInput');
