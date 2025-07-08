@@ -6,7 +6,6 @@
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
   <style>
-    /* Optional: style for the word count/donation display */
     #storyWordCount {
       margin-top: 8px;
       font-style: italic;
@@ -71,7 +70,7 @@
 
         <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
-        <!-- Live word count and suggested donation -->
+
         <div id="storyWordCount">0 words | Suggested donation: 0 cents</div>
 
         <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
@@ -108,7 +107,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
@@ -119,44 +117,49 @@
       appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
       measurementId: "G-0HXV6NGHQP"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
+    // Check auth on load
+    let currentUser = null;
+    let currentUsername = null;
 
-    // Toggle logic
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "auth.html";
+      } else {
+        currentUser = user;
+        try {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          currentUsername = userDoc.exists ? userDoc.data().username : user.email;
+        } catch (err) {
+          console.error("Error fetching username:", err);
+          currentUsername = user.email;
+        }
+      }
+    });
+
+    // Toggle buttons
     const loreToggle = document.getElementById('loreToggle');
     const storyToggle = document.getElementById('storyToggle');
     const loreFormSection = document.getElementById('loreFormSection');
     const storyFormSection = document.getElementById('storyFormSection');
 
-    function updateToggleButtons() {
-      if (loreFormSection.style.display === 'block' || loreFormSection.style.display === '') {
-        loreToggle.classList.add('active');
-        storyToggle.classList.remove('active');
-        loreToggle.style.opacity = '1';
-        storyToggle.style.opacity = '0.5';
-      } else {
-        storyToggle.classList.add('active');
-        loreToggle.classList.remove('active');
-        storyToggle.style.opacity = '1';
-        loreToggle.style.opacity = '0.5';
-      }
-    }
-
     loreToggle.addEventListener('click', () => {
       loreFormSection.style.display = 'block';
       storyFormSection.style.display = 'none';
-      updateToggleButtons();
+      loreToggle.classList.add('active');
+      storyToggle.classList.remove('active');
     });
 
     storyToggle.addEventListener('click', () => {
       loreFormSection.style.display = 'none';
       storyFormSection.style.display = 'block';
-      updateToggleButtons();
+      storyToggle.classList.add('active');
+      loreToggle.classList.remove('active');
     });
-
-    updateToggleButtons();
 
     // Reference lists
     let allLoreNames = [];
@@ -193,35 +196,31 @@
         });
     }
 
-    // Load reference lists on page load
     fetchAllLore();
     fetchRecentLoreReferencesFromStories();
 
     // Lore submission
     document.getElementById('loreForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      await fetchAllLore(); // Refresh
+      await fetchAllLore();
       const name = document.getElementById('loreName').value.trim();
       const category = document.getElementById('loreCategory').value;
       const description = document.getElementById('loreDescription').value.trim();
       const references = document.getElementById('loreReferences').value.split(',').map(r => r.trim()).filter(Boolean);
       const timestamp = new Date();
 
-      if (!references.length) {
-        document.getElementById('loreStatusMessage').textContent = 'Error: You must include at least one reference.';
-        return;
-      }
-      const validRef = references.find(r => allLoreNames.includes(r));
-      if (!validRef) {
-        document.getElementById('loreStatusMessage').textContent = 'Error: Reference must match an existing lore entry.';
-        return;
-      }
-      if (!description.toLowerCase().includes(validRef.toLowerCase())) {
-        document.getElementById('loreStatusMessage').textContent = 'Error: The description must mention the reference.';
+      if (!references.length || !currentUsername) {
+        document.getElementById('loreStatusMessage').textContent = 'Error: You must be signed in and include at least one reference.';
         return;
       }
 
-      db.collection('lore').add({ name, category, description, references, timestamp })
+      const validRef = references.find(r => allLoreNames.includes(r));
+      if (!validRef || !description.toLowerCase().includes(validRef.toLowerCase())) {
+        document.getElementById('loreStatusMessage').textContent = 'Error: Reference must match existing lore and appear in description.';
+        return;
+      }
+
+      db.collection('lore').add({ name, category, description, references, timestamp, author: currentUsername })
         .then(() => {
           document.getElementById('loreStatusMessage').textContent = 'Lore entry added successfully!';
           document.getElementById('loreForm').reset();
@@ -242,26 +241,23 @@
       const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(Boolean);
       const timestamp = new Date();
 
-      if (!references.length) {
-        document.getElementById('storyStatusMessage').textContent = 'Error: You must include at least one reference.';
-        return;
-      }
-      const validRef = references.find(r => recentLoreNames.includes(r));
-      if (!validRef) {
-        document.getElementById('storyStatusMessage').textContent = 'Error: Reference must match a recently used lore.';
-        return;
-      }
-      if (!content.toLowerCase().includes(validRef.toLowerCase())) {
-        document.getElementById('storyStatusMessage').textContent = 'Error: The content must mention the reference.';
+      if (!references.length || !currentUsername) {
+        document.getElementById('storyStatusMessage').textContent = 'Error: You must be signed in and include at least one reference.';
         return;
       }
 
-      db.collection('story').add({ name, content, references, timestamp })
+      const validRef = references.find(r => recentLoreNames.includes(r));
+      if (!validRef || !content.toLowerCase().includes(validRef.toLowerCase())) {
+        document.getElementById('storyStatusMessage').textContent = 'Error: Reference must match recent lore and appear in content.';
+        return;
+      }
+
+      db.collection('story').add({ name, content, references, timestamp, author: currentUsername })
         .then(() => {
           document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
           document.getElementById('storyForm').reset();
-          fetchRecentLoreReferencesFromStories();
           storyWordCount.textContent = '0 words | Suggested donation: 0 cents';
+          fetchRecentLoreReferencesFromStories();
         })
         .catch((error) => {
           console.error('Error adding story:', error);
@@ -269,26 +265,14 @@
         });
     });
 
-    // Story word count and donation update
+    // Story word count
     const storyContent = document.getElementById('storyContent');
     const storyWordCount = document.getElementById('storyWordCount');
-
     storyContent.addEventListener('input', () => {
       const text = storyContent.value.trim();
       const words = text ? text.split(/\s+/).length : 0;
-      const donationCents = words; // 1 cent per word
-      storyWordCount.textContent = `${words} word${words !== 1 ? 's' : ''} | Suggested donation: ${donationCents} cent${donationCents !== 1 ? 's' : ''}`;
+      storyWordCount.textContent = `${words} word${words !== 1 ? 's' : ''} | Suggested donation: ${words} cent${words !== 1 ? 's' : ''}`;
     });
-    firebase.auth().onAuthStateChanged((user) => {
-  if (!user) {
-    // Not signed in, redirect to sign-in page
-    window.location.href = "auth.html";
-  } else {
-    // User is signed in, you can optionally show their email or do something here
-    console.log("User signed in:", user.email);
-  }
-});
-
   </script>
 </body>
 </html>
