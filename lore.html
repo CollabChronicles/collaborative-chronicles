@@ -66,6 +66,8 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+
 
     const loreListDiv = document.getElementById('lore-list');
     const categoryFilter = document.getElementById('categoryFilter');
