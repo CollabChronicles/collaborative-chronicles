@@ -5,47 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-  <style>
-    /* Override glow-button with flat button styling */
-
-    /* Use the same button styles you gave me */
-    .button-standard,
-    a.button-standard,
-    .toggle-button,
-    a.toggle-button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #4e342e;
-      color: #ffe0b2;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      border: none;
-      font-family: Georgia, serif;
-      cursor: pointer;
-      box-shadow: none;
-      transition: background-color 0.3s ease;
-    }
-
-    .button-standard:hover,
-    a.button-standard:hover,
-    .toggle-button:hover,
-    a.toggle-button:hover {
-      background-color: #3e2723;
-    }
-
-    .button-standard:active,
-    a.button-standard:active,
-    .toggle-button:active,
-    a.toggle-button:active {
-      background-color: #2e1b18;
-    }
-
-    .toggle-button.active {
-      background-color: #6a4f3b;
-      color: #fff0d1;
-    }
-  </style>
 </head>
 <body>
   <header>
@@ -64,7 +23,7 @@
 
     <section id="toggleSection" class="toggle-buttons">
       <button class="toggle-button active" id="loreToggle">Add Lore</button>
-      <button class="toggle-button" id="storyToggle">Add Story</button>
+      <button class="toggle-button inactive" id="storyToggle">Add Story</button>
     </section>
 
     <section id="loreFormSection">
@@ -149,14 +108,20 @@
 
     loreToggle.addEventListener('click', () => {
       loreToggle.classList.add('active');
+      loreToggle.classList.remove('inactive');
+      storyToggle.classList.add('inactive');
       storyToggle.classList.remove('active');
+
       loreFormSection.style.display = 'block';
       storyFormSection.style.display = 'none';
     });
 
     storyToggle.addEventListener('click', () => {
       storyToggle.classList.add('active');
+      storyToggle.classList.remove('inactive');
+      loreToggle.classList.add('inactive');
       loreToggle.classList.remove('active');
+
       loreFormSection.style.display = 'none';
       storyFormSection.style.display = 'block';
     });
@@ -168,7 +133,6 @@
       const category = document.getElementById('loreCategory').value;
       const description = document.getElementById('loreDescription').value.trim();
       const references = document.getElementById('loreReferences').value.split(',').map(r => r.trim()).filter(r => r);
-
       const timestamp = new Date();
 
       db.collection('lore').add({ name, category, description, references, timestamp })
@@ -188,7 +152,6 @@
       const name = document.getElementById('storyName').value.trim();
       const content = document.getElementById('storyContent').value.trim();
       const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(r => r);
-
       const timestamp = new Date();
 
       db.collection('story').add({ name, content, references, timestamp })
