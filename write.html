@@ -58,8 +58,6 @@
         <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
         <input type="text" id="loreReferences" required />
 
-        <!-- Removed Available Lore to Reference list per your request -->
-
         <input class="button-standard" type="submit" value="Submit Lore" />
         <p id="loreStatusMessage"></p>
       </form>
@@ -73,7 +71,8 @@
 
         <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
-        <div id="storyWordCount"></div>
+        <!-- Live word count and suggested donation -->
+        <div id="storyWordCount">0 words | Suggested donation: 0 cents</div>
 
         <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
         <input type="text" id="storyReferences" required />
@@ -258,7 +257,7 @@
           document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
           document.getElementById('storyForm').reset();
           fetchRecentLoreReferencesFromStories();
-          storyWordCount.textContent = '';
+          storyWordCount.textContent = '0 words | Suggested donation: 0 cents';
         })
         .catch((error) => {
           console.error('Error adding story:', error);
@@ -274,7 +273,7 @@
       const text = storyContent.value.trim();
       const words = text ? text.split(/\s+/).length : 0;
       const donationCents = words; // 1 cent per word
-      storyWordCount.textContent = `Word count: ${words} | Suggested donation: ${donationCents} cent${donationCents !== 1 ? 's' : ''}`;
+      storyWordCount.textContent = `${words} word${words !== 1 ? 's' : ''} | Suggested donation: ${donationCents} cent${donationCents !== 1 ? 's' : ''}`;
     });
   </script>
 </body>
