@@ -63,6 +63,13 @@
         <label for="storyReferences">References (comma-separated):</label>
         <input type="text" id="storyReferences" />
 
+        <div id="recentReferencesBox">
+          <h3>Recent Lore Entries You Can Reference</h3>
+          <ul id="recentReferencesList">
+            <li>Loading recent references...</li>
+          </ul>
+        </div>
+
         <input class="button-standard" type="submit" value="Submit Story" />
         <p id="storyStatusMessage"></p>
       </form>
@@ -74,6 +81,7 @@
       </a>
       <p id="paymentNote">
         Donations go directly to supporting literacy through Reading is Fundamental.
+        Suggested donation: $5 per 1,000 words you write!
       </p>
     </section>
   </main>
@@ -100,7 +108,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Toggle buttons
     const loreToggle = document.getElementById('loreToggle');
     const storyToggle = document.getElementById('storyToggle');
     const loreFormSection = document.getElementById('loreFormSection');
@@ -108,25 +115,40 @@
 
     loreToggle.addEventListener('click', () => {
       loreToggle.classList.add('active');
-      loreToggle.classList.remove('inactive');
-      storyToggle.classList.add('inactive');
       storyToggle.classList.remove('active');
-
       loreFormSection.style.display = 'block';
       storyFormSection.style.display = 'none';
     });
 
     storyToggle.addEventListener('click', () => {
       storyToggle.classList.add('active');
-      storyToggle.classList.remove('inactive');
-      loreToggle.classList.add('inactive');
       loreToggle.classList.remove('active');
-
       loreFormSection.style.display = 'none';
       storyFormSection.style.display = 'block';
     });
 
-    // Lore form submit
+    // Load recent references
+    const recentList = document.getElementById('recentReferencesList');
+    db.collection('lore').orderBy('timestamp', 'desc').limit(20).get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          recentList.innerHTML = '<li>No lore entries yet.</li>';
+        } else {
+          recentList.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.textContent = data.name || '(Unnamed)';
+            recentList.appendChild(li);
+          });
+        }
+      })
+      .catch(err => {
+        console.error('Error loading references:', err);
+        recentList.innerHTML = '<li>Error loading references.</li>';
+      });
+
+    // Lore submit
     document.getElementById('loreForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('loreName').value.trim();
@@ -140,13 +162,13 @@
           document.getElementById('loreStatusMessage').textContent = 'Lore entry added successfully!';
           document.getElementById('loreForm').reset();
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('Error adding lore:', error);
           document.getElementById('loreStatusMessage').textContent = 'Error adding lore. Please try again.';
         });
     });
 
-    // Story form submit
+    // Story submit with validation
     document.getElementById('storyForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('storyName').value.trim();
@@ -154,12 +176,24 @@
       const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(r => r);
       const timestamp = new Date();
 
+      if (references.length === 0) {
+        document.getElementById('storyStatusMessage').textContent = 'Please provide at least one reference.';
+        return;
+      }
+
+      // Check if all references appear in content
+      const allPresent = references.every(ref => content.includes(ref));
+      if (!allPresent) {
+        document.getElementById('storyStatusMessage').textContent = 'Each reference must appear in your story content.';
+        return;
+      }
+
       db.collection('story').add({ name, content, references, timestamp })
         .then(() => {
           document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
           document.getElementById('storyForm').reset();
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('Error adding story:', error);
           document.getElementById('storyStatusMessage').textContent = 'Error adding story. Please try again.';
         });
