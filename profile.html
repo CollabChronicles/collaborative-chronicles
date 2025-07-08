@@ -19,11 +19,40 @@
   </header>
 
   <main>
-    <section id="notSignedInSection" style="display:none; text-align:center;">
-      <h2>You are not signed in.</h2>
-      <p><a class="button-standard" href="auth.html">Sign In or Create an Account</a></p>
+    <!-- AUTH SECTION (Sign In / Sign Up Forms) -->
+    <section id="authSection" style="display:none; max-width: 400px; margin: 0 auto;">
+      <h2>Sign In to Collaborative Chronicles</h2>
+
+      <!-- Sign In Form -->
+      <form id="signInForm">
+        <label for="email">Email:</label>
+        <input type="text" id="email" required autocomplete="username" />
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required autocomplete="current-password" />
+
+        <input class="button-standard" type="submit" value="Sign In" />
+        <p id="signInMessage" style="color: red;"></p>
+      </form>
+
+      <p style="margin-top: 10px; text-align: center;">
+        New here? <a href="#" id="showSignUp">Create an account</a>
+      </p>
+
+      <!-- Sign Up Form -->
+      <form id="signUpForm" style="display:none;">
+        <label for="signUpEmail">Email:</label>
+        <input type="text" id="signUpEmail" required autocomplete="username" />
+
+        <label for="signUpPassword">Password:</label>
+        <input type="password" id="signUpPassword" required autocomplete="new-password" />
+
+        <input class="button-standard" type="submit" value="Sign Up" />
+        <p id="signUpMessage" style="color: red;"></p>
+      </form>
     </section>
 
+    <!-- PROFILE SECTION -->
     <section id="profileSection" style="display:none;">
       <h2>Your Profile</h2>
       <p id="userEmailOrUsername"></p>
@@ -67,62 +96,132 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // DOM Elements
+    const authSection = document.getElementById('authSection');
     const profileSection = document.getElementById('profileSection');
-    const notSignedInSection = document.getElementById('notSignedInSection');
-    const userEmailOrUsername = document.getElementById('userEmailOrUsername');
+
+    const signInForm = document.getElementById('signInForm');
+    const signUpForm = document.getElementById('signUpForm');
+    const showSignUpLink = document.getElementById('showSignUp');
     const signOutButton = document.getElementById('signOutButton');
+
+    const signInMessage = document.getElementById('signInMessage');
+    const signUpMessage = document.getElementById('signUpMessage');
+    const userEmailOrUsername = document.getElementById('userEmailOrUsername');
+
     const totalWordCount = document.getElementById('totalWordCount');
     const userLoreList = document.getElementById('userLoreList');
     const userStoryList = document.getElementById('userStoryList');
 
     let currentUsername = null;
-    let currentUserEmail = null;
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        profileSection.style.display = 'none';
-        notSignedInSection.style.display = 'block';
-        return;
-      }
-
-      notSignedInSection.style.display = 'none';
-      profileSection.style.display = 'block';
-      currentUserEmail = user.email;
-
-      // Get username from users collection
-      try {
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        currentUsername = userDoc.exists ? userDoc.data().username : user.email;
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-        currentUsername = user.email;
-      }
-
-      userEmailOrUsername.textContent = `Signed in as: ${currentUsername}`;
-
-      // Load and display user's lore and stories
-      loadUserLore();
-      loadUserStories();
+    // Toggle to show Sign Up form from Sign In
+    showSignUpLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      signInForm.style.display = 'none';
+      signUpForm.style.display = 'block';
+      signInMessage.textContent = '';
+      signUpMessage.textContent = '';
     });
 
-    signOutButton.addEventListener('click', () => {
-      auth.signOut()
+    // SIGN IN
+    signInForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      auth.signInWithEmailAndPassword(email, password)
         .then(() => {
-          window.location.href = 'auth.html';
+          signInForm.reset();
+          signInMessage.textContent = '';
         })
         .catch((error) => {
-          console.error('Error signing out:', error);
+          signInMessage.textContent = error.message;
         });
+    });
+
+    // SIGN UP
+    signUpForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signUpEmail').value.trim();
+      const password = document.getElementById('signUpPassword').value.trim();
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(async (cred) => {
+          signUpForm.reset();
+          signUpForm.style.display = 'none';
+          signInForm.style.display = 'block';
+          signUpMessage.textContent = '';
+
+          // Optional: create a default username entry for new users in users collection
+          // Using email prefix as username
+          const defaultUsername = email.split('@')[0];
+          await db.collection('users').doc(cred.user.uid).set({
+            username: defaultUsername
+          });
+        })
+        .catch((error) => {
+          signUpMessage.textContent = error.message;
+        });
+    });
+
+    // SIGN OUT
+    signOutButton.addEventListener('click', () => {
+      auth.signOut();
+    });
+
+    // ON AUTH STATE CHANGE
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Signed in
+        authSection.style.display = 'none';
+        profileSection.style.display = 'block';
+
+        try {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          currentUsername = userDoc.exists ? userDoc.data().username : user.email;
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          currentUsername = user.email;
+        }
+
+        userEmailOrUsername.textContent = `Signed in as: ${currentUsername}`;
+
+        loadUserLore();
+        loadUserStories();
+
+      } else {
+        // Not signed in
+        authSection.style.display = 'block';
+        profileSection.style.display = 'none';
+
+        signUpForm.style.display = 'none';
+        signInForm.style.display = 'block';
+
+        signInMessage.textContent = '';
+        signUpMessage.textContent = '';
+        currentUsername = null;
+
+        // Clear profile lists
+        totalWordCount.textContent = '';
+        userLoreList.innerHTML = '';
+        userStoryList.innerHTML = '';
+      }
     });
 
     async function loadUserLore() {
       userLoreList.innerHTML = '<li>Loading...</li>';
       try {
-        const snapshot = await db.collection('lore').where('author', '==', currentUsername).orderBy('timestamp', 'desc').get();
+        const snapshot = await db.collection('lore')
+          .where('author', '==', currentUsername)
+          .orderBy('timestamp', 'desc')
+          .get();
+
         if (snapshot.empty) {
           userLoreList.innerHTML = '<li>No lore entries found.</li>';
           return;
         }
+
         userLoreList.innerHTML = '';
         snapshot.forEach(doc => {
           const data = doc.data();
@@ -140,12 +239,17 @@
       userStoryList.innerHTML = '<li>Loading...</li>';
       let totalWords = 0;
       try {
-        const snapshot = await db.collection('story').where('author', '==', currentUsername).orderBy('timestamp', 'desc').get();
+        const snapshot = await db.collection('story')
+          .where('author', '==', currentUsername)
+          .orderBy('timestamp', 'desc')
+          .get();
+
         if (snapshot.empty) {
           userStoryList.innerHTML = '<li>No story entries found.</li>';
           totalWordCount.textContent = '0 words';
           return;
         }
+
         userStoryList.innerHTML = '';
         snapshot.forEach(doc => {
           const data = doc.data();
