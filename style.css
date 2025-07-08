@@ -130,9 +130,19 @@ input[type="submit"]:disabled {
 
 /* Active state for toggle buttons */
 .toggle-button.active {
-  background-color: #6a4f3b; /* lighter brown */
-  color: #fff0d1;
+  background-color: #A0522D;  /* rich saturated brown */
+  color: #fff;                /* bright white text */
+  font-weight: bold;          /* make text bolder */
 }
+
+.toggle-button {
+  opacity: 0.7;                /* dim by default */
+}
+
+.toggle-button:hover {
+  opacity: 1;
+}
+
 
 /* Toggle button container */
 .toggle-buttons {
