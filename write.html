@@ -5,15 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
-  <style>
-    #storyWordCount {
-      margin-top: 8px;
-      font-style: italic;
-      color: #5C3317;
-      font-family: Georgia, serif;
-      font-size: 0.95rem;
-    }
-  </style>
 </head>
 <body>
   <header>
@@ -72,30 +63,12 @@
         <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
 
-        <div id="storyWordCount">0 words | Suggested donation: 0 cents</div>
-
         <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
         <input type="text" id="storyReferences" required />
-
-        <div id="recentLoreList">
-          <h4>Recently Referenced Lore (must reference one of these):</h4>
-          <ul id="recentLoreNamesList">
-            <li>Loading recent references...</li>
-          </ul>
-        </div>
 
         <input class="button-standard" type="submit" value="Submit Story" />
         <p id="storyStatusMessage"></p>
       </form>
-    </section>
-
-    <section style="margin-top: 40px; text-align: center;">
-      <a class="button-standard" href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" rel="noopener noreferrer">
-        Support Literacy
-      </a>
-      <p id="paymentNote">
-        Donations go directly to supporting literacy through Reading is Fundamental.
-      </p>
     </section>
   </main>
 
@@ -103,7 +76,7 @@
     <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -118,31 +91,17 @@
       appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
       measurementId: "G-0HXV6NGHQP"
     };
-
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // Check auth on load
-    let currentUser = null;
-    let currentUsername = null;
-
-    auth.onAuthStateChanged(async (user) => {
+    // Redirect to profile if not signed in
+    auth.onAuthStateChanged(user => {
       if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        currentUser = user;
-        try {
-          const userDoc = await db.collection('users').doc(user.uid).get();
-          currentUsername = userDoc.exists ? userDoc.data().username : user.email;
-        } catch (err) {
-          console.error("Error fetching username:", err);
-          currentUsername = user.email;
-        }
+        window.location.href = 'profile.html';
       }
     });
 
-    // Toggle buttons
+    // Toggle lore/story forms
     const loreToggle = document.getElementById('loreToggle');
     const storyToggle = document.getElementById('storyToggle');
     const loreFormSection = document.getElementById('loreFormSection');
@@ -153,6 +112,8 @@
       storyFormSection.style.display = 'none';
       loreToggle.classList.add('active');
       storyToggle.classList.remove('active');
+      loreToggle.style.opacity = '1';
+      storyToggle.style.opacity = '0.5';
     });
 
     storyToggle.addEventListener('click', () => {
@@ -160,120 +121,17 @@
       storyFormSection.style.display = 'block';
       storyToggle.classList.add('active');
       loreToggle.classList.remove('active');
+      storyToggle.style.opacity = '1';
+      loreToggle.style.opacity = '0.5';
     });
 
-    // Reference lists
-    let allLoreNames = [];
-    let recentLoreNames = [];
-
-    function displayRecentLoreList() {
-      const ul = document.getElementById('recentLoreNamesList');
-      ul.innerHTML = recentLoreNames.length
-        ? recentLoreNames.map(name => `<li>${name}</li>`).join('')
-        : '<li>No recent references found.</li>';
-    }
-
-    function fetchAllLore() {
-      return db.collection('lore').get().then(snapshot => {
-        allLoreNames = snapshot.docs.map(doc => doc.data().name.trim()).filter(Boolean);
-      });
-    }
-
-    function fetchRecentLoreReferencesFromStories() {
-      return db.collection('story')
-        .orderBy('timestamp', 'desc')
-        .limit(20)
-        .get()
-        .then(snapshot => {
-          const refs = new Set();
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.references && Array.isArray(data.references)) {
-              data.references.forEach(ref => refs.add(ref.trim()));
-            }
-          });
-          recentLoreNames = Array.from(refs);
-          displayRecentLoreList();
-        });
-    }
-
-    fetchAllLore();
-    fetchRecentLoreReferencesFromStories();
-
-    // Lore submission
-    document.getElementById('loreForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await fetchAllLore();
-      const name = document.getElementById('loreName').value.trim();
-      const category = document.getElementById('loreCategory').value;
-      const description = document.getElementById('loreDescription').value.trim();
-      const references = document.getElementById('loreReferences').value.split(',').map(r => r.trim()).filter(Boolean);
-      const timestamp = new Date();
-
-      if (!references.length || !currentUsername) {
-        document.getElementById('loreStatusMessage').textContent = 'Error: You must be signed in and include at least one reference.';
-        return;
-      }
-
-      const validRef = references.find(r => allLoreNames.includes(r));
-      if (!validRef || !description.toLowerCase().includes(validRef.toLowerCase())) {
-        document.getElementById('loreStatusMessage').textContent = 'Error: Reference must match existing lore and appear in description.';
-        return;
-      }
-
-      db.collection('lore').add({ name, category, description, references, timestamp, author: currentUsername })
-        .then(() => {
-          document.getElementById('loreStatusMessage').textContent = 'Lore entry added successfully!';
-          document.getElementById('loreForm').reset();
-          fetchAllLore();
-        })
-        .catch((error) => {
-          console.error('Error adding lore:', error);
-          document.getElementById('loreStatusMessage').textContent = 'Error adding lore. Please try again.';
-        });
-    });
-
-    // Story submission
-    document.getElementById('storyForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await fetchRecentLoreReferencesFromStories();
-      const name = document.getElementById('storyName').value.trim();
-      const content = document.getElementById('storyContent').value.trim();
-      const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(Boolean);
-      const timestamp = new Date();
-
-      if (!references.length || !currentUsername) {
-        document.getElementById('storyStatusMessage').textContent = 'Error: You must be signed in and include at least one reference.';
-        return;
-      }
-
-      const validRef = references.find(r => recentLoreNames.includes(r));
-      if (!validRef || !content.toLowerCase().includes(validRef.toLowerCase())) {
-        document.getElementById('storyStatusMessage').textContent = 'Error: Reference must match recent lore and appear in content.';
-        return;
-      }
-
-      db.collection('story').add({ name, content, references, timestamp, author: currentUsername })
-        .then(() => {
-          document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
-          document.getElementById('storyForm').reset();
-          storyWordCount.textContent = '0 words | Suggested donation: 0 cents';
-          fetchRecentLoreReferencesFromStories();
-        })
-        .catch((error) => {
-          console.error('Error adding story:', error);
-          document.getElementById('storyStatusMessage').textContent = 'Error adding story. Please try again.';
-        });
-    });
-
-    // Story word count
-    const storyContent = document.getElementById('storyContent');
-    const storyWordCount = document.getElementById('storyWordCount');
-    storyContent.addEventListener('input', () => {
-      const text = storyContent.value.trim();
-      const words = text ? text.split(/\s+/).length : 0;
-      storyWordCount.textContent = `${words} word${words !== 1 ? 's' : ''} | Suggested donation: ${words} cent${words !== 1 ? 's' : ''}`;
-    });
+    // Initialize toggles state
+    loreFormSection.style.display = 'block';
+    storyFormSection.style.display = 'none';
+    loreToggle.classList.add('active');
+    storyToggle.classList.remove('active');
+    loreToggle.style.opacity = '1';
+    storyToggle.style.opacity = '0.5';
   </script>
 </body>
 </html>
