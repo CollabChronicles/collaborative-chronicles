@@ -200,17 +200,37 @@ form {
   box-sizing: border-box;
 }
 
-/* Word Count Box on Home Page */
+/* --- Updated Word Count Box --- */
 .word-count-box {
-  background: #fff8e1;
-  border: 2px solid #A0522D;
-  padding: 30px;
-  border-radius: 8px;
+  background-color: #8B4513;        /* Dark brown background */
+  border: 2px solid #A0522D;        /* Your border color */
+  padding: 30px 40px;
+  border-radius: 12px;
   text-align: center;
-  font-size: 3rem;
+  font-size: 3.5rem;                /* Larger font */
   font-weight: bold;
-  color: #5C3317;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  color: #fff8e1;                  /* Light parchment text */
+  box-shadow: 0 6px 15px rgba(139, 69, 19, 0.6); /* stronger shadow */
   margin: 50px auto;
   max-width: 600px;
+  letter-spacing: 3px;
+  user-select: none;
+  position: relative;
+}
+
+/* Quill icon before the text */
+.word-count-box::before {
+  content: "✒️";
+  font-size: 3rem;
+  margin-right: 1rem;
+  vertical-align: middle;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Padding so text doesn't overlap icon */
+.word-count-box {
+  padding-left: 80px;
 }
