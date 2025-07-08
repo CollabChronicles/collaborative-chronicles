@@ -244,3 +244,59 @@ form {
   font-family: Georgia, serif;
   font-size: 0.95rem;
 }
+
+/* Authentication Page Styling */
+.auth-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #fff8e1;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.auth-container h2 {
+  text-align: center;
+  color: #5C3317;
+  margin-bottom: 10px;
+}
+
+.auth-container p {
+  text-align: center;
+  color: #4e342e;
+  margin-bottom: 20px;
+}
+
+#userStatus {
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #5C3317;
+}
+
+#signInMessage,
+#signUpMessage {
+  margin-top: 10px;
+  color: #8B4513;
+  font-weight: bold;
+  text-align: center;
+}
+
+#showSignUp {
+  color: #8B4513;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#showSignUp:hover {
+  color: #5C3317;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.auth-container form {
+  margin-top: 20px;
+}
+
