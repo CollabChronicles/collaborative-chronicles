@@ -6,28 +6,13 @@
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
   <style>
-    /* Additional style to make inactive toggle button faint */
-    .toggle-button {
-      opacity: 0.5;
-      font-weight: normal;
-      transition: opacity 0.3s ease, font-weight 0.3s ease;
-    }
-    .toggle-button.active {
-      opacity: 1;
-      font-weight: bold;
-    }
-    /* Word count and donation note styling */
+    /* Optional: style for the word count/donation display */
     #storyWordCount {
-      margin-top: 10px;
+      margin-top: 8px;
       font-style: italic;
       color: #5C3317;
       font-family: Georgia, serif;
-    }
-    #donationNote {
-      margin-top: 5px;
-      font-style: italic;
-      color: #5C3317;
-      font-family: Georgia, serif;
+      font-size: 0.95rem;
     }
   </style>
 </head>
@@ -73,7 +58,7 @@
         <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
         <input type="text" id="loreReferences" required />
 
-        <!-- Removed the available lore list here -->
+        <!-- Removed Available Lore to Reference list per your request -->
 
         <input class="button-standard" type="submit" value="Submit Lore" />
         <p id="loreStatusMessage"></p>
@@ -88,8 +73,7 @@
 
         <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
-        <div id="storyWordCount">Word count: 0</div>
-        <div id="donationNote">Suggested donation: 1 cent per word</div>
+        <div id="storyWordCount"></div>
 
         <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
         <input type="text" id="storyReferences" required />
@@ -107,7 +91,7 @@
     </section>
 
     <section style="margin-top: 40px; text-align: center;">
-      <a class="button-standard" href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank">
+      <a class="button-standard" href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" rel="noopener noreferrer">
         Support Literacy
       </a>
       <p id="paymentNote">
@@ -137,28 +121,39 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Toggle logic with button fade/bold fix
+    // Toggle logic
     const loreToggle = document.getElementById('loreToggle');
     const storyToggle = document.getElementById('storyToggle');
     const loreFormSection = document.getElementById('loreFormSection');
     const storyFormSection = document.getElementById('storyFormSection');
 
-    function setActiveForm(form) {
-      if (form === 'lore') {
+    function updateToggleButtons() {
+      if (loreFormSection.style.display === 'block' || loreFormSection.style.display === '') {
         loreToggle.classList.add('active');
         storyToggle.classList.remove('active');
-        loreFormSection.style.display = 'block';
-        storyFormSection.style.display = 'none';
+        loreToggle.style.opacity = '1';
+        storyToggle.style.opacity = '0.5';
       } else {
         storyToggle.classList.add('active');
         loreToggle.classList.remove('active');
-        loreFormSection.style.display = 'none';
-        storyFormSection.style.display = 'block';
+        storyToggle.style.opacity = '1';
+        loreToggle.style.opacity = '0.5';
       }
     }
 
-    loreToggle.addEventListener('click', () => setActiveForm('lore'));
-    storyToggle.addEventListener('click', () => setActiveForm('story'));
+    loreToggle.addEventListener('click', () => {
+      loreFormSection.style.display = 'block';
+      storyFormSection.style.display = 'none';
+      updateToggleButtons();
+    });
+
+    storyToggle.addEventListener('click', () => {
+      loreFormSection.style.display = 'none';
+      storyFormSection.style.display = 'block';
+      updateToggleButtons();
+    });
+
+    updateToggleButtons();
 
     // Reference lists
     let allLoreNames = [];
@@ -235,16 +230,6 @@
         });
     });
 
-    // Story word count and donation update
-    const storyContent = document.getElementById('storyContent');
-    const storyWordCount = document.getElementById('storyWordCount');
-
-    storyContent.addEventListener('input', () => {
-      const text = storyContent.value.trim();
-      const words = text ? text.split(/\s+/).length : 0;
-      storyWordCount.textContent = `Word count: ${words}`;
-    });
-
     // Story submission
     document.getElementById('storyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -272,13 +257,24 @@
         .then(() => {
           document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
           document.getElementById('storyForm').reset();
-          storyWordCount.textContent = 'Word count: 0';
           fetchRecentLoreReferencesFromStories();
+          storyWordCount.textContent = '';
         })
         .catch((error) => {
           console.error('Error adding story:', error);
           document.getElementById('storyStatusMessage').textContent = 'Error adding story. Please try again.';
         });
+    });
+
+    // Story word count and donation update
+    const storyContent = document.getElementById('storyContent');
+    const storyWordCount = document.getElementById('storyWordCount');
+
+    storyContent.addEventListener('input', () => {
+      const text = storyContent.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      const donationCents = words; // 1 cent per word
+      storyWordCount.textContent = `Word count: ${words} | Suggested donation: ${donationCents} cent${donationCents !== 1 ? 's' : ''}`;
     });
   </script>
 </body>
