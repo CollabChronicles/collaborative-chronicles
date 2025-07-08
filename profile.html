@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Profile</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Collaborative Chronicles</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a> |
+      <a href="profile.html">Profile</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="notSignedInSection" style="display:none; text-align:center;">
+      <h2>You are not signed in.</h2>
+      <p><a class="button-standard" href="auth.html">Sign In or Create an Account</a></p>
+    </section>
+
+    <section id="profileSection" style="display:none;">
+      <h2>Your Profile</h2>
+      <p id="userEmailOrUsername"></p>
+      <button id="signOutButton" class="button-standard">Sign Out</button>
+
+      <h3>Total Words Contributed</h3>
+      <p id="totalWordCount">Loading...</p>
+
+      <h3>Your Lore Entries</h3>
+      <ul id="userLoreList">
+        <li>Loading...</li>
+      </ul>
+
+      <h3>Your Story Entries</h3>
+      <ul id="userStoryList">
+        <li>Loading...</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>2025 Collaborative Chronicles</p>
+  </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const profileSection = document.getElementById('profileSection');
+    const notSignedInSection = document.getElementById('notSignedInSection');
+    const userEmailOrUsername = document.getElementById('userEmailOrUsername');
+    const signOutButton = document.getElementById('signOutButton');
+    const totalWordCount = document.getElementById('totalWordCount');
+    const userLoreList = document.getElementById('userLoreList');
+    const userStoryList = document.getElementById('userStoryList');
+
+    let currentUsername = null;
+    let currentUserEmail = null;
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        profileSection.style.display = 'none';
+        notSignedInSection.style.display = 'block';
+        return;
+      }
+
+      notSignedInSection.style.display = 'none';
+      profileSection.style.display = 'block';
+      currentUserEmail = user.email;
+
+      // Get username from users collection
+      try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        currentUsername = userDoc.exists ? userDoc.data().username : user.email;
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        currentUsername = user.email;
+      }
+
+      userEmailOrUsername.textContent = `Signed in as: ${currentUsername}`;
+
+      // Load and display user's lore and stories
+      loadUserLore();
+      loadUserStories();
+    });
+
+    signOutButton.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          window.location.href = 'auth.html';
+        })
+        .catch((error) => {
+          console.error('Error signing out:', error);
+        });
+    });
+
+    async function loadUserLore() {
+      userLoreList.innerHTML = '<li>Loading...</li>';
+      try {
+        const snapshot = await db.collection('lore').where('author', '==', currentUsername).orderBy('timestamp', 'desc').get();
+        if (snapshot.empty) {
+          userLoreList.innerHTML = '<li>No lore entries found.</li>';
+          return;
+        }
+        userLoreList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.textContent = `${data.name} (${data.category}) - References: ${data.references.join(', ')}`;
+          userLoreList.appendChild(li);
+        });
+      } catch (error) {
+        console.error('Error loading lore:', error);
+        userLoreList.innerHTML = '<li>Error loading lore entries.</li>';
+      }
+    }
+
+    async function loadUserStories() {
+      userStoryList.innerHTML = '<li>Loading...</li>';
+      let totalWords = 0;
+      try {
+        const snapshot = await db.collection('story').where('author', '==', currentUsername).orderBy('timestamp', 'desc').get();
+        if (snapshot.empty) {
+          userStoryList.innerHTML = '<li>No story entries found.</li>';
+          totalWordCount.textContent = '0 words';
+          return;
+        }
+        userStoryList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const words = countWords(data.content);
+          totalWords += words;
+
+          const excerpt = data.content.split(/\s+/).slice(0, 20).join(' ') + (words > 20 ? '...' : '');
+          const li = document.createElement('li');
+          li.textContent = `${data.name || '(Untitled)'} - ${words} words - "${excerpt}"`;
+          userStoryList.appendChild(li);
+        });
+        totalWordCount.textContent = `${totalWords} word${totalWords !== 1 ? 's' : ''}`;
+      } catch (error) {
+        console.error('Error loading stories:', error);
+        userStoryList.innerHTML = '<li>Error loading story entries.</li>';
+        totalWordCount.textContent = 'Error';
+      }
+    }
+
+    function countWords(text) {
+      if (!text) return 0;
+      return text.trim().split(/\s+/).length;
+    }
+  </script>
+</body>
+</html>
