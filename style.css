@@ -68,6 +68,8 @@ textarea {
   font-size: 1rem;
   background: #fff8e1;
   box-sizing: border-box;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 textarea {
@@ -95,7 +97,8 @@ input[type="submit"] {
   text-decoration: none;
   text-align: center;
   transition: background-color 0.3s ease;
-  margin-top: 20px; /* ADDED: extra vertical space above buttons everywhere */
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 
 .button-standard:hover,
@@ -130,19 +133,17 @@ input[type="submit"]:disabled {
 
 /* Active state for toggle buttons */
 .toggle-button.active {
-  background-color: #A0522D;  /* rich saturated brown */
-  color: #fff;                /* bright white text */
-  font-weight: bold;          /* make text bolder */
+  background-color: #6a4f3b; /* lighter brown */
+  color: #fff0d1;
 }
 
-.toggle-button {
-  opacity: 0.7;                /* dim by default */
+/* Inactive Toggle Button Style */
+.toggle-button.inactive {
+  opacity: 0.5;
+  background-color: #4e342e;
+  color: #ffe0b2;
+  cursor: pointer;
 }
-
-.toggle-button:hover {
-  opacity: 1;
-}
-
 
 /* Toggle button container */
 .toggle-buttons {
@@ -189,7 +190,7 @@ form {
 
 /* Search input styling */
 #searchInput, #categoryFilter {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   padding: 10px;
   border-radius: 5px;
   border: 2px solid #A0522D;
@@ -199,26 +200,17 @@ form {
   box-sizing: border-box;
 }
 
-/* Word Count on Home Page */
-#wordCountDisplay {
-  font-size: 3.5rem;     /* BIGGER: overrides inline style */
-  font-weight: bold;
-  color: #5C3317;
-  margin: 40px 0;        /* MORE vertical spacing */
-  text-align: center;
-}
-
-/* Word Count Box (if used elsewhere) */
+/* Word Count Box on Home Page */
 .word-count-box {
   background: #fff8e1;
   border: 2px solid #A0522D;
-  padding: 20px;
+  padding: 30px;
   border-radius: 8px;
   text-align: center;
-  font-size: 2rem;
+  font-size: 3rem;
   font-weight: bold;
   color: #5C3317;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  margin: 40px auto;
+  margin: 50px auto;
   max-width: 600px;
 }
