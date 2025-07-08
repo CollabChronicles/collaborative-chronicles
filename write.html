@@ -5,6 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+  <style>
+    /* Additional style to make inactive toggle button faint */
+    .toggle-button {
+      opacity: 0.5;
+      font-weight: normal;
+      transition: opacity 0.3s ease, font-weight 0.3s ease;
+    }
+    .toggle-button.active {
+      opacity: 1;
+      font-weight: bold;
+    }
+    /* Word count and donation note styling */
+    #storyWordCount {
+      margin-top: 10px;
+      font-style: italic;
+      color: #5C3317;
+      font-family: Georgia, serif;
+    }
+    #donationNote {
+      margin-top: 5px;
+      font-style: italic;
+      color: #5C3317;
+      font-family: Georgia, serif;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -48,12 +73,7 @@
         <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
         <input type="text" id="loreReferences" required />
 
-        <div id="allLoreList">
-          <h4>Available Lore to Reference:</h4>
-          <ul id="allLoreNamesList">
-            <li>Loading lore list...</li>
-          </ul>
-        </div>
+        <!-- Removed the available lore list here -->
 
         <input class="button-standard" type="submit" value="Submit Lore" />
         <p id="loreStatusMessage"></p>
@@ -68,6 +88,8 @@
 
         <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
+        <div id="storyWordCount">Word count: 0</div>
+        <div id="donationNote">Suggested donation: 1 cent per word</div>
 
         <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
         <input type="text" id="storyReferences" required />
@@ -115,36 +137,32 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Toggle logic
+    // Toggle logic with button fade/bold fix
     const loreToggle = document.getElementById('loreToggle');
     const storyToggle = document.getElementById('storyToggle');
     const loreFormSection = document.getElementById('loreFormSection');
     const storyFormSection = document.getElementById('storyFormSection');
 
-    loreToggle.addEventListener('click', () => {
-      loreToggle.classList.add('active');
-      storyToggle.classList.remove('active');
-      loreFormSection.style.display = 'block';
-      storyFormSection.style.display = 'none';
-    });
+    function setActiveForm(form) {
+      if (form === 'lore') {
+        loreToggle.classList.add('active');
+        storyToggle.classList.remove('active');
+        loreFormSection.style.display = 'block';
+        storyFormSection.style.display = 'none';
+      } else {
+        storyToggle.classList.add('active');
+        loreToggle.classList.remove('active');
+        loreFormSection.style.display = 'none';
+        storyFormSection.style.display = 'block';
+      }
+    }
 
-    storyToggle.addEventListener('click', () => {
-      storyToggle.classList.add('active');
-      loreToggle.classList.remove('active');
-      loreFormSection.style.display = 'none';
-      storyFormSection.style.display = 'block';
-    });
+    loreToggle.addEventListener('click', () => setActiveForm('lore'));
+    storyToggle.addEventListener('click', () => setActiveForm('story'));
 
     // Reference lists
     let allLoreNames = [];
     let recentLoreNames = [];
-
-    function displayAllLoreList() {
-      const ul = document.getElementById('allLoreNamesList');
-      ul.innerHTML = allLoreNames.length
-        ? allLoreNames.map(name => `<li>${name}</li>`).join('')
-        : '<li>No lore entries yet.</li>';
-    }
 
     function displayRecentLoreList() {
       const ul = document.getElementById('recentLoreNamesList');
@@ -156,7 +174,6 @@
     function fetchAllLore() {
       return db.collection('lore').get().then(snapshot => {
         allLoreNames = snapshot.docs.map(doc => doc.data().name.trim()).filter(Boolean);
-        displayAllLoreList();
       });
     }
 
@@ -218,6 +235,16 @@
         });
     });
 
+    // Story word count and donation update
+    const storyContent = document.getElementById('storyContent');
+    const storyWordCount = document.getElementById('storyWordCount');
+
+    storyContent.addEventListener('input', () => {
+      const text = storyContent.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      storyWordCount.textContent = `Word count: ${words}`;
+    });
+
     // Story submission
     document.getElementById('storyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -245,6 +272,7 @@
         .then(() => {
           document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
           document.getElementById('storyForm').reset();
+          storyWordCount.textContent = 'Word count: 0';
           fetchRecentLoreReferencesFromStories();
         })
         .catch((error) => {
