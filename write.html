@@ -279,6 +279,16 @@
       const donationCents = words; // 1 cent per word
       storyWordCount.textContent = `${words} word${words !== 1 ? 's' : ''} | Suggested donation: ${donationCents} cent${donationCents !== 1 ? 's' : ''}`;
     });
+    firebase.auth().onAuthStateChanged((user) => {
+  if (!user) {
+    // Not signed in, redirect to sign-in page
+    window.location.href = "auth.html";
+  } else {
+    // User is signed in, you can optionally show their email or do something here
+    console.log("User signed in:", user.email);
+  }
+});
+
   </script>
 </body>
 </html>
