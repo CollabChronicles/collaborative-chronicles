@@ -19,11 +19,12 @@
   </header>
 
   <main>
-    <section class="auth-container">
-      <h2>Sign In to Collaborative Chronicles</h2>
-      <p>Access writing features and join the community.</p>
+    <h2>Sign In to Collaborative Chronicles</h2>
+    <p>Access writing features and join the community.</p>
 
-      <div id="userStatus"></div>
+    <section id="authSection">
+      <!-- User Status -->
+      <div id="userStatus" style="margin-top: 20px; font-weight: bold; color: #5C3317;"></div>
 
       <!-- Sign In Form -->
       <form id="signInForm">
@@ -37,12 +38,16 @@
         <p id="signInMessage"></p>
       </form>
 
-      <p class="center-text">
+      <!-- Sign Up Link -->
+      <p style="margin-top: 10px; text-align: center;">
         New here? <a href="#" id="showSignUp">Create an account</a>
       </p>
 
       <!-- Sign Up Form -->
-      <form id="signUpForm">
+      <form id="signUpForm" style="display: none;">
+        <label for="signUpUsername">Username:</label>
+        <input type="text" id="signUpUsername" required />
+
         <label for="signUpEmail">Email:</label>
         <input type="text" id="signUpEmail" required />
 
@@ -53,7 +58,8 @@
         <p id="signUpMessage"></p>
       </form>
 
-      <button id="signOutButton" class="button-standard">Sign Out</button>
+      <!-- Sign Out Button -->
+      <button id="signOutButton" class="button-standard" style="display: none;">Sign Out</button>
     </section>
   </main>
 
@@ -61,11 +67,13 @@
     <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
@@ -76,9 +84,12 @@
       measurementId: "G-0HXV6NGHQP"
     };
 
+    // Init
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
+    // Elements
     const signInForm = document.getElementById('signInForm');
     const signUpForm = document.getElementById('signUpForm');
     const showSignUp = document.getElementById('showSignUp');
@@ -87,18 +98,34 @@
     const signInMessage = document.getElementById('signInMessage');
     const signUpMessage = document.getElementById('signUpMessage');
 
+    // Toggle to show Sign Up form
     showSignUp.addEventListener('click', (e) => {
       e.preventDefault();
       signInForm.style.display = 'none';
       signUpForm.style.display = 'block';
     });
 
+    // Sign Up
     signUpForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      const username = document.getElementById('signUpUsername').value.trim();
       const email = document.getElementById('signUpEmail').value.trim();
       const password = document.getElementById('signUpPassword').value.trim();
 
+      if (!username) {
+        signUpMessage.textContent = 'Please choose a username.';
+        return;
+      }
+
       auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Save username and email in Firestore
+          return db.collection('users').doc(user.uid).set({
+            username,
+            email
+          });
+        })
         .then(() => {
           signUpMessage.textContent = 'Account created! You are signed in.';
           signUpForm.reset();
@@ -109,6 +136,7 @@
         });
     });
 
+    // Sign In
     signInForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
@@ -125,6 +153,7 @@
         });
     });
 
+    // Sign Out
     signOutButton.addEventListener('click', () => {
       auth.signOut()
         .then(() => {
@@ -136,9 +165,21 @@
         });
     });
 
-    auth.onAuthStateChanged((user) => {
+    // Auth state change
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
-        userStatus.textContent = `Signed in as ${user.email}`;
+        // Get username
+        let username = user.email;
+        try {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          if (userDoc.exists) {
+            username = userDoc.data().username || user.email;
+          }
+        } catch (err) {
+          console.error('Error fetching username:', err);
+        }
+
+        userStatus.textContent = `Signed in as ${username}`;
         signInForm.style.display = 'none';
         signUpForm.style.display = 'none';
         signOutButton.style.display = 'inline-block';
