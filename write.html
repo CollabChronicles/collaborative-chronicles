@@ -23,9 +23,10 @@
 
     <section id="toggleSection" class="toggle-buttons">
       <button class="toggle-button active" id="loreToggle">Add Lore</button>
-      <button class="toggle-button inactive" id="storyToggle">Add Story</button>
+      <button class="toggle-button" id="storyToggle">Add Story</button>
     </section>
 
+    <!-- Lore Form -->
     <section id="loreFormSection">
       <form id="loreForm">
         <label for="loreName">Name:</label>
@@ -44,28 +45,36 @@
         <label for="loreDescription">Description:</label>
         <textarea id="loreDescription" rows="5" required></textarea>
 
-        <label for="loreReferences">References (comma-separated):</label>
-        <input type="text" id="loreReferences" />
+        <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
+        <input type="text" id="loreReferences" required />
+
+        <div id="allLoreList">
+          <h4>Available Lore to Reference:</h4>
+          <ul id="allLoreNamesList">
+            <li>Loading lore list...</li>
+          </ul>
+        </div>
 
         <input class="button-standard" type="submit" value="Submit Lore" />
         <p id="loreStatusMessage"></p>
       </form>
     </section>
 
+    <!-- Story Form -->
     <section id="storyFormSection" style="display: none;">
       <form id="storyForm">
         <label for="storyName">Title (optional):</label>
         <input type="text" id="storyName" />
 
-        <label for="storyContent">Content:</label>
+        <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
 
-        <label for="storyReferences">References (comma-separated):</label>
-        <input type="text" id="storyReferences" />
+        <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
+        <input type="text" id="storyReferences" required />
 
-        <div id="recentReferencesBox">
-          <h3>Recent Lore Entries You Can Reference</h3>
-          <ul id="recentReferencesList">
+        <div id="recentLoreList">
+          <h4>Recently Referenced Lore (must reference one of these):</h4>
+          <ul id="recentLoreNamesList">
             <li>Loading recent references...</li>
           </ul>
         </div>
@@ -81,7 +90,6 @@
       </a>
       <p id="paymentNote">
         Donations go directly to supporting literacy through Reading is Fundamental.
-        Suggested donation: $5 per 1,000 words you write!
       </p>
     </section>
   </main>
@@ -95,7 +103,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Initialize Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
@@ -108,6 +115,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Toggle logic
     const loreToggle = document.getElementById('loreToggle');
     const storyToggle = document.getElementById('storyToggle');
     const loreFormSection = document.getElementById('loreFormSection');
@@ -127,64 +135,109 @@
       storyFormSection.style.display = 'block';
     });
 
-    // Load recent references
-    const recentList = document.getElementById('recentReferencesList');
-    db.collection('lore').orderBy('timestamp', 'desc').limit(20).get()
-      .then(snapshot => {
-        if (snapshot.empty) {
-          recentList.innerHTML = '<li>No lore entries yet.</li>';
-        } else {
-          recentList.innerHTML = '';
+    // Reference lists
+    let allLoreNames = [];
+    let recentLoreNames = [];
+
+    function displayAllLoreList() {
+      const ul = document.getElementById('allLoreNamesList');
+      ul.innerHTML = allLoreNames.length
+        ? allLoreNames.map(name => `<li>${name}</li>`).join('')
+        : '<li>No lore entries yet.</li>';
+    }
+
+    function displayRecentLoreList() {
+      const ul = document.getElementById('recentLoreNamesList');
+      ul.innerHTML = recentLoreNames.length
+        ? recentLoreNames.map(name => `<li>${name}</li>`).join('')
+        : '<li>No recent references found.</li>';
+    }
+
+    function fetchAllLore() {
+      return db.collection('lore').get().then(snapshot => {
+        allLoreNames = snapshot.docs.map(doc => doc.data().name.trim()).filter(Boolean);
+        displayAllLoreList();
+      });
+    }
+
+    function fetchRecentLoreReferencesFromStories() {
+      return db.collection('story')
+        .orderBy('timestamp', 'desc')
+        .limit(20)
+        .get()
+        .then(snapshot => {
+          const refs = new Set();
           snapshot.forEach(doc => {
             const data = doc.data();
-            const li = document.createElement('li');
-            li.textContent = data.name || '(Unnamed)';
-            recentList.appendChild(li);
+            if (data.references && Array.isArray(data.references)) {
+              data.references.forEach(ref => refs.add(ref.trim()));
+            }
           });
-        }
-      })
-      .catch(err => {
-        console.error('Error loading references:', err);
-        recentList.innerHTML = '<li>Error loading references.</li>';
-      });
+          recentLoreNames = Array.from(refs);
+          displayRecentLoreList();
+        });
+    }
 
-    // Lore submit
-    document.getElementById('loreForm').addEventListener('submit', (e) => {
+    // Load reference lists on page load
+    fetchAllLore();
+    fetchRecentLoreReferencesFromStories();
+
+    // Lore submission
+    document.getElementById('loreForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      await fetchAllLore(); // Refresh
       const name = document.getElementById('loreName').value.trim();
       const category = document.getElementById('loreCategory').value;
       const description = document.getElementById('loreDescription').value.trim();
-      const references = document.getElementById('loreReferences').value.split(',').map(r => r.trim()).filter(r => r);
+      const references = document.getElementById('loreReferences').value.split(',').map(r => r.trim()).filter(Boolean);
       const timestamp = new Date();
+
+      if (!references.length) {
+        document.getElementById('loreStatusMessage').textContent = 'Error: You must include at least one reference.';
+        return;
+      }
+      const validRef = references.find(r => allLoreNames.includes(r));
+      if (!validRef) {
+        document.getElementById('loreStatusMessage').textContent = 'Error: Reference must match an existing lore entry.';
+        return;
+      }
+      if (!description.toLowerCase().includes(validRef.toLowerCase())) {
+        document.getElementById('loreStatusMessage').textContent = 'Error: The description must mention the reference.';
+        return;
+      }
 
       db.collection('lore').add({ name, category, description, references, timestamp })
         .then(() => {
           document.getElementById('loreStatusMessage').textContent = 'Lore entry added successfully!';
           document.getElementById('loreForm').reset();
+          fetchAllLore();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error adding lore:', error);
           document.getElementById('loreStatusMessage').textContent = 'Error adding lore. Please try again.';
         });
     });
 
-    // Story submit with validation
-    document.getElementById('storyForm').addEventListener('submit', (e) => {
+    // Story submission
+    document.getElementById('storyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      await fetchRecentLoreReferencesFromStories();
       const name = document.getElementById('storyName').value.trim();
       const content = document.getElementById('storyContent').value.trim();
-      const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(r => r);
+      const references = document.getElementById('storyReferences').value.split(',').map(r => r.trim()).filter(Boolean);
       const timestamp = new Date();
 
-      if (references.length === 0) {
-        document.getElementById('storyStatusMessage').textContent = 'Please provide at least one reference.';
+      if (!references.length) {
+        document.getElementById('storyStatusMessage').textContent = 'Error: You must include at least one reference.';
         return;
       }
-
-      // Check if all references appear in content
-      const allPresent = references.every(ref => content.includes(ref));
-      if (!allPresent) {
-        document.getElementById('storyStatusMessage').textContent = 'Each reference must appear in your story content.';
+      const validRef = references.find(r => recentLoreNames.includes(r));
+      if (!validRef) {
+        document.getElementById('storyStatusMessage').textContent = 'Error: Reference must match a recently used lore.';
+        return;
+      }
+      if (!content.toLowerCase().includes(validRef.toLowerCase())) {
+        document.getElementById('storyStatusMessage').textContent = 'Error: The content must mention the reference.';
         return;
       }
 
@@ -192,8 +245,9 @@
         .then(() => {
           document.getElementById('storyStatusMessage').textContent = 'Story entry added successfully!';
           document.getElementById('storyForm').reset();
+          fetchRecentLoreReferencesFromStories();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error adding story:', error);
           document.getElementById('storyStatusMessage').textContent = 'Error adding story. Please try again.';
         });
