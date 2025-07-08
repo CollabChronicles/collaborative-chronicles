@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Sign In</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Collaborative Chronicles</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a> |
+      <a href="auth.html">Sign In</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="auth-container">
+      <h2>Sign In to Collaborative Chronicles</h2>
+      <p>Access writing features and join the community.</p>
+
+      <div id="userStatus"></div>
+
+      <!-- Sign In Form -->
+      <form id="signInForm">
+        <label for="email">Email:</label>
+        <input type="text" id="email" required />
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required />
+
+        <input class="button-standard" type="submit" value="Sign In" />
+        <p id="signInMessage"></p>
+      </form>
+
+      <p class="center-text">
+        New here? <a href="#" id="showSignUp">Create an account</a>
+      </p>
+
+      <!-- Sign Up Form -->
+      <form id="signUpForm">
+        <label for="signUpEmail">Email:</label>
+        <input type="text" id="signUpEmail" required />
+
+        <label for="signUpPassword">Password:</label>
+        <input type="password" id="signUpPassword" required />
+
+        <input class="button-standard" type="submit" value="Sign Up" />
+        <p id="signUpMessage"></p>
+      </form>
+
+      <button id="signOutButton" class="button-standard">Sign Out</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>2025 Collaborative Chronicles</p>
+  </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const signInForm = document.getElementById('signInForm');
+    const signUpForm = document.getElementById('signUpForm');
+    const showSignUp = document.getElementById('showSignUp');
+    const signOutButton = document.getElementById('signOutButton');
+    const userStatus = document.getElementById('userStatus');
+    const signInMessage = document.getElementById('signInMessage');
+    const signUpMessage = document.getElementById('signUpMessage');
+
+    showSignUp.addEventListener('click', (e) => {
+      e.preventDefault();
+      signInForm.style.display = 'none';
+      signUpForm.style.display = 'block';
+    });
+
+    signUpForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signUpEmail').value.trim();
+      const password = document.getElementById('signUpPassword').value.trim();
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          signUpMessage.textContent = 'Account created! You are signed in.';
+          signUpForm.reset();
+        })
+        .catch((error) => {
+          console.error(error);
+          signUpMessage.textContent = error.message;
+        });
+    });
+
+    signInForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          signInMessage.textContent = 'Signed in successfully!';
+          signInForm.reset();
+        })
+        .catch((error) => {
+          console.error(error);
+          signInMessage.textContent = error.message;
+        });
+    });
+
+    signOutButton.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          userStatus.textContent = 'Signed out.';
+        })
+        .catch((error) => {
+          console.error(error);
+          userStatus.textContent = 'Error signing out.';
+        });
+    });
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        userStatus.textContent = `Signed in as ${user.email}`;
+        signInForm.style.display = 'none';
+        signUpForm.style.display = 'none';
+        signOutButton.style.display = 'inline-block';
+      } else {
+        userStatus.textContent = 'You are not signed in.';
+        signInForm.style.display = 'block';
+        signUpForm.style.display = 'none';
+        signOutButton.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
