@@ -95,6 +95,7 @@ input[type="submit"] {
   text-decoration: none;
   text-align: center;
   transition: background-color 0.3s ease;
+  margin-top: 20px; /* ADDED: extra vertical space above buttons everywhere */
 }
 
 .button-standard:hover,
@@ -188,7 +189,16 @@ form {
   box-sizing: border-box;
 }
 
-/* Word Count Box on Home Page */
+/* Word Count on Home Page */
+#wordCountDisplay {
+  font-size: 3.5rem;     /* BIGGER: overrides inline style */
+  font-weight: bold;
+  color: #5C3317;
+  margin: 40px 0;        /* MORE vertical spacing */
+  text-align: center;
+}
+
+/* Word Count Box (if used elsewhere) */
 .word-count-box {
   background: #fff8e1;
   border: 2px solid #A0522D;
