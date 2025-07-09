@@ -54,7 +54,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-
   <script>
     // Initialize Firebase
     const firebaseConfig = {
@@ -69,7 +68,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
-
 
     const loreListDiv = document.getElementById('lore-list');
     const categoryFilter = document.getElementById('categoryFilter');
@@ -100,23 +98,22 @@
             (!searchTerm || (data.name.toLowerCase().includes(searchTerm) || data.description.toLowerCase().includes(searchTerm)))) {
 
           if (!categorized[docCategory]) categorized[docCategory] = [];
-          categorized[docCategory].push(data);
+          // Store doc and id for links
+          categorized[docCategory].push({ id: doc.id, data });
         }
       });
-
-      let content = '';
 
       if (Object.keys(categorized).length === 0) {
         loreListDiv.innerHTML = '<p><em>No matching entries.</em></p>';
         return;
       }
 
+      let content = '';
       for (const cat in categorized) {
         content += `<h3>${escapeHtml(cat)}</h3><ul class="lore-list-items">`;
-        categorized[cat].forEach(data => {
+        categorized[cat].forEach(({ id, data }) => {
           content += `<li>
-            <strong>${escapeHtml(data.name)}</strong>: ${escapeHtml(data.description)}
-            ${data.references && data.references.length ? `<br><em>References: ${escapeHtml(data.references.join(', '))}</em>` : ''}
+            <a href="lore-detail.html?id=${encodeURIComponent(id)}" class="lore-link"><strong>${escapeHtml(data.name)}</strong></a>: ${escapeHtml(data.description)}
           </li>`;
         });
         content += `</ul>`;
@@ -131,7 +128,7 @@
       displayLore(allLoreDocs, selectedCategory, searchTerm);
     }
 
-    // Fetch from Firestore
+    // Fetch lore entries from Firestore
     db.collection("lore").orderBy("timestamp", "desc").get()
       .then(snapshot => {
         allLoreDocs = snapshot.docs;
