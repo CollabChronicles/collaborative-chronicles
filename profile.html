@@ -24,6 +24,29 @@
       border-bottom: 1px solid #ccc;
       padding-bottom: 6px;
     }
+    #notSignedInSection input {
+      margin: 6px 0;
+      padding: 8px;
+      font-size: 1em;
+      width: 250px;
+      max-width: 90vw;
+    }
+    #notSignedInSection button {
+      margin: 6px 6px 6px 0;
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    #authMessage {
+      margin-top: 8px;
+      font-weight: bold;
+      color: red;
+      min-height: 1.2em;
+    }
+    #usernameMessage {
+      color: red;
+      min-height: 1.2em;
+    }
   </style>
 </head>
 <body>
@@ -40,9 +63,13 @@
 
   <main>
     <!-- When not signed in -->
-    <section id="notSignedInSection" style="display:none; text-align:center;">
-      <h2>You are not signed in.</h2>
-      <p><a class="button-standard" href="auth.html">Sign In or Create an Account</a></p>
+    <section id="notSignedInSection" style="text-align:center;">
+      <h2>Sign In or Create an Account</h2>
+      <input type="email" id="emailInput" placeholder="Email" autocomplete="username" /><br />
+      <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" /><br />
+      <button id="signInBtn" class="button-standard">Sign In</button>
+      <button id="signUpBtn" class="button-standard">Create Account</button>
+      <p id="authMessage"></p>
     </section>
 
     <!-- When signed in -->
@@ -59,7 +86,7 @@
         <input type="text" id="usernameInput" placeholder="Enter new username" />
         <button id="saveUsernameBtn" class="btn-small">Save</button>
         <button id="cancelUsernameBtn" class="btn-small">Cancel</button>
-        <p id="usernameMessage" style="color:red;"></p>
+        <p id="usernameMessage"></p>
       </div>
 
       <button id="signOutButton" class="button-standard">Sign Out</button>
@@ -114,28 +141,101 @@
     const userLoreList = document.getElementById('userLoreList');
     const userStoryList = document.getElementById('userStoryList');
 
-    let currentUser = null;
-    let currentUsername = null; // username string
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const signInBtn = document.getElementById('signInBtn');
+    const signUpBtn = document.getElementById('signUpBtn');
+    const authMessage = document.getElementById('authMessage');
 
-    // On auth state change
+    let currentUser = null;
+    let currentUsername = null;
+
+    // Show correct UI based on auth state
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
-        // Not signed in
+        // Show sign in/up form
         notSignedInSection.style.display = 'block';
         profileSection.style.display = 'none';
+        currentUser = null;
+        currentUsername = null;
+        clearProfileData();
+      } else {
+        currentUser = user;
+        notSignedInSection.style.display = 'none';
+        profileSection.style.display = 'block';
+        authMessage.textContent = '';
+        await loadUsername();
+        displayUsername.textContent = currentUsername;
+        loadUserLore();
+        loadUserStories();
+      }
+    });
+
+    // Sign In
+    signInBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      authMessage.style.color = 'red';
+      authMessage.textContent = '';
+
+      if (!email || !password) {
+        authMessage.textContent = 'Please enter email and password.';
         return;
       }
-      currentUser = user;
-      notSignedInSection.style.display = 'none';
-      profileSection.style.display = 'block';
 
-      // Load or create username
-      await loadUsername();
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        // Clear inputs on success
+        emailInput.value = '';
+        passwordInput.value = '';
+        authMessage.textContent = '';
+      } catch (err) {
+        authMessage.textContent = 'Sign in failed: ' + err.message;
+      }
+    });
 
-      displayUsername.textContent = currentUsername;
+    // Sign Up
+    signUpBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
 
-      loadUserLore();
-      loadUserStories();
+      authMessage.style.color = 'red';
+      authMessage.textContent = '';
+
+      if (!email || !password) {
+        authMessage.textContent = 'Please enter email and password.';
+        return;
+      }
+
+      if (password.length < 6) {
+        authMessage.textContent = 'Password must be at least 6 characters.';
+        return;
+      }
+
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        currentUser = userCredential.user;
+
+        // Set default username to email prefix
+        currentUsername = email.split('@')[0];
+        await db.collection('users').doc(currentUser.uid).set({ username: currentUsername });
+
+        displayUsername.textContent = currentUsername;
+        // Clear inputs on success
+        emailInput.value = '';
+        passwordInput.value = '';
+        authMessage.textContent = '';
+
+        notSignedInSection.style.display = 'none';
+        profileSection.style.display = 'block';
+
+        loadUserLore();
+        loadUserStories();
+
+      } catch (err) {
+        authMessage.textContent = 'Sign up failed: ' + err.message;
+      }
     });
 
     // Load username from Firestore, create default if none
@@ -144,9 +244,7 @@
       if (userDoc.exists && userDoc.data().username) {
         currentUsername = userDoc.data().username;
       } else {
-        // If no username, create default username as email prefix
         currentUsername = currentUser.email.split('@')[0];
-        // Save default username to Firestore
         await db.collection('users').doc(currentUser.uid).set({ username: currentUsername });
       }
     }
@@ -169,6 +267,10 @@
     // Save new username
     saveUsernameBtn.addEventListener('click', async () => {
       const newUsername = usernameInput.value.trim();
+
+      usernameMessage.style.color = 'red';
+      usernameMessage.textContent = '';
+
       if (!newUsername) {
         usernameMessage.textContent = 'Username cannot be empty.';
         return;
@@ -327,9 +429,8 @@
     }
 
     // Edit entry (lore or story)
-    window.editEntry = async function(collection, docId) {
+    window.editEntry = function(collection, docId) {
       // Redirect to write page with editing query params
-      // You will need to implement this editing page accordingly
       window.location.href = `write.html?edit=${collection}&id=${docId}`;
     };
 
@@ -340,7 +441,7 @@
       try {
         await db.collection(collection).doc(docId).delete();
         alert('Entry deleted successfully.');
-        if(collection === 'lore') {
+        if (collection === 'lore') {
           loadUserLore();
         } else {
           loadUserStories();
@@ -350,6 +451,17 @@
         console.error(err);
       }
     };
+
+    // Clear profile data on sign out
+    function clearProfileData() {
+      displayUsername.textContent = '';
+      totalWordCount.textContent = '';
+      userLoreList.innerHTML = '';
+      userStoryList.innerHTML = '';
+      editUsernameDiv.style.display = 'none';
+      editUsernameBtn.style.display = 'inline-block';
+      usernameMessage.textContent = '';
+    }
 
     // Simple escape to prevent HTML injection in displayed text
     function escapeHtml(text) {
