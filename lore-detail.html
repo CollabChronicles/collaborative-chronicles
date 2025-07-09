@@ -28,6 +28,11 @@
       color: red;
       font-weight: bold;
     }
+    .section-title {
+      font-size: 1.2em;
+      margin-top: 1.5em;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -46,6 +51,9 @@
     <h2 id="entryTitle">Loading...</h2>
     <div id="entryContent">
       <p>Loading entry...</p>
+    </div>
+    <div id="referencingWorks">
+      <!-- Filled by script -->
     </div>
   </main>
 
@@ -72,14 +80,13 @@
 
     const entryTitle = document.getElementById('entryTitle');
     const entryContent = document.getElementById('entryContent');
+    const referencingWorksDiv = document.getElementById('referencingWorks');
 
-    // Helper: get URL query param
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
-    // Helper: escape HTML
     function escapeHtml(text) {
       if (!text) return '';
       return text
@@ -92,9 +99,7 @@
 
     async function loadLoreEntry() {
       const id = getQueryParam('id');
-
       if (!id) {
-        // No ID in URL
         entryTitle.textContent = 'Error';
         entryContent.innerHTML = '<p class="error">No entry ID provided. Please access this page through the Lore Archive.</p>';
         return;
@@ -109,7 +114,16 @@
         }
 
         const data = doc.data();
-        entryTitle.textContent = escapeHtml(data.name || '(Untitled)');
+        const loreName = data.name || '(Untitled)';
+        entryTitle.textContent = escapeHtml(loreName);
+
+        // Build references list as clickable
+        let referencesHtml = '<li>None</li>';
+        if (Array.isArray(data.references) && data.references.length) {
+          referencesHtml = data.references.map(ref => `
+            <li><a href="lore.html?search=${encodeURIComponent(ref)}">${escapeHtml(ref)}</a></li>
+          `).join('');
+        }
 
         entryContent.innerHTML = `
           <div class="field">
@@ -124,16 +138,15 @@
           </div>
           <div class="field">
             <span class="label">References:</span>
-            <ul class="references-list">
-              ${Array.isArray(data.references) && data.references.length
-                ? data.references.map(ref => `<li>${escapeHtml(ref)}</li>`).join('')
-                : '<li>None</li>'}
-            </ul>
+            <ul class="references-list">${referencesHtml}</ul>
           </div>
           <div>
             <a class="button-standard" href="lore.html">Back to Lore Archive</a>
           </div>
         `;
+
+        // Load referencing works
+        await loadReferencingWorks(loreName);
       } catch (error) {
         console.error(error);
         entryTitle.textContent = 'Error';
@@ -141,7 +154,65 @@
       }
     }
 
-    // Run on page load
+    async function loadReferencingWorks(loreName) {
+      const referencingItems = [];
+
+      try {
+        // Query lore entries that reference this
+        const loreSnapshot = await db.collection('lore')
+          .where('references', 'array-contains', loreName)
+          .get();
+
+        loreSnapshot.forEach(doc => {
+          const data = doc.data();
+          referencingItems.push({
+            id: doc.id,
+            type: 'lore',
+            name: data.name || '(Untitled)'
+          });
+        });
+
+        // Query story entries that reference this
+        const storySnapshot = await db.collection('story')
+          .where('references', 'array-contains', loreName)
+          .get();
+
+        storySnapshot.forEach(doc => {
+          const data = doc.data();
+          referencingItems.push({
+            id: doc.id,
+            type: 'story',
+            name: data.name || '(Untitled)'
+          });
+        });
+
+        if (!referencingItems.length) {
+          referencingWorksDiv.innerHTML = `
+            <h3 class="section-title">Works referencing "${escapeHtml(loreName)}"</h3>
+            <p>None found.</p>
+          `;
+          return;
+        }
+
+        // Build clickable list
+        const listHtml = referencingItems.map(item => {
+          const link = item.type === 'lore'
+            ? `view-lore.html?id=${item.id}`
+            : `view-story.html?id=${item.id}`;
+          return `<li><a href="${link}">${escapeHtml(item.name)} (${item.type})</a></li>`;
+        }).join('');
+
+        referencingWorksDiv.innerHTML = `
+          <h3 class="section-title">Works referencing "${escapeHtml(loreName)}"</h3>
+          <ul class="references-list">${listHtml}</ul>
+        `;
+      } catch (error) {
+        console.error(error);
+        referencingWorksDiv.innerHTML = '<p class="error">Error loading referencing works. Please try again later.</p>';
+      }
+    }
+
+    // Load on page load
     loadLoreEntry();
   </script>
 </body>
