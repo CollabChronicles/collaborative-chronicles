@@ -52,3 +52,4 @@ I only started logging a few days into the project so the first few days are app
 
 07-08-2025
 - Expanded on site text
+- Made each Lore entry a link that takes it to its own page featuring: category, author, description, and references
