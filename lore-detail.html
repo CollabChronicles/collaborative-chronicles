@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="img-src data: https:;">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Lore Detail</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+  <style>
+    main {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .field {
+      margin-bottom: 12px;
+    }
+    .label {
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .references-list {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Collaborative Chronicles</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a> |
+      <a href="profile.html">Profile</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 id="entryTitle">Loading...</h2>
+    <div id="entryContent">
+      <p>Loading entry...</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>2025 Collaborative Chronicles</p>
+  </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const entryTitle = document.getElementById('entryTitle');
+    const entryContent = document.getElementById('entryContent');
+
+    // Helper: get URL query param
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    // Helper: escape HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    async function loadLoreEntry() {
+      const id = getQueryParam('id');
+
+      if (!id) {
+        // No ID in URL
+        entryTitle.textContent = 'Error';
+        entryContent.innerHTML = '<p class="error">No entry ID provided. Please access this page through the Lore Archive.</p>';
+        return;
+      }
+
+      try {
+        const doc = await db.collection('lore').doc(id).get();
+        if (!doc.exists) {
+          entryTitle.textContent = 'Not Found';
+          entryContent.innerHTML = '<p class="error">That lore entry does not exist. It may have been deleted.</p>';
+          return;
+        }
+
+        const data = doc.data();
+        entryTitle.textContent = escapeHtml(data.name || '(Untitled)');
+
+        entryContent.innerHTML = `
+          <div class="field">
+            <span class="label">Category:</span> ${escapeHtml(data.category || 'Miscellaneous')}
+          </div>
+          <div class="field">
+            <span class="label">Author:</span> ${escapeHtml(data.author || 'Unknown')}
+          </div>
+          <div class="field">
+            <span class="label">Description:</span>
+            <p>${escapeHtml(data.description || 'No description provided.')}</p>
+          </div>
+          <div class="field">
+            <span class="label">References:</span>
+            <ul class="references-list">
+              ${Array.isArray(data.references) && data.references.length
+                ? data.references.map(ref => `<li>${escapeHtml(ref)}</li>`).join('')
+                : '<li>None</li>'}
+            </ul>
+          </div>
+          <div>
+            <a class="button-standard" href="lore.html">Back to Lore Archive</a>
+          </div>
+        `;
+      } catch (error) {
+        console.error(error);
+        entryTitle.textContent = 'Error';
+        entryContent.innerHTML = '<p class="error">Error loading lore entry. Please try again later.</p>';
+      }
+    }
+
+    // Run on page load
+    loadLoreEntry();
+  </script>
+</body>
+</html>
