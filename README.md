@@ -29,7 +29,7 @@ I only started logging a few days into the project so the first few days are app
 - Required listed references in Story form to appear in the actual content section
 - Improved overall presentation of site
 - Lore page entries displayed grouped by category (Character, Place, Faction, Object, Tale, Miscellaneous)
-- Added ord counter and suggested donation feature on "Write!" page
+- Added word counter and suggested donation feature on "Write!" page
 - Added total Story wordcount on the homepage
 
 07-06-2025
@@ -49,3 +49,6 @@ I only started logging a few days into the project so the first few days are app
 - Tweaking site visuals
 - Set up profile system by implementing sign in/out and usernames
 - Allows users to see their submissions and word count they've contributed
+
+07-08-2025
+- Expanded on site text
