@@ -118,31 +118,37 @@
           </div>
         `;
 
-        // Fetch references with case-insensitive matching for linking
+        // Build map of lore names (lowercase) to ids & originals, safely
+        const allLoreSnapshot = await db.collection('lore').get();
+        const loreMap = new Map();
+        allLoreSnapshot.forEach(refDoc => {
+          const name = refDoc.data().name;
+          if (typeof name === 'string' && name.trim() !== '') {
+            loreMap.set(name.trim().toLowerCase(), {
+              id: refDoc.id,
+              originalName: name
+            });
+          }
+        });
+
+        // Build map of story names safely
+        const allStorySnapshot = await db.collection('story').get();
+        const storyMap = new Map();
+        allStorySnapshot.forEach(refDoc => {
+          const name = refDoc.data().name;
+          if (typeof name === 'string' && name.trim() !== '') {
+            storyMap.set(name.trim().toLowerCase(), {
+              id: refDoc.id,
+              originalName: name
+            });
+          }
+        });
+
+        // Reference links (case-insensitive matching)
         let referenceLinks = [];
         if (Array.isArray(data.references) && data.references.length) {
-          // Build map of lore names (lowercase) to ids & originals
-          const allLoreSnapshot = await db.collection('lore').get();
-          const loreMap = new Map();
-          allLoreSnapshot.forEach(refDoc => {
-            loreMap.set(refDoc.data().name.trim().toLowerCase(), {
-              id: refDoc.id,
-              originalName: refDoc.data().name
-            });
-          });
-
-          // Build map of story names for reference linking if needed
-          const allStorySnapshot = await db.collection('story').get();
-          const storyMap = new Map();
-          allStorySnapshot.forEach(refDoc => {
-            storyMap.set(refDoc.data().name.trim().toLowerCase(), {
-              id: refDoc.id,
-              originalName: refDoc.data().name
-            });
-          });
-
           referenceLinks = data.references.map(name => {
-            const key = name.trim().toLowerCase();
+            const key = typeof name === 'string' ? name.trim().toLowerCase() : '';
             if (loreMap.has(key)) {
               const loreEntry = loreMap.get(key);
               return `<li><a href="lore-detail.html?id=${loreEntry.id}">${escapeHtml(loreEntry.originalName)}</a></li>`;
@@ -166,18 +172,19 @@
           </div>
         `;
 
-        // Query for works referencing this story (case-insensitive)
+        // Works referencing this story (case-insensitive)
         const allLoreDocs = await db.collection('lore').get();
         const allStoryDocs = await db.collection('story').get();
 
         const referencingWorks = [];
-
         const storyNameLower = (data.name || '').trim().toLowerCase();
 
         allLoreDocs.forEach(doc => {
           const docData = doc.data();
           if (Array.isArray(docData.references)) {
-            const refsLower = docData.references.map(r => r.trim().toLowerCase());
+            const refsLower = docData.references
+              .filter(r => typeof r === 'string')
+              .map(r => r.trim().toLowerCase());
             if (refsLower.includes(storyNameLower)) {
               referencingWorks.push({
                 id: doc.id,
@@ -191,10 +198,11 @@
         allStoryDocs.forEach(doc => {
           const docData = doc.data();
           if (Array.isArray(docData.references)) {
-            const refsLower = docData.references.map(r => r.trim().toLowerCase());
+            const refsLower = docData.references
+              .filter(r => typeof r === 'string')
+              .map(r => r.trim().toLowerCase());
             if (refsLower.includes(storyNameLower)) {
-              // Skip self-reference
-              if (doc.id !== id) {
+              if (doc.id !== id) { // skip self
                 referencingWorks.push({
                   id: doc.id,
                   type: 'story',
