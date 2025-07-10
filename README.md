@@ -56,4 +56,4 @@ I only started logging a few days into the project so the first few days are app
 
 07-09-2025
 - Cleaned up profile page
-- Fixed issues with Lore and Story links
+- Fixed a whole lot of issues with Lore and Story links
