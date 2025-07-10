@@ -57,3 +57,4 @@ I only started logging a few days into the project so the first few days are app
 07-09-2025
 - Cleaned up profile page
 - Fixed a whole lot of issues with Lore and Story links
+- Improved on edit function by auto-filling original entry to make it easier for writers to see what they originally had and edit it
