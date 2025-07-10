@@ -7,7 +7,7 @@
   <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
   <style>
-    #cancelEditBtn {
+    #cancelEditBtn, #cancelEditBtnStory {
       margin-left: 8px;
       cursor: pointer;
     }
@@ -15,11 +15,18 @@
       margin-top: 8px;
       font-weight: bold;
     }
-    /* NEW: Word count suggestion style */
     #wordCounter {
       margin-top: 6px;
       font-style: italic;
       color: #555;
+    }
+    #recentLoreList {
+      margin-top: 12px;
+      padding-left: 20px;
+    }
+    #recentLoreList li {
+      list-style-type: disc;
+      margin-bottom: 4px;
     }
   </style>
 </head>
@@ -37,10 +44,7 @@
 
   <main>
     <h2>Add to the World</h2>
-    <p>Contribute new lore entries or add to the ongoing story below! Add an adventurous character, a scheming faction, a legendary artifact, or anything else you can imagine! Fantasy, sci-fi, mystery, noir, serious, humorous, grimdark, noir, whimsical...any style goes here. However, please only submit original content. Avoid using copyrighted characters, settings, or text from existing franchises. We want to make an original world together!</p>
-    <p>In order to encourage writer collaboration and maintain narrative cohesiveness, we require all new Lore entries to reference an already existing Lore entry, and all new Story entries to reference a recently referenced Lore entry. This ensures narrative continuity and interconnectivity of all elements of the world. </p>
-    <p>Collaborative Chronicles is a world for everyone. Inappropriate or hateful additions will be removed promptly. </p>
-    <p>P.S. - have fun!</p>
+    <p>Contribute new lore entries or add to the ongoing story below! Fantasy, sci-fi, mystery... any style is welcome, but please keep it original and avoid copyrighted materials. To maintain narrative continuity, all new Lore entries must reference at least one existing Lore, and Story entries must reference a recently referenced Lore item (shown below).</p>
 
     <section id="toggleSection" class="toggle-buttons">
       <button class="toggle-button active" id="loreToggle">Add Lore</button>
@@ -84,7 +88,6 @@
         <label for="storyContent">Content (must mention at least one reference):</label>
         <textarea id="storyContent" rows="10" required></textarea>
 
-        <!-- NEW: Word counter / donation suggestion -->
         <div id="wordCounter">0 words | suggested donation: 0 cents</div>
         <p></p>
 
@@ -95,6 +98,11 @@
         <button type="button" id="cancelEditBtnStory" style="display:none;">Cancel Edit</button>
         <p id="storyStatusMessage"></p>
       </form>
+
+      <h3>Recently Referenced Lore (choose from these):</h3>
+      <ul id="recentLoreList">
+        <li>Loading...</li>
+      </ul>
     </section>
   </main>
 
@@ -107,246 +115,233 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
-    authDomain: "collaborative-chronicles.firebaseapp.com",
-    projectId: "collaborative-chronicles",
-    storageBucket: "collaborative-chronicles.appspot.com",
-    messagingSenderId: "127752938400",
-    appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-    measurementId: "G-0HXV6NGHQP"
-  };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  // DOM
-  const loreToggle = document.getElementById('loreToggle');
-  const storyToggle = document.getElementById('storyToggle');
-  const loreFormSection = document.getElementById('loreFormSection');
-  const storyFormSection = document.getElementById('storyFormSection');
-  const loreStatusMessage = document.getElementById('loreStatusMessage');
-  const storyStatusMessage = document.getElementById('storyStatusMessage');
+    const loreToggle = document.getElementById('loreToggle');
+    const storyToggle = document.getElementById('storyToggle');
+    const loreFormSection = document.getElementById('loreFormSection');
+    const storyFormSection = document.getElementById('storyFormSection');
+    const loreStatusMessage = document.getElementById('loreStatusMessage');
+    const storyStatusMessage = document.getElementById('storyStatusMessage');
+    const storyContent = document.getElementById('storyContent');
+    const wordCounter = document.getElementById('wordCounter');
+    const recentLoreList = document.getElementById('recentLoreList');
+    const loreForm = document.getElementById('loreForm');
+    const storyForm = document.getElementById('storyForm');
 
-  const storyContent = document.getElementById('storyContent');
-  const wordCounter = document.getElementById('wordCounter');
+    let currentUser = null;
+    let currentUsername = null;
+    let recentLoreNamesSet = new Set();
 
-  // Forms
-  const loreForm = document.getElementById('loreForm');
-  const storyForm = document.getElementById('storyForm');
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        await loadUsername();
+      } else {
+        currentUser = null;
+        currentUsername = null;
+      }
+    });
 
-  // User
-  let currentUser = null;
-  let currentUsername = null;
-
-  // Monitor auth state
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      currentUser = user;
-      await loadUsername();
-    } else {
-      currentUser = null;
-      currentUsername = null;
+    async function loadUsername() {
+      if (!currentUser) return;
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      currentUsername = doc.exists && doc.data().username
+        ? doc.data().username
+        : currentUser.email.split('@')[0];
     }
-  });
 
-  async function loadUsername() {
-    if (!currentUser) return;
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    if (doc.exists && doc.data().username) {
-      currentUsername = doc.data().username;
-    } else {
-      currentUsername = currentUser.email.split('@')[0];
+    storyContent.addEventListener('input', () => {
+      const words = countWords(storyContent.value);
+      const cents = words;
+      wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${cents} cent${cents !== 1 ? 's' : ''}`;
+    });
+
+    function countWords(text) {
+      if (!text) return 0;
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
     }
-  }
 
-  // Word counter (1 cent per word)
-  storyContent.addEventListener('input', () => {
-    const words = countWords(storyContent.value);
-    wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${words} cent${words !== 1 ? 's' : ''}`;
-  });
+    loreToggle.addEventListener('click', () => {
+      loreFormSection.style.display = 'block';
+      storyFormSection.style.display = 'none';
+      loreToggle.classList.add('active');
+      storyToggle.classList.remove('active');
+      loreToggle.style.opacity = '1';
+      storyToggle.style.opacity = '0.5';
+    });
 
-  function countWords(text) {
-    if (!text) return 0;
-    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-  }
+    storyToggle.addEventListener('click', () => {
+      loreFormSection.style.display = 'none';
+      storyFormSection.style.display = 'block';
+      storyToggle.classList.add('active');
+      loreToggle.classList.remove('active');
+      storyToggle.style.opacity = '1';
+      loreToggle.style.opacity = '0.5';
+    });
 
-  // Toggle forms
-  loreToggle.addEventListener('click', () => {
     loreFormSection.style.display = 'block';
     storyFormSection.style.display = 'none';
     loreToggle.classList.add('active');
     storyToggle.classList.remove('active');
     loreToggle.style.opacity = '1';
     storyToggle.style.opacity = '0.5';
-  });
 
-  storyToggle.addEventListener('click', () => {
-    loreFormSection.style.display = 'none';
-    storyFormSection.style.display = 'block';
-    storyToggle.classList.add('active');
-    loreToggle.classList.remove('active');
-    storyToggle.style.opacity = '1';
-    loreToggle.style.opacity = '0.5';
-  });
-
-  loreFormSection.style.display = 'block';
-  storyFormSection.style.display = 'none';
-  loreToggle.classList.add('active');
-  storyToggle.classList.remove('active');
-  loreToggle.style.opacity = '1';
-  storyToggle.style.opacity = '0.5';
-
-  loreForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    loreStatusMessage.textContent = '';
-
-    if (!currentUser || !currentUsername) {
-      loreStatusMessage.textContent = 'You must be signed in to submit.';
-      return;
-    }
-
-    const name = document.getElementById('loreName').value.trim();
-    const category = document.getElementById('loreCategory').value;
-    const description = document.getElementById('loreDescription').value.trim();
-    const references = document.getElementById('loreReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-    if (!name || !category || !description || references.length === 0) {
-      loreStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
-      return;
-    }
-
-    try {
-      await db.collection('lore').add({
-        name,
-        category,
-        description,
-        references,
-        author: currentUsername,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      loreStatusMessage.style.color = 'green';
-      loreStatusMessage.textContent = 'Lore submitted successfully!';
-      loreForm.reset();
-    } catch (err) {
-      loreStatusMessage.style.color = 'red';
-      loreStatusMessage.textContent = 'Error submitting lore. Please try again.';
-      console.error(err);
-    }
-  });
-
-  storyForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    storyStatusMessage.textContent = '';
-
-    if (!currentUser || !currentUsername) {
-      storyStatusMessage.textContent = 'You must be signed in to submit.';
-      return;
-    }
-
-    const name = document.getElementById('storyName').value.trim();
-    const content = document.getElementById('storyContent').value.trim();
-    const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-    if (!content || references.length === 0) {
-      storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
-      return;
-    }
-
-    try {
-      await db.collection('story').add({
-        name: name || null,
-        content,
-        references,
-        author: currentUsername,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      storyStatusMessage.style.color = 'green';
-      storyStatusMessage.textContent = 'Story submitted successfully!';
-      storyForm.reset();
-      wordCounter.textContent = '0 words | suggested donation: 0 cents';
-    } catch (err) {
-      storyStatusMessage.style.color = 'red';
-      storyStatusMessage.textContent = 'Error submitting story. Please try again.';
-      console.error(err);
-    }
-  });
-
-  // Load recently referenced lore
-  window.addEventListener('load', async () => {
-    const recentLoreDiv = document.createElement('div');
-    recentLoreDiv.id = 'recentLoreList';
-    recentLoreDiv.innerHTML = `<h3>Recently Referenced Lore (pick from these):</h3><p>Loading...</p>`;
-    storyFormSection.appendChild(recentLoreDiv);
-
-    try {
-      // 1. Get recent stories and lore referencing other lore
-      const storiesSnap = await db.collection('story').orderBy('timestamp', 'desc').limit(30).get();
-      const loreSnap = await db.collection('lore').orderBy('timestamp', 'desc').limit(30).get();
-
-      const referenceCount = {};
-      storiesSnap.forEach(doc => {
-        const refs = doc.data().references || [];
-        refs.forEach(ref => {
-          referenceCount[ref] = (referenceCount[ref] || 0) + 1;
+    // Load Recently Referenced Lore
+    async function loadRecentLore() {
+      try {
+        // Get lore items with most recent timestamp among those *referenced*
+        let loreRefCounts = new Map();
+        const storySnapshot = await db.collection('story').get();
+        storySnapshot.forEach(doc => {
+          const refs = doc.data().references || [];
+          refs.forEach(r => {
+            if (r) loreRefCounts.set(r, (loreRefCounts.get(r) || 0) + 1);
+          });
         });
-      });
-      loreSnap.forEach(doc => {
-        const refs = doc.data().references || [];
-        refs.forEach(ref => {
-          referenceCount[ref] = (referenceCount[ref] || 0) + 1;
-        });
-      });
 
-      // 2. Sort by most referenced
-      const sortedReferences = Object.entries(referenceCount)
-        .sort((a, b) => b[1] - a[1])
-        .map(entry => entry[0]);
+        const sortedRefs = Array.from(loreRefCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(entry => entry[0]);
 
-      let finalLoreNames = sortedReferences.slice(0, 20);
+        let finalLoreNames = [];
 
-      // 3. If not enough, get recent lore names
-      if (finalLoreNames.length < 20) {
-        const extraSnap = await db.collection('lore').orderBy('timestamp', 'desc').limit(30).get();
-        extraSnap.forEach(doc => {
-          const name = doc.data().name;
-          if (name && !finalLoreNames.includes(name)) {
-            finalLoreNames.push(name);
-          }
-        });
-        finalLoreNames = finalLoreNames.slice(0, 20);
+        // Add up to 20 from most referenced
+        for (let name of sortedRefs) {
+          if (finalLoreNames.length >= 20) break;
+          finalLoreNames.push(name);
+        }
+
+        if (finalLoreNames.length < 20) {
+          // Fill with recently created lore
+          const moreLore = await db.collection('lore')
+            .orderBy('timestamp', 'desc')
+            .limit(20 - finalLoreNames.length)
+            .get();
+
+          moreLore.forEach(doc => {
+            const name = doc.data().name;
+            if (name && !finalLoreNames.includes(name)) {
+              finalLoreNames.push(name);
+            }
+          });
+        }
+
+        // Display them
+        if (finalLoreNames.length) {
+          recentLoreList.innerHTML = finalLoreNames
+            .map(name => `<li>${name}</li>`)
+            .join('');
+          recentLoreNamesSet = new Set(finalLoreNames.map(n => n.toLowerCase()));
+        } else {
+          recentLoreList.innerHTML = '<li>None found.</li>';
+          recentLoreNamesSet = new Set();
+        }
+
+      } catch (error) {
+        console.error(error);
+        recentLoreList.innerHTML = '<li>Error loading recently referenced lore.</li>';
+      }
+    }
+
+    loadRecentLore();
+
+    // SUBMIT HANDLERS
+    loreForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loreStatusMessage.textContent = '';
+
+      if (!currentUser || !currentUsername) {
+        loreStatusMessage.textContent = 'You must be signed in to submit.';
+        return;
       }
 
-      // 4. Map to doc IDs
-      const loreQuery = await db.collection('lore').where('name', 'in', finalLoreNames.slice(0,10)).get();
-      const nameToId = {};
-      loreQuery.forEach(doc => {
-        nameToId[doc.data().name] = doc.id;
-      });
+      const name = document.getElementById('loreName').value.trim();
+      const category = document.getElementById('loreCategory').value;
+      const description = document.getElementById('loreDescription').value.trim();
+      const references = document.getElementById('loreReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-      // 5. Build links
-      const linksHtml = finalLoreNames.map(name => {
-        const id = nameToId[name];
-        if (id) {
-          return `<li><a href="lore-detail.html?id=${id}">${name}</a></li>`;
-        } else {
-          return `<li>${name}</li>`;
-        }
-      }).join('');
+      if (!name || !category || !description || references.length === 0) {
+        loreStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+        return;
+      }
 
-      recentLoreDiv.innerHTML = `
-        <h3>Recently Referenced Lore (pick from these):</h3>
-        <ul class="references-list">${linksHtml}</ul>
-      `;
-    } catch (err) {
-      console.error(err);
-      recentLoreDiv.innerHTML = `<p class="error">Failed to load recent lore references. Please try again later.</p>`;
-    }
-  });
-</script>
+      try {
+        await db.collection('lore').add({
+          name,
+          category,
+          description,
+          references,
+          author: currentUsername,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        loreStatusMessage.style.color = 'green';
+        loreStatusMessage.textContent = 'Lore submitted successfully!';
+        loreForm.reset();
+      } catch (err) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'Error submitting lore. Please try again.';
+        console.error(err);
+      }
+    });
 
+    storyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      storyStatusMessage.textContent = '';
 
+      if (!currentUser || !currentUsername) {
+        storyStatusMessage.textContent = 'You must be signed in to submit.';
+        return;
+      }
+
+      const name = document.getElementById('storyName').value.trim();
+      const content = document.getElementById('storyContent').value.trim();
+      const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+      if (!content || references.length === 0) {
+        storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+        return;
+      }
+
+      // NEW: Enforce that at least one reference is in the recent set
+      const hasValidReference = references.some(ref => recentLoreNamesSet.has(ref.toLowerCase()));
+      if (!hasValidReference) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'You must include at least one of the recently referenced lore items shown below.';
+        return;
+      }
+
+      try {
+        await db.collection('story').add({
+          name: name || null,
+          content,
+          references,
+          author: currentUsername,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        storyStatusMessage.style.color = 'green';
+        storyStatusMessage.textContent = 'Story submitted successfully!';
+        storyForm.reset();
+        wordCounter.textContent = '0 words | suggested donation: 0 cents';
+      } catch (err) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'Error submitting story. Please try again.';
+        console.error(err);
+      }
+    });
+  </script>
 </body>
 </html>
