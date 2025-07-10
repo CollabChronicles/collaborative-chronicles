@@ -121,22 +121,21 @@
           </div>
         `;
 
-        // Fetch IDs for references
+        // Case-insensitive map for references
         let referenceLinks = [];
         if (Array.isArray(data.references) && data.references.length) {
-          const refQuery = await db.collection('lore')
-            .where('name', 'in', data.references.slice(0, 10))
-            .get();
-
+          // Fetch all lore entries (or at least a large set)
+          const refQuery = await db.collection('lore').get();
           const refMap = {};
           refQuery.forEach(refDoc => {
-            refMap[refDoc.data().name] = refDoc.id;
+            const nameLower = refDoc.data().name.toLowerCase();
+            refMap[nameLower] = refDoc.id;
           });
 
           referenceLinks = data.references.map(name => {
-            const refId = refMap[name];
-            if (refId) {
-              return `<li><a href="lore-detail.html?id=${refId}">${escapeHtml(name)}</a></li>`;
+            const id = refMap[name.toLowerCase()];
+            if (id) {
+              return `<li><a href="lore-detail.html?id=${id}">${escapeHtml(name)}</a></li>`;
             } else {
               return `<li>${escapeHtml(name)}</li>`;
             }
