@@ -311,10 +311,19 @@
       const content = document.getElementById('storyContent').value.trim();
       const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-      if (!content || references.length === 0) {
-        storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
-        return;
-      }
+     if (!content || references.length === 0) {
+  storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+  return;
+}
+
+// Check that at least one reference is *mentioned* in content
+const lowerContent = content.toLowerCase();
+const matchedReference = references.find(ref => lowerContent.includes(ref.toLowerCase()));
+if (!matchedReference) {
+  storyStatusMessage.textContent = 'Your story must mention at least one of the references in its content.';
+  return;
+}
+
 
       // NEW: Enforce that at least one reference is in the recent set
       const hasValidReference = references.some(ref => recentLoreNamesSet.has(ref.toLowerCase()));
