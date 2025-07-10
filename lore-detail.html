@@ -120,14 +120,39 @@
             <span class="label">Description:</span>
             <p>${escapeHtml(data.description || 'No description provided.')}</p>
           </div>
-          <div class="field">
-            <span class="label">References:</span>
-            <ul class="references-list">
-              ${Array.isArray(data.references) && data.references.length
-                ? data.references.map(ref => `<li>${escapeHtml(ref)}</li>`).join('')
-                : '<li>None</li>'}
-            </ul>
-          </div>
+          // Fetch IDs for references
+let referenceLinks = [];
+if (Array.isArray(data.references) && data.references.length) {
+  const refQuery = await db.collection('lore')
+    .where('name', 'in', data.references.slice(0, 10)) // Firestore limits to 10
+    .get();
+
+  const refMap = {};
+  refQuery.forEach(doc => {
+    refMap[doc.data().name] = doc.id;
+  });
+
+  referenceLinks = data.references.map(name => {
+    const id = refMap[name];
+    if (id) {
+      return `<li><a href="lore-detail.html?id=${id}">${escapeHtml(name)}</a></li>`;
+    } else {
+      return `<li>${escapeHtml(name)}</li>`;
+    }
+  });
+} else {
+  referenceLinks = ['<li>None</li>'];
+}
+
+html += `
+  <div class="field">
+    <span class="label">References:</span>
+    <ul class="references-list">
+      ${referenceLinks.join('')}
+    </ul>
+  </div>
+`;
+
         `;
 
         // Query for works referencing this lore
