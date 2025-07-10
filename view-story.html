@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="img-src data:;">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Story Detail</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
+  <style>
+    main {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .field {
+      margin-bottom: 12px;
+    }
+    .label {
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .references-list {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Collaborative Chronicles</h1>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a> |
+      <a href="profile.html">Profile</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 id="entryTitle">Loading...</h2>
+    <div id="entryContent">
+      <p>Loading entry...</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>2025 Collaborative Chronicles</p>
+  </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const entryTitle = document.getElementById('entryTitle');
+    const entryContent = document.getElementById('entryContent');
+
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    async function loadStoryEntry() {
+      const id = getQueryParam('id');
+
+      if (!id) {
+        entryTitle.textContent = 'Error';
+        entryContent.innerHTML = '<p class="error">No entry ID provided. Please access this page through the Story Archive.</p>';
+        return;
+      }
+
+      try {
+        const doc = await db.collection('story').doc(id).get();
+        if (!doc.exists) {
+          entryTitle.textContent = 'Not Found';
+          entryContent.innerHTML = '<p class="error">That story entry does not exist. It may have been deleted.</p>';
+          return;
+        }
+
+        const data = doc.data();
+        entryTitle.textContent = escapeHtml(data.name || '(Untitled)');
+
+        let html = `
+          <div class="field">
+            <span class="label">Author:</span> ${escapeHtml(data.author || 'Unknown')}
+          </div>
+          <div class="field">
+            <span class="label">Content:</span>
+            <p>${escapeHtml(data.content || 'No content provided.')}</p>
+          </div>
+        `;
+
+        // Handle references
+        if (Array.isArray(data.references) && data.references.length > 0) {
+          const loreNames = data.references;
+          let referenceLinks = [];
+
+          // For each reference name, look up its document to get ID
+          const loreQuery = await db.collection('lore')
+            .where('name', 'in', loreNames)
+            .get();
+
+          const loreMap = new Map();
+          loreQuery.forEach(doc => {
+            loreMap.set(doc.data().name, doc.id);
+          });
+
+          referenceLinks = loreNames.map(name => {
+            const loreId = loreMap.get(name);
+            if (loreId) {
+              return `<li><a href="lore-detail.html?id=${loreId}">${escapeHtml(name)}</a></li>`;
+            } else {
+              return `<li>${escapeHtml(name)} (Not found)</li>`;
+            }
+          });
+
+          html += `
+            <div class="field">
+              <span class="label">References:</span>
+              <ul class="references-list">
+                ${referenceLinks.join('')}
+              </ul>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="field">
+              <span class="label">References:</span>
+              <ul class="references-list">
+                <li>None</li>
+              </ul>
+            </div>
+          `;
+        }
+
+        html += `
+          <div>
+            <a class="button-standard" href="story.html">Back to Story Archive</a>
+          </div>
+        `;
+
+        entryContent.innerHTML = html;
+      } catch (error) {
+        console.error(error);
+        entryTitle.textContent = 'Error';
+        entryContent.innerHTML = '<p class="error">Error loading story entry. Please try again later.</p>';
+      }
+    }
+
+    loadStoryEntry();
+  </script>
+</body>
+</html>
