@@ -107,7 +107,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
- <script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
     authDomain: "collaborative-chronicles.firebaseapp.com",
@@ -158,16 +158,14 @@
     if (doc.exists && doc.data().username) {
       currentUsername = doc.data().username;
     } else {
-      // Default fallback
       currentUsername = currentUser.email.split('@')[0];
     }
   }
 
-  // Word counter
+  // Word counter (1 cent per word)
   storyContent.addEventListener('input', () => {
     const words = countWords(storyContent.value);
-    const cents = Math.max(0, Math.round(words * 0.5));
-    wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${cents} cent${cents !== 1 ? 's' : ''}`;
+    wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${words} cent${words !== 1 ? 's' : ''}`;
   });
 
   function countWords(text) {
@@ -194,15 +192,12 @@
     loreToggle.style.opacity = '0.5';
   });
 
-  // Initialize toggles state
   loreFormSection.style.display = 'block';
   storyFormSection.style.display = 'none';
   loreToggle.classList.add('active');
   storyToggle.classList.remove('active');
   loreToggle.style.opacity = '1';
   storyToggle.style.opacity = '0.5';
-
-  // SUBMIT HANDLERS
 
   loreForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -278,7 +273,80 @@
       console.error(err);
     }
   });
+
+  // Load recently referenced lore
+  window.addEventListener('load', async () => {
+    const recentLoreDiv = document.createElement('div');
+    recentLoreDiv.id = 'recentLoreList';
+    recentLoreDiv.innerHTML = `<h3>Recently Referenced Lore (pick from these):</h3><p>Loading...</p>`;
+    storyFormSection.appendChild(recentLoreDiv);
+
+    try {
+      // 1. Get recent stories and lore referencing other lore
+      const storiesSnap = await db.collection('story').orderBy('timestamp', 'desc').limit(30).get();
+      const loreSnap = await db.collection('lore').orderBy('timestamp', 'desc').limit(30).get();
+
+      const referenceCount = {};
+      storiesSnap.forEach(doc => {
+        const refs = doc.data().references || [];
+        refs.forEach(ref => {
+          referenceCount[ref] = (referenceCount[ref] || 0) + 1;
+        });
+      });
+      loreSnap.forEach(doc => {
+        const refs = doc.data().references || [];
+        refs.forEach(ref => {
+          referenceCount[ref] = (referenceCount[ref] || 0) + 1;
+        });
+      });
+
+      // 2. Sort by most referenced
+      const sortedReferences = Object.entries(referenceCount)
+        .sort((a, b) => b[1] - a[1])
+        .map(entry => entry[0]);
+
+      let finalLoreNames = sortedReferences.slice(0, 20);
+
+      // 3. If not enough, get recent lore names
+      if (finalLoreNames.length < 20) {
+        const extraSnap = await db.collection('lore').orderBy('timestamp', 'desc').limit(30).get();
+        extraSnap.forEach(doc => {
+          const name = doc.data().name;
+          if (name && !finalLoreNames.includes(name)) {
+            finalLoreNames.push(name);
+          }
+        });
+        finalLoreNames = finalLoreNames.slice(0, 20);
+      }
+
+      // 4. Map to doc IDs
+      const loreQuery = await db.collection('lore').where('name', 'in', finalLoreNames.slice(0,10)).get();
+      const nameToId = {};
+      loreQuery.forEach(doc => {
+        nameToId[doc.data().name] = doc.id;
+      });
+
+      // 5. Build links
+      const linksHtml = finalLoreNames.map(name => {
+        const id = nameToId[name];
+        if (id) {
+          return `<li><a href="lore-detail.html?id=${id}">${name}</a></li>`;
+        } else {
+          return `<li>${name}</li>`;
+        }
+      }).join('');
+
+      recentLoreDiv.innerHTML = `
+        <h3>Recently Referenced Lore (pick from these):</h3>
+        <ul class="references-list">${linksHtml}</ul>
+      `;
+    } catch (err) {
+      console.error(err);
+      recentLoreDiv.innerHTML = `<p class="error">Failed to load recent lore references. Please try again later.</p>`;
+    }
+  });
 </script>
+
 
 </body>
 </html>
