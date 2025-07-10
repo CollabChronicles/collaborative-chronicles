@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="img-src data:;">
+  <meta http-equiv="Content-Security-Policy" content="img-src data: https:;">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - Story Detail</title>
+  <title>Collaborative Chronicles - Lore Detail</title>
   <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
   <style>
     main {
@@ -88,20 +88,20 @@
         .replace(/'/g, "&#039;");
     }
 
-    async function loadStoryEntry() {
+    async function loadLoreEntry() {
       const id = getQueryParam('id');
 
       if (!id) {
         entryTitle.textContent = 'Error';
-        entryContent.innerHTML = '<p class="error">No entry ID provided. Please access this page through the Story Archive.</p>';
+        entryContent.innerHTML = '<p class="error">No entry ID provided. Please access this page through the Lore Archive.</p>';
         return;
       }
 
       try {
-        const doc = await db.collection('story').doc(id).get();
+        const doc = await db.collection('lore').doc(id).get();
         if (!doc.exists) {
           entryTitle.textContent = 'Not Found';
-          entryContent.innerHTML = '<p class="error">That story entry does not exist. It may have been deleted.</p>';
+          entryContent.innerHTML = '<p class="error">That lore entry does not exist. It may have been deleted.</p>';
           return;
         }
 
@@ -110,28 +110,27 @@
 
         let html = `
           <div class="field">
+            <span class="label">Category:</span> ${escapeHtml(data.category || 'Miscellaneous')}
+          </div>
+          <div class="field">
             <span class="label">Author:</span> ${escapeHtml(data.author || 'Unknown')}
           </div>
           <div class="field">
-            <span class="label">Content:</span>
-            <p>${escapeHtml(data.content || 'No content provided.')}</p>
+            <span class="label">Description:</span>
+            <p>${escapeHtml(data.description || 'No description provided.')}</p>
           </div>
         `;
 
-        // Handle references (case-insensitive matching)
-        if (Array.isArray(data.references) && data.references.length > 0) {
-          const loreNamesLower = data.references.map(name => name.toLowerCase());
-          let referenceLinks = [];
-
-          // Query lore where name in references (case-insensitive handled after fetch)
-          // Firestore "in" query is case-sensitive, so fetch all lore and filter client-side
-          const loreSnapshot = await db.collection('lore').get();
-
-          // Map lore name lowercased => {id, originalName}
+        // Fetch references with case-insensitive matching for linking
+        let referenceLinks = [];
+        if (Array.isArray(data.references) && data.references.length) {
+          const allLoreSnapshot = await db.collection('lore').get();
           const loreMap = new Map();
-          loreSnapshot.forEach(doc => {
-            const loreName = doc.data().name || '';
-            loreMap.set(loreName.toLowerCase(), { id: doc.id, originalName: loreName });
+          allLoreSnapshot.forEach(refDoc => {
+            loreMap.set(refDoc.data().name.toLowerCase(), {
+              id: refDoc.id,
+              originalName: refDoc.data().name
+            });
           });
 
           referenceLinks = data.references.map(name => {
@@ -139,32 +138,79 @@
             if (loreEntry) {
               return `<li><a href="lore-detail.html?id=${loreEntry.id}">${escapeHtml(loreEntry.originalName)}</a></li>`;
             } else {
-              return `<li>${escapeHtml(name)} (Not found)</li>`;
+              return `<li>${escapeHtml(name)}</li>`;
             }
           });
-
-          html += `
-            <div class="field">
-              <span class="label">References:</span>
-              <ul class="references-list">
-                ${referenceLinks.join('')}
-              </ul>
-            </div>
-          `;
         } else {
-          html += `
-            <div class="field">
-              <span class="label">References:</span>
-              <ul class="references-list">
-                <li>None</li>
-              </ul>
-            </div>
-          `;
+          referenceLinks = ['<li>None</li>'];
         }
 
         html += `
+          <div class="field">
+            <span class="label">References:</span>
+            <ul class="references-list">
+              ${referenceLinks.join('')}
+            </ul>
+          </div>
+        `;
+
+        // Query for works referencing this lore (case-insensitive)
+        const allLoreDocs = await db.collection('lore').get();
+        const allStoryDocs = await db.collection('story').get();
+
+        const referencingWorks = [];
+
+        const loreNameLower = (data.name || '').toLowerCase();
+
+        allLoreDocs.forEach(doc => {
+          const docData = doc.data();
+          if (Array.isArray(docData.references)) {
+            const refsLower = docData.references.map(r => r.toLowerCase());
+            if (refsLower.includes(loreNameLower)) {
+              referencingWorks.push({
+                id: doc.id,
+                type: 'lore',
+                name: docData.name || '(Untitled)'
+              });
+            }
+          }
+        });
+
+        allStoryDocs.forEach(doc => {
+          const docData = doc.data();
+          if (Array.isArray(docData.references)) {
+            const refsLower = docData.references.map(r => r.toLowerCase());
+            if (refsLower.includes(loreNameLower)) {
+              referencingWorks.push({
+                id: doc.id,
+                type: 'story',
+                name: docData.name || '(Untitled)'
+              });
+            }
+          }
+        });
+
+        html += `
+          <div class="field">
+            <span class="label">Works referencing "${escapeHtml(data.name)}":</span>
+            <ul class="references-list">
+              ${
+                referencingWorks.length
+                ? referencingWorks.map(work => {
+                    const link = work.type === 'lore'
+                      ? `lore-detail.html?id=${work.id}`
+                      : `view-story.html?id=${work.id}`;
+                    return `<li><a href="${link}">${escapeHtml(work.name)}</a></li>`;
+                  }).join('')
+                : '<li>None</li>'
+              }
+            </ul>
+          </div>
+        `;
+
+        html += `
           <div>
-            <a class="button-standard" href="story.html">Back to Story Archive</a>
+            <a class="button-standard" href="lore.html">Back to Lore Archive</a>
           </div>
         `;
 
@@ -172,11 +218,11 @@
       } catch (error) {
         console.error(error);
         entryTitle.textContent = 'Error';
-        entryContent.innerHTML = '<p class="error">Error loading story entry. Please try again later.</p>';
+        entryContent.innerHTML = '<p class="error">Error loading lore entry. Please try again later.</p>';
       }
     }
 
-    loadStoryEntry();
+    loadLoreEntry();
   </script>
 </body>
 </html>
