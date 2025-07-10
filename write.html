@@ -85,7 +85,7 @@
         <label for="storyName">Title (optional):</label>
         <input type="text" id="storyName" />
 
-        <label for="storyContent">Content (must mention at least one reference):</label>
+        <label for="storyContent">Content (must mention all references):</label>
         <textarea id="storyContent" rows="10" required></textarea>
 
         <div id="wordCounter">0 words | suggested donation: 0 cents</div>
@@ -145,11 +145,14 @@
     let currentUser = null;
     let currentUsername = null;
     let recentLoreMap = new Map();
+    let existingLoreNamesSet = new Set();
 
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
         await loadUsername();
+        await loadExistingLoreNames();
+        await loadRecentLore();
       } else {
         currentUser = null;
         currentUsername = null;
@@ -164,9 +167,18 @@
         : currentUser.email.split('@')[0];
     }
 
+    async function loadExistingLoreNames() {
+      existingLoreNamesSet.clear();
+      const snapshot = await db.collection('lore').get();
+      snapshot.forEach(doc => {
+        const name = doc.data().name;
+        if (name) existingLoreNamesSet.add(name.toLowerCase());
+      });
+    }
+
     storyContent.addEventListener('input', () => {
       const words = countWords(storyContent.value);
-      const cents = words;
+      const cents = words; // 1 word = 1 cent
       wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${cents} cent${cents !== 1 ? 's' : ''}`;
     });
 
@@ -239,13 +251,21 @@
         recentLoreMap.clear();
 
         if (finalLoreNames.length) {
-          const loreQuery = await db.collection('lore')
-            .where('name', 'in', finalLoreNames.slice(0, 10))
-            .get();
+          // Firestore "in" queries max 10, so split if needed
+          const chunks = [];
+          for (let i = 0; i < finalLoreNames.length; i += 10) {
+            chunks.push(finalLoreNames.slice(i, i + 10));
+          }
+          recentLoreList.innerHTML = ''; // clear before filling
+          for (const chunk of chunks) {
+            const loreQuery = await db.collection('lore')
+              .where('name', 'in', chunk)
+              .get();
 
-          loreQuery.forEach(doc => {
-            recentLoreMap.set(doc.data().name.toLowerCase(), doc.id);
-          });
+            loreQuery.forEach(doc => {
+              recentLoreMap.set(doc.data().name.toLowerCase(), doc.id);
+            });
+          }
 
           recentLoreList.innerHTML = finalLoreNames
             .map(name => {
@@ -266,13 +286,13 @@
       }
     }
 
-    loadRecentLore();
-
     loreForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       loreStatusMessage.textContent = '';
+      loreStatusMessage.style.color = '';
 
       if (!currentUser || !currentUsername) {
+        loreStatusMessage.style.color = 'red';
         loreStatusMessage.textContent = 'You must be signed in to submit.';
         return;
       }
@@ -283,7 +303,25 @@
       const references = document.getElementById('loreReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
       if (!name || !category || !description || references.length === 0) {
+        loreStatusMessage.style.color = 'red';
         loreStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+        return;
+      }
+
+      // All references must be existing lore entries
+      const loreRefsValid = references.every(ref => existingLoreNamesSet.has(ref.toLowerCase()));
+      if (!loreRefsValid) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'All references must be existing lore entries.';
+        return;
+      }
+
+      // All references must be mentioned in description text
+      const lowerDesc = description.toLowerCase();
+      const allRefsMentioned = references.every(ref => lowerDesc.includes(ref.toLowerCase()));
+      if (!allRefsMentioned) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'The description must mention all listed references.';
         return;
       }
 
@@ -309,8 +347,10 @@
     storyForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       storyStatusMessage.textContent = '';
+      storyStatusMessage.style.color = '';
 
       if (!currentUser || !currentUsername) {
+        storyStatusMessage.style.color = 'red';
         storyStatusMessage.textContent = 'You must be signed in to submit.';
         return;
       }
@@ -320,21 +360,26 @@
       const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
       if (!content || references.length === 0) {
+        storyStatusMessage.style.color = 'red';
         storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
         return;
       }
 
       const lowerContent = content.toLowerCase();
-      const matchedReference = references.find(ref => lowerContent.includes(ref.toLowerCase()));
-      if (!matchedReference) {
-        storyStatusMessage.textContent = 'Your story must mention at least one of the references in its content.';
+
+      // All references must be mentioned in content
+      const allRefsMentioned = references.every(ref => lowerContent.includes(ref.toLowerCase()));
+      if (!allRefsMentioned) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'Your story must mention all listed references in its content.';
         return;
       }
 
-      const hasValidReference = references.some(ref => recentLoreMap.has(ref.toLowerCase()));
-      if (!hasValidReference) {
+      // All references must be from recent lore list
+      const allRefsValid = references.every(ref => recentLoreMap.has(ref.toLowerCase()));
+      if (!allRefsValid) {
         storyStatusMessage.style.color = 'red';
-        storyStatusMessage.textContent = 'You must include at least one of the recently referenced lore items shown below.';
+        storyStatusMessage.textContent = 'All references must be from the Recently Referenced Lore list.';
         return;
       }
 
