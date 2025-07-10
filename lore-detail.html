@@ -108,7 +108,6 @@
         const data = doc.data();
         entryTitle.textContent = escapeHtml(data.name || '(Untitled)');
 
-        // Build HTML sections
         let html = `
           <div class="field">
             <span class="label">Category:</span> ${escapeHtml(data.category || 'Miscellaneous')}
@@ -120,39 +119,39 @@
             <span class="label">Description:</span>
             <p>${escapeHtml(data.description || 'No description provided.')}</p>
           </div>
-          // Fetch IDs for references
-let referenceLinks = [];
-if (Array.isArray(data.references) && data.references.length) {
-  const refQuery = await db.collection('lore')
-    .where('name', 'in', data.references.slice(0, 10)) // Firestore limits to 10
-    .get();
+        `;
 
-  const refMap = {};
-  refQuery.forEach(doc => {
-    refMap[doc.data().name] = doc.id;
-  });
+        // Fetch IDs for references
+        let referenceLinks = [];
+        if (Array.isArray(data.references) && data.references.length) {
+          const refQuery = await db.collection('lore')
+            .where('name', 'in', data.references.slice(0, 10))
+            .get();
 
-  referenceLinks = data.references.map(name => {
-    const id = refMap[name];
-    if (id) {
-      return `<li><a href="lore-detail.html?id=${id}">${escapeHtml(name)}</a></li>`;
-    } else {
-      return `<li>${escapeHtml(name)}</li>`;
-    }
-  });
-} else {
-  referenceLinks = ['<li>None</li>'];
-}
+          const refMap = {};
+          refQuery.forEach(refDoc => {
+            refMap[refDoc.data().name] = refDoc.id;
+          });
 
-html += `
-  <div class="field">
-    <span class="label">References:</span>
-    <ul class="references-list">
-      ${referenceLinks.join('')}
-    </ul>
-  </div>
-`;
+          referenceLinks = data.references.map(name => {
+            const refId = refMap[name];
+            if (refId) {
+              return `<li><a href="lore-detail.html?id=${refId}">${escapeHtml(name)}</a></li>`;
+            } else {
+              return `<li>${escapeHtml(name)}</li>`;
+            }
+          });
+        } else {
+          referenceLinks = ['<li>None</li>'];
+        }
 
+        html += `
+          <div class="field">
+            <span class="label">References:</span>
+            <ul class="references-list">
+              ${referenceLinks.join('')}
+            </ul>
+          </div>
         `;
 
         // Query for works referencing this lore
