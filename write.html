@@ -141,11 +141,17 @@
     const recentLoreList = document.getElementById('recentLoreList');
     const loreForm = document.getElementById('loreForm');
     const storyForm = document.getElementById('storyForm');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const cancelEditBtnStory = document.getElementById('cancelEditBtnStory');
 
     let currentUser = null;
     let currentUsername = null;
     let recentLoreMap = new Map();
     let existingLoreNamesSet = new Set();
+
+    // New state vars for editing
+    let editingLoreId = null;
+    let editingStoryId = null;
 
     auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -153,6 +159,7 @@
         await loadUsername();
         await loadExistingLoreNames();
         await loadRecentLore();
+        await checkForEditParams();
       } else {
         currentUser = null;
         currentUsername = null;
@@ -188,22 +195,32 @@
     }
 
     loreToggle.addEventListener('click', () => {
-      loreFormSection.style.display = 'block';
-      storyFormSection.style.display = 'none';
-      loreToggle.classList.add('active');
-      storyToggle.classList.remove('active');
-      loreToggle.style.opacity = '1';
-      storyToggle.style.opacity = '0.5';
+      setMode('lore');
     });
 
     storyToggle.addEventListener('click', () => {
-      loreFormSection.style.display = 'none';
-      storyFormSection.style.display = 'block';
-      storyToggle.classList.add('active');
-      loreToggle.classList.remove('active');
-      storyToggle.style.opacity = '1';
-      loreToggle.style.opacity = '0.5';
+      setMode('story');
     });
+
+    function setMode(mode) {
+      if (mode === 'lore') {
+        loreFormSection.style.display = 'block';
+        storyFormSection.style.display = 'none';
+        loreToggle.classList.add('active');
+        storyToggle.classList.remove('active');
+        loreToggle.style.opacity = '1';
+        storyToggle.style.opacity = '0.5';
+      } else {
+        loreFormSection.style.display = 'none';
+        storyFormSection.style.display = 'block';
+        storyToggle.classList.add('active');
+        loreToggle.classList.remove('active');
+        storyToggle.style.opacity = '1';
+        loreToggle.style.opacity = '0.5';
+      }
+      clearStatusMessages();
+      resetEditState();
+    }
 
     loreFormSection.style.display = 'block';
     storyFormSection.style.display = 'none';
@@ -326,17 +343,35 @@
       }
 
       try {
-        await db.collection('lore').add({
-          name,
-          category,
-          description,
-          references,
-          author: currentUsername,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        loreStatusMessage.style.color = 'green';
-        loreStatusMessage.textContent = 'Lore submitted successfully!';
+        if (editingLoreId) {
+          // UPDATE existing lore document
+          await db.collection('lore').doc(editingLoreId).update({
+            name,
+            category,
+            description,
+            references,
+            author: currentUsername,
+            // Optionally update timestamp to now:
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          loreStatusMessage.style.color = 'green';
+          loreStatusMessage.textContent = 'Lore updated successfully!';
+        } else {
+          // ADD new lore document
+          await db.collection('lore').add({
+            name,
+            category,
+            description,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          loreStatusMessage.style.color = 'green';
+          loreStatusMessage.textContent = 'Lore submitted successfully!';
+        }
         loreForm.reset();
+        cancelEditBtn.style.display = 'none';
+        editingLoreId = null;
       } catch (err) {
         loreStatusMessage.style.color = 'red';
         loreStatusMessage.textContent = 'Error submitting lore. Please try again.';
@@ -384,23 +419,128 @@
       }
 
       try {
-        await db.collection('story').add({
-          name: name || null,
-          content,
-          references,
-          author: currentUsername,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        storyStatusMessage.style.color = 'green';
-        storyStatusMessage.textContent = 'Story submitted successfully!';
+        if (editingStoryId) {
+          // UPDATE existing story document
+          await db.collection('story').doc(editingStoryId).update({
+            name: name || null,
+            content,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          storyStatusMessage.style.color = 'green';
+          storyStatusMessage.textContent = 'Story updated successfully!';
+        } else {
+          // ADD new story document
+          await db.collection('story').add({
+            name: name || null,
+            content,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          storyStatusMessage.style.color = 'green';
+          storyStatusMessage.textContent = 'Story submitted successfully!';
+        }
         storyForm.reset();
         wordCounter.textContent = '0 words | suggested donation: 0 cents';
+        cancelEditBtnStory.style.display = 'none';
+        editingStoryId = null;
       } catch (err) {
         storyStatusMessage.style.color = 'red';
         storyStatusMessage.textContent = 'Error submitting story. Please try again.';
         console.error(err);
       }
     });
+
+    // Cancel edit buttons logic
+    cancelEditBtn.addEventListener('click', () => {
+      loreForm.reset();
+      loreStatusMessage.textContent = '';
+      cancelEditBtn.style.display = 'none';
+      editingLoreId = null;
+      // Switch to lore mode, default state
+      setMode('lore');
+      window.history.replaceState({}, document.title, 'write.html'); // clear URL params
+    });
+
+    cancelEditBtnStory.addEventListener('click', () => {
+      storyForm.reset();
+      storyStatusMessage.textContent = '';
+      cancelEditBtnStory.style.display = 'none';
+      editingStoryId = null;
+      // Switch to story mode, default state
+      setMode('story');
+      window.history.replaceState({}, document.title, 'write.html'); // clear URL params
+    });
+
+    function clearStatusMessages() {
+      loreStatusMessage.textContent = '';
+      storyStatusMessage.textContent = '';
+    }
+
+    function resetEditState() {
+      editingLoreId = null;
+      editingStoryId = null;
+      cancelEditBtn.style.display = 'none';
+      cancelEditBtnStory.style.display = 'none';
+    }
+
+    // Parse URL query parameters to detect if we're editing something
+    async function checkForEditParams() {
+      const params = new URLSearchParams(window.location.search);
+      const editType = params.get('edit'); // 'lore' or 'story'
+      const docId = params.get('id');
+
+      if (!editType || !docId) return;
+
+      if (editType === 'lore') {
+        // Load lore data and autofill form
+        try {
+          const doc = await db.collection('lore').doc(docId).get();
+          if (!doc.exists) {
+            alert('Lore entry not found for editing.');
+            return;
+          }
+          const data = doc.data();
+          setMode('lore');
+          document.getElementById('loreName').value = data.name || '';
+          document.getElementById('loreCategory').value = data.category || 'Character';
+          document.getElementById('loreDescription').value = data.description || '';
+          document.getElementById('loreReferences').value = (data.references || []).join(', ');
+          editingLoreId = docId;
+          cancelEditBtn.style.display = 'inline-block';
+          loreStatusMessage.textContent = 'Editing existing lore entry. Make changes and submit.';
+          loreStatusMessage.style.color = 'blue';
+        } catch (error) {
+          console.error('Error loading lore for editing:', error);
+          alert('Error loading lore entry for editing.');
+        }
+      } else if (editType === 'story') {
+        // Load story data and autofill form
+        try {
+          const doc = await db.collection('story').doc(docId).get();
+          if (!doc.exists) {
+            alert('Story entry not found for editing.');
+            return;
+          }
+          const data = doc.data();
+          setMode('story');
+          document.getElementById('storyName').value = data.name || '';
+          document.getElementById('storyContent').value = data.content || '';
+          document.getElementById('storyReferences').value = (data.references || []).join(', ');
+          editingStoryId = docId;
+          cancelEditBtnStory.style.display = 'inline-block';
+          storyStatusMessage.textContent = 'Editing existing story entry. Make changes and submit.';
+          storyStatusMessage.style.color = 'blue';
+          // Update word counter on load
+          storyContent.dispatchEvent(new Event('input'));
+        } catch (error) {
+          console.error('Error loading story for editing:', error);
+          alert('Error loading story entry for editing.');
+        }
+      }
+    }
   </script>
 </body>
 </html>
