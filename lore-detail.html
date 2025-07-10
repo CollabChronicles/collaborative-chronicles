@@ -121,22 +121,22 @@
           </div>
         `;
 
-        // Fetch IDs for references
+        // Fetch all lore entries to create a normalized name -> id map for references
+        const allLoreSnapshot = await db.collection('lore').get();
+        const loreNameToIdMap = {};
+        allLoreSnapshot.forEach(loreDoc => {
+          const loreData = loreDoc.data();
+          if (loreData.name) {
+            loreNameToIdMap[loreData.name.trim().toLowerCase()] = loreDoc.id;
+          }
+        });
+
+        // Build reference links with case-insensitive matching
         let referenceLinks = [];
         if (Array.isArray(data.references) && data.references.length) {
-          const refQuery = await db.collection('lore')
-            .where('name', 'in', data.references.slice(0, 10))
-            .get();
-
-          const refMap = {};
-          refQuery.forEach(refDoc => {
-            // Normalize names for mapping keys
-            refMap[refDoc.data().name.trim().toLowerCase()] = refDoc.id;
-          });
-
           referenceLinks = data.references.map(name => {
             const key = name.trim().toLowerCase();
-            const refId = refMap[key];
+            const refId = loreNameToIdMap[key];
             if (refId) {
               return `<li><a href="lore-detail.html?id=${refId}">${escapeHtml(name)}</a></li>`;
             } else {
@@ -156,11 +156,13 @@
           </div>
         `;
 
-        // Query for works referencing this lore, normalize names for case-insensitive matching
-        const referencingWorks = [];
+        // Case-insensitive name of current lore for matching referencing works
         const loreNameNormalized = (data.name || '').trim().toLowerCase();
 
-        // Fetch lore referencing this lore
+        // Find works referencing this lore (case-insensitive)
+        const referencingWorks = [];
+
+        // Check all lore entries
         const loreSnapshot = await db.collection('lore').get();
         loreSnapshot.forEach(doc => {
           const docData = doc.data();
@@ -176,7 +178,7 @@
           }
         });
 
-        // Fetch stories referencing this lore
+        // Check all story entries
         const storySnapshot = await db.collection('story').get();
         storySnapshot.forEach(doc => {
           const docData = doc.data();
