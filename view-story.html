@@ -118,25 +118,26 @@
           </div>
         `;
 
-        // Handle references
+        // Handle references (case-insensitive matching)
         if (Array.isArray(data.references) && data.references.length > 0) {
-          const loreNames = data.references;
+          const loreNamesLower = data.references.map(name => name.toLowerCase());
           let referenceLinks = [];
 
-          // For each reference name, look up its document to get ID
-          const loreQuery = await db.collection('lore')
-            .where('name', 'in', loreNames)
-            .get();
+          // Query lore where name in references (case-insensitive handled after fetch)
+          // Firestore "in" query is case-sensitive, so fetch all lore and filter client-side
+          const loreSnapshot = await db.collection('lore').get();
 
+          // Map lore name lowercased => {id, originalName}
           const loreMap = new Map();
-          loreQuery.forEach(doc => {
-            loreMap.set(doc.data().name, doc.id);
+          loreSnapshot.forEach(doc => {
+            const loreName = doc.data().name || '';
+            loreMap.set(loreName.toLowerCase(), { id: doc.id, originalName: loreName });
           });
 
-          referenceLinks = loreNames.map(name => {
-            const loreId = loreMap.get(name);
-            if (loreId) {
-              return `<li><a href="lore-detail.html?id=${loreId}">${escapeHtml(name)}</a></li>`;
+          referenceLinks = data.references.map(name => {
+            const loreEntry = loreMap.get(name.toLowerCase());
+            if (loreEntry) {
+              return `<li><a href="lore-detail.html?id=${loreEntry.id}">${escapeHtml(loreEntry.originalName)}</a></li>`;
             } else {
               return `<li>${escapeHtml(name)} (Not found)</li>`;
             }
