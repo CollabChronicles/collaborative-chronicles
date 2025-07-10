@@ -144,7 +144,7 @@
 
     let currentUser = null;
     let currentUsername = null;
-    let recentLoreNamesSet = new Set();
+    let recentLoreMap = new Map();
 
     auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -200,10 +200,8 @@
     loreToggle.style.opacity = '1';
     storyToggle.style.opacity = '0.5';
 
-    // Load Recently Referenced Lore
     async function loadRecentLore() {
       try {
-        // Get lore items with most recent timestamp among those *referenced*
         let loreRefCounts = new Map();
         const storySnapshot = await db.collection('story').get();
         storySnapshot.forEach(doc => {
@@ -219,14 +217,12 @@
 
         let finalLoreNames = [];
 
-        // Add up to 20 from most referenced
         for (let name of sortedRefs) {
           if (finalLoreNames.length >= 20) break;
           finalLoreNames.push(name);
         }
 
         if (finalLoreNames.length < 20) {
-          // Fill with recently created lore
           const moreLore = await db.collection('lore')
             .orderBy('timestamp', 'desc')
             .limit(20 - finalLoreNames.length)
@@ -240,17 +236,30 @@
           });
         }
 
-        // Display them
+        recentLoreMap.clear();
+
         if (finalLoreNames.length) {
+          const loreQuery = await db.collection('lore')
+            .where('name', 'in', finalLoreNames.slice(0, 10))
+            .get();
+
+          loreQuery.forEach(doc => {
+            recentLoreMap.set(doc.data().name.toLowerCase(), doc.id);
+          });
+
           recentLoreList.innerHTML = finalLoreNames
-            .map(name => `<li>${name}</li>`)
+            .map(name => {
+              const id = recentLoreMap.get(name.toLowerCase());
+              if (id) {
+                return `<li><a href="lore-detail.html?id=${id}">${name}</a></li>`;
+              } else {
+                return `<li>${name}</li>`;
+              }
+            })
             .join('');
-          recentLoreNamesSet = new Set(finalLoreNames.map(n => n.toLowerCase()));
         } else {
           recentLoreList.innerHTML = '<li>None found.</li>';
-          recentLoreNamesSet = new Set();
         }
-
       } catch (error) {
         console.error(error);
         recentLoreList.innerHTML = '<li>Error loading recently referenced lore.</li>';
@@ -259,7 +268,6 @@
 
     loadRecentLore();
 
-    // SUBMIT HANDLERS
     loreForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       loreStatusMessage.textContent = '';
@@ -311,22 +319,19 @@
       const content = document.getElementById('storyContent').value.trim();
       const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-     if (!content || references.length === 0) {
-  storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
-  return;
-}
+      if (!content || references.length === 0) {
+        storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+        return;
+      }
 
-// Check that at least one reference is *mentioned* in content
-const lowerContent = content.toLowerCase();
-const matchedReference = references.find(ref => lowerContent.includes(ref.toLowerCase()));
-if (!matchedReference) {
-  storyStatusMessage.textContent = 'Your story must mention at least one of the references in its content.';
-  return;
-}
+      const lowerContent = content.toLowerCase();
+      const matchedReference = references.find(ref => lowerContent.includes(ref.toLowerCase()));
+      if (!matchedReference) {
+        storyStatusMessage.textContent = 'Your story must mention at least one of the references in its content.';
+        return;
+      }
 
-
-      // NEW: Enforce that at least one reference is in the recent set
-      const hasValidReference = references.some(ref => recentLoreNamesSet.has(ref.toLowerCase()));
+      const hasValidReference = references.some(ref => recentLoreMap.has(ref.toLowerCase()));
       if (!hasValidReference) {
         storyStatusMessage.style.color = 'red';
         storyStatusMessage.textContent = 'You must include at least one of the recently referenced lore items shown below.';
