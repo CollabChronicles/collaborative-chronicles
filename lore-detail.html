@@ -121,21 +121,24 @@
           </div>
         `;
 
-        // Case-insensitive map for references
+        // Fetch IDs for references
         let referenceLinks = [];
         if (Array.isArray(data.references) && data.references.length) {
-          // Fetch all lore entries (or at least a large set)
-          const refQuery = await db.collection('lore').get();
+          const refQuery = await db.collection('lore')
+            .where('name', 'in', data.references.slice(0, 10))
+            .get();
+
           const refMap = {};
           refQuery.forEach(refDoc => {
-            const nameLower = refDoc.data().name.toLowerCase();
-            refMap[nameLower] = refDoc.id;
+            // Normalize names for mapping keys
+            refMap[refDoc.data().name.trim().toLowerCase()] = refDoc.id;
           });
 
           referenceLinks = data.references.map(name => {
-            const id = refMap[name.toLowerCase()];
-            if (id) {
-              return `<li><a href="lore-detail.html?id=${id}">${escapeHtml(name)}</a></li>`;
+            const key = name.trim().toLowerCase();
+            const refId = refMap[key];
+            if (refId) {
+              return `<li><a href="lore-detail.html?id=${refId}">${escapeHtml(name)}</a></li>`;
             } else {
               return `<li>${escapeHtml(name)}</li>`;
             }
@@ -153,31 +156,40 @@
           </div>
         `;
 
-        // Query for works referencing this lore
+        // Query for works referencing this lore, normalize names for case-insensitive matching
         const referencingWorks = [];
+        const loreNameNormalized = (data.name || '').trim().toLowerCase();
 
-        const loreSnapshot = await db.collection('lore')
-          .where('references', 'array-contains', data.name)
-          .get();
-
+        // Fetch lore referencing this lore
+        const loreSnapshot = await db.collection('lore').get();
         loreSnapshot.forEach(doc => {
-          referencingWorks.push({
-            id: doc.id,
-            type: 'lore',
-            name: doc.data().name || '(Untitled)'
-          });
+          const docData = doc.data();
+          if (Array.isArray(docData.references)) {
+            const refsNormalized = docData.references.map(r => r.trim().toLowerCase());
+            if (refsNormalized.includes(loreNameNormalized)) {
+              referencingWorks.push({
+                id: doc.id,
+                type: 'lore',
+                name: docData.name || '(Untitled)'
+              });
+            }
+          }
         });
 
-        const storySnapshot = await db.collection('story')
-          .where('references', 'array-contains', data.name)
-          .get();
-
+        // Fetch stories referencing this lore
+        const storySnapshot = await db.collection('story').get();
         storySnapshot.forEach(doc => {
-          referencingWorks.push({
-            id: doc.id,
-            type: 'story',
-            name: doc.data().name || '(Untitled)'
-          });
+          const docData = doc.data();
+          if (Array.isArray(docData.references)) {
+            const refsNormalized = docData.references.map(r => r.trim().toLowerCase());
+            if (refsNormalized.includes(loreNameNormalized)) {
+              referencingWorks.push({
+                id: doc.id,
+                type: 'story',
+                name: docData.name || '(Untitled)'
+              });
+            }
+          }
         });
 
         html += `
