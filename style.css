@@ -152,12 +152,13 @@ button.toggle-button.active {
   opacity: 1;
 }
 
-/* Toggle inactive opacity */
-.toggle-button:not(.active),
-a.toggle-button:not(.active),
-button.toggle-button:not(.active) {
+/* Toggle inactive opacity - ONLY within the toggle-buttons section */
+.toggle-buttons .toggle-button:not(.active),
+.toggle-buttons a.toggle-button:not(.active),
+.toggle-buttons button.toggle-button:not(.active) {
   opacity: 0.5;
 }
+
 
 /* Toggle button container */
 .toggle-buttons {
