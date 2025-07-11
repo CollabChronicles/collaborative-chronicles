@@ -1,5 +1,3 @@
-/* Base styling */
-
 /* Fantasy fonts for story page */
 .story-bubble {
   font-family: 'Crimson Pro', Georgia, serif;
@@ -9,31 +7,30 @@
   font-family: 'Cinzel', Georgia, serif;
 }
 
-
+/* Base styling */
 body {
   margin: 0;
   font-family: Georgia, serif;
-  background: linear-gradient(135deg, #f9f4e7, #fcefd8);
-  color: #4e342e;
+  background: #000;
+  color: #d4af37;
   line-height: 1.6;
   padding: 0 20px;
 }
 
 /* Header */
 header {
-  background: #8B4513;
-  color: #fff;
+  background: #000;
+  color: #d4af37;
   padding: 20px;
   text-align: center;
-  border-bottom: 5px solid #A0522D;
+  border-bottom: 5px solid #d4af37;
 }
 
 header h1 {
   margin: 0;
   font-size: 2.5rem;
-  font-family: 'Georgia', serif;
   letter-spacing: 2px;
-  text-shadow: 2px 2px #5C3317;
+  text-shadow: 2px 2px #b8860b;
 }
 
 header nav {
@@ -41,7 +38,7 @@ header nav {
 }
 
 header nav a {
-  color: #ffd7a0;
+  color: #d4af37;
   text-decoration: none;
   margin: 0 12px;
   font-weight: bold;
@@ -56,15 +53,15 @@ header nav a:hover {
 footer {
   text-align: center;
   padding: 15px;
-  background: #8B4513;
-  color: #fff;
-  border-top: 5px solid #A0522D;
+  background: #000;
+  color: #d4af37;
+  border-top: 5px solid #d4af37;
   margin-top: 40px;
 }
 
 /* Headings */
 h2, h3 {
-  color: #5C3317;
+  color: #d4af37;
 }
 
 /* Inputs and forms */
@@ -73,11 +70,12 @@ select,
 textarea {
   width: 100%;
   padding: 10px;
-  border: 2px solid #A0522D;
+  border: 2px solid #d4af37;
   border-radius: 5px;
+  background: #000;
+  color: #d4af37;
   font-family: Georgia, serif;
   font-size: 1rem;
-  background: #fff8e1;
   box-sizing: border-box;
   margin-top: 10px;
   margin-bottom: 20px;
@@ -87,7 +85,7 @@ textarea {
   resize: vertical;
 }
 
-/* Unified Flat Button Styling for all buttons and links with button classes */
+/* Buttons and links with button classes */
 .button-standard,
 a.button-standard,
 .toggle-button,
@@ -99,15 +97,14 @@ input[type="submit"] {
   font-weight: bold;
   font-size: 1.1rem;
   padding: 12px 25px;
-  color: #ffe0b2; /* light tan text */
-  background-color: #4e342e; /* flat dark brown */
-  border: none;
+  color: #d4af37;
+  background-color: #000;
+  border: 2px solid #d4af37;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: none;
   text-decoration: none;
   text-align: center;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
   margin-top: 30px;
   margin-bottom: 30px;
 }
@@ -118,9 +115,8 @@ a.button-standard:hover,
 a.toggle-button:hover,
 button:hover,
 input[type="submit"]:hover {
-  background-color: #3e2723; /* darker brown on hover */
-  box-shadow: none;
-  transform: none;
+  background-color: #d4af37;
+  color: #000;
 }
 
 .button-standard:active,
@@ -129,7 +125,8 @@ a.button-standard:active,
 a.toggle-button:active,
 button:active,
 input[type="submit"]:active {
-  background-color: #2e1b18; /* darkest brown on click */
+  background-color: #b8860b;
+  color: #000;
 }
 
 .button-standard:disabled,
@@ -144,16 +141,16 @@ input[type="submit"]:disabled {
 
 /* Active state for toggle buttons */
 .toggle-button.active {
-  background-color: #6a4f3b; /* lighter brown */
-  color: #fff0d1;
+  background-color: #d4af37;
+  color: #000;
 }
 
 /* Inactive Toggle Button Style */
 .toggle-button.inactive {
   opacity: 0.5;
-  background-color: #4e342e;
-  color: #ffe0b2;
-  cursor: pointer;
+  background-color: #000;
+  color: #d4af37;
+  border: 2px solid #d4af37;
 }
 
 /* Toggle button container */
@@ -167,10 +164,11 @@ input[type="submit"]:disabled {
 
 /* Form container */
 form {
-  background: #fff8e1;
+  background: #000;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border: 2px solid #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
   margin-top: 20px;
 }
 
@@ -180,23 +178,24 @@ form {
 #storyStatusMessage {
   margin-top: 15px;
   font-weight: bold;
-  color: #8B4513;
+  color: #d4af37;
 }
 
 /* Payment note */
 #paymentNote {
   margin-top: 10px;
   font-style: italic;
-  color: #5C3317;
+  color: #d4af37;
 }
 
 /* Lore and Story listings */
 #lore-list, #story-content {
   margin-top: 20px;
   padding: 15px;
-  background: #fff8e1;
+  background: #000;
   border-radius: 8px;
-  border: 1px solid #A0522D;
+  border: 2px solid #d4af37;
+  color: #d4af37;
 }
 
 /* Search input styling */
@@ -204,7 +203,9 @@ form {
   margin-bottom: 20px;
   padding: 10px;
   border-radius: 5px;
-  border: 2px solid #A0522D;
+  border: 2px solid #d4af37;
+  background: #000;
+  color: #d4af37;
   font-family: Georgia, serif;
   font-size: 1rem;
   width: 100%;
@@ -213,15 +214,15 @@ form {
 
 /* --- Updated Word Count Box --- */
 .word-count-box {
-  background-color: #8B4513;        /* Dark brown background */
-  border: 2px solid #A0522D;        /* Your border color */
+  background-color: #000;
+  border: 2px solid #d4af37;
   padding: 30px 40px;
   border-radius: 12px;
   text-align: center;
-  font-size: 3.5rem;                /* Larger font */
+  font-size: 3.5rem;
   font-weight: bold;
-  color: #fff8e1;                  /* Light parchment text */
-  box-shadow: 0 6px 15px rgba(139, 69, 19, 0.6); /* stronger shadow */
+  color: #d4af37;
+  box-shadow: 0 6px 15px rgba(212, 175, 55, 0.5);
   margin: 50px auto;
   max-width: 600px;
   letter-spacing: 3px;
@@ -229,7 +230,6 @@ form {
   position: relative;
 }
 
-/* Quill icon before the text */
 .word-count-box::before {
   content: "✒️";
   font-size: 3rem;
@@ -241,17 +241,16 @@ form {
   transform: translateY(-50%);
 }
 
-/* Padding so text doesn't overlap icon */
 .word-count-box {
   padding-left: 80px;
 }
 
-/* Story submission word count and donation line style with extra space below */
+/* Story submission word count and donation line */
 #storyWordCount {
   margin-top: 8px;
-  margin-bottom: 20px;  /* Extra space below */
+  margin-bottom: 20px;
   font-style: italic;
-  color: #5C3317;
+  color: #d4af37;
   font-family: Georgia, serif;
   font-size: 0.95rem;
 }
@@ -260,21 +259,22 @@ form {
 .auth-container {
   max-width: 600px;
   margin: 40px auto;
-  background: #fff8e1;
+  background: #000;
   padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+  border: 2px solid #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
 }
 
 .auth-container h2 {
   text-align: center;
-  color: #5C3317;
+  color: #d4af37;
   margin-bottom: 10px;
 }
 
 .auth-container p {
   text-align: center;
-  color: #4e342e;
+  color: #d4af37;
   margin-bottom: 20px;
 }
 
@@ -282,25 +282,25 @@ form {
   margin-bottom: 20px;
   text-align: center;
   font-weight: bold;
-  color: #5C3317;
+  color: #d4af37;
 }
 
 #signInMessage,
 #signUpMessage {
   margin-top: 10px;
-  color: #8B4513;
+  color: #d4af37;
   font-weight: bold;
   text-align: center;
 }
 
 #showSignUp {
-  color: #8B4513;
+  color: #d4af37;
   text-decoration: underline;
   cursor: pointer;
 }
 
 #showSignUp:hover {
-  color: #5C3317;
+  color: #fff;
 }
 
 .center-text {
@@ -320,24 +320,25 @@ form {
 }
 
 .grow-button {
-  background-color: #b86b2d;
-  color: white;
+  background-color: #000;
+  color: #d4af37;
   text-decoration: none;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  transition: background-color 0.3s ease;
+  border: 2px solid #d4af37;
+  box-shadow: 0 4px 6px rgba(212, 175, 55, 0.3);
+  transition: all 0.3s ease;
 }
 
 .grow-button:hover {
-  background-color: #a15a25;
+  background-color: #d4af37;
+  color: #000;
 }
 
 /* ===============================
    NEW BOOK-STYLE STORY PAGE
    =============================== */
-
 .story-container {
   display: flex;
   justify-content: center;
@@ -347,17 +348,18 @@ form {
 .story-bubble {
   max-width: 900px;
   width: 100%;
-  background-color: #fff8e1;
+  background-color: #000;
   padding: 3rem 2rem;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(139, 69, 19, 0.2);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2);
   overflow-y: auto;
   max-height: 80vh;
   font-size: 1.2rem;
   line-height: 1.75;
-  color: #4e342e;
+  color: #d4af37;
   text-align: justify;
-  border: 2px solid #A0522D;
+  border: 2px solid #d4af37;
+  font-family: 'Crimson Pro', Georgia, serif;
 }
 
 .story-bubble h2 {
@@ -365,7 +367,8 @@ form {
   margin-bottom: 2rem;
   font-size: 2rem;
   font-weight: bold;
-  color: #5C3317;
+  color: #d4af37;
+  font-family: 'Cinzel', Georgia, serif;
 }
 
 .story-bubble p {
