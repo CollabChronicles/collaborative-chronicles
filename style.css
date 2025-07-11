@@ -85,13 +85,12 @@ textarea {
   resize: vertical;
 }
 
-/* Buttons and links with button classes */
+/* Unified Button Styling */
 .button-standard,
 a.button-standard,
-.toggle-button,
-a.toggle-button,
-button,
-input[type="submit"] {
+button.button-standard,
+input.button-standard,
+input[type="submit"].button-standard {
   display: inline-block;
   font-family: Georgia, serif;
   font-weight: bold;
@@ -107,34 +106,30 @@ input[type="submit"] {
   transition: all 0.3s ease;
   margin-top: 30px;
   margin-bottom: 30px;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .button-standard:hover,
 a.button-standard:hover,
-.toggle-button:hover,
-a.toggle-button:hover,
-button:hover,
-input[type="submit"]:hover {
+button.button-standard:hover,
+input.button-standard:hover {
   background-color: #d4af37;
   color: #000;
 }
 
 .button-standard:active,
 a.button-standard:active,
-.toggle-button:active,
-a.toggle-button:active,
-button:active,
-input[type="submit"]:active {
+button.button-standard:active,
+input.button-standard:active {
   background-color: #b8860b;
   color: #000;
 }
 
 .button-standard:disabled,
 a.button-standard:disabled,
-.toggle-button:disabled,
-a.toggle-button:disabled,
-button:disabled,
-input[type="submit"]:disabled {
+button.button-standard:disabled,
+input.button-standard:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
