@@ -28,6 +28,13 @@
       list-style-type: disc;
       margin-bottom: 4px;
     }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
@@ -45,6 +52,8 @@
   <main>
     <h2>Add to the World</h2>
     <p>Contribute new lore entries or add to the ongoing story below! Fantasy, sci-fi, mystery... any style is welcome, but please keep it original and avoid copyrighted materials. To maintain narrative continuity, all new Lore entries must reference at least one existing Lore, and Story entries must reference a recently referenced Lore item (shown below).</p>
+    <p>Collaborative Chronicles is a world for everyone. Hateful or inappropriate content will be removed promptly.</p>
+    <p>Have fun!</p>
 
     <section id="toggleSection" class="toggle-buttons">
       <button class="toggle-button active" id="loreToggle">Add Lore</button>
@@ -73,8 +82,13 @@
         <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
         <input type="text" id="loreReferences" required />
 
-        <input class="button-standard" type="submit" value="Submit Lore" />
-        <button type="button" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+        <p><em>Suggested donation: $1</em></p>
+
+        <div class="button-group">
+          <input class="button-standard" type="submit" value="Submit Lore" />
+          <button type="button" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+          <a class="button-standard" href="https://www.gofundme.com/manage/support-reading-is-fundamentals-mission/edit" target="_blank" rel="noopener noreferrer">Support Literacy</a>
+        </div>
         <p id="loreStatusMessage"></p>
       </form>
     </section>
@@ -94,8 +108,11 @@
         <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
         <input type="text" id="storyReferences" required />
 
-        <input class="button-standard" type="submit" value="Submit Story" />
-        <button type="button" id="cancelEditBtnStory" style="display:none;">Cancel Edit</button>
+        <div class="button-group">
+          <input class="button-standard" type="submit" value="Submit Story" />
+          <button type="button" id="cancelEditBtnStory" style="display:none;">Cancel Edit</button>
+          <a class="button-standard" href="https://www.gofundme.com/manage/support-reading-is-fundamentals-mission/edit" target="_blank" rel="noopener noreferrer">Support Literacy</a>
+        </div>
         <p id="storyStatusMessage"></p>
       </form>
 
@@ -351,7 +368,6 @@
             description,
             references,
             author: currentUsername,
-            // Optionally update timestamp to now:
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
           });
           loreStatusMessage.style.color = 'green';
@@ -461,18 +477,61 @@
       editingLoreId = null;
       // Switch to lore mode, default state
       setMode('lore');
-      window.history.replaceState({}, document.title, 'write.html'); // clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
     });
 
     cancelEditBtnStory.addEventListener('click', () => {
       storyForm.reset();
       storyStatusMessage.textContent = '';
+      wordCounter.textContent = '0 words | suggested donation: 0 cents';
       cancelEditBtnStory.style.display = 'none';
       editingStoryId = null;
-      // Switch to story mode, default state
       setMode('story');
-      window.history.replaceState({}, document.title, 'write.html'); // clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
     });
+
+    // Check for ?edit=loreID or ?editStory=storyID in URL params
+    async function checkForEditParams() {
+      const params = new URLSearchParams(window.location.search);
+      const loreId = params.get('edit');
+      const storyId = params.get('editStory');
+
+      if (loreId) {
+        setMode('lore');
+        try {
+          const doc = await db.collection('lore').doc(loreId).get();
+          if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('loreName').value = data.name || '';
+            document.getElementById('loreCategory').value = data.category || 'Miscellaneous';
+            document.getElementById('loreDescription').value = data.description || '';
+            document.getElementById('loreReferences').value = (data.references || []).join(', ');
+            editingLoreId = loreId;
+            cancelEditBtn.style.display = 'inline-block';
+            loreStatusMessage.textContent = 'Editing existing lore entry';
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      } else if (storyId) {
+        setMode('story');
+        try {
+          const doc = await db.collection('story').doc(storyId).get();
+          if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('storyName').value = data.name || '';
+            document.getElementById('storyContent').value = data.content || '';
+            document.getElementById('storyReferences').value = (data.references || []).join(', ');
+            editingStoryId = storyId;
+            cancelEditBtnStory.style.display = 'inline-block';
+            storyStatusMessage.textContent = 'Editing existing story entry';
+            storyContent.dispatchEvent(new Event('input'));
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
 
     function clearStatusMessages() {
       loreStatusMessage.textContent = '';
@@ -484,62 +543,9 @@
       editingStoryId = null;
       cancelEditBtn.style.display = 'none';
       cancelEditBtnStory.style.display = 'none';
-    }
-
-    // Parse URL query parameters to detect if we're editing something
-    async function checkForEditParams() {
-      const params = new URLSearchParams(window.location.search);
-      const editType = params.get('edit'); // 'lore' or 'story'
-      const docId = params.get('id');
-
-      if (!editType || !docId) return;
-
-      if (editType === 'lore') {
-        // Load lore data and autofill form
-        try {
-          const doc = await db.collection('lore').doc(docId).get();
-          if (!doc.exists) {
-            alert('Lore entry not found for editing.');
-            return;
-          }
-          const data = doc.data();
-          setMode('lore');
-          document.getElementById('loreName').value = data.name || '';
-          document.getElementById('loreCategory').value = data.category || 'Character';
-          document.getElementById('loreDescription').value = data.description || '';
-          document.getElementById('loreReferences').value = (data.references || []).join(', ');
-          editingLoreId = docId;
-          cancelEditBtn.style.display = 'inline-block';
-          loreStatusMessage.textContent = 'Editing existing lore entry. Make changes and submit.';
-          loreStatusMessage.style.color = 'blue';
-        } catch (error) {
-          console.error('Error loading lore for editing:', error);
-          alert('Error loading lore entry for editing.');
-        }
-      } else if (editType === 'story') {
-        // Load story data and autofill form
-        try {
-          const doc = await db.collection('story').doc(docId).get();
-          if (!doc.exists) {
-            alert('Story entry not found for editing.');
-            return;
-          }
-          const data = doc.data();
-          setMode('story');
-          document.getElementById('storyName').value = data.name || '';
-          document.getElementById('storyContent').value = data.content || '';
-          document.getElementById('storyReferences').value = (data.references || []).join(', ');
-          editingStoryId = docId;
-          cancelEditBtnStory.style.display = 'inline-block';
-          storyStatusMessage.textContent = 'Editing existing story entry. Make changes and submit.';
-          storyStatusMessage.style.color = 'blue';
-          // Update word counter on load
-          storyContent.dispatchEvent(new Event('input'));
-        } catch (error) {
-          console.error('Error loading story for editing:', error);
-          alert('Error loading story entry for editing.');
-        }
-      }
+      loreForm.reset();
+      storyForm.reset();
+      wordCounter.textContent = '0 words | suggested donation: 0 cents';
     }
   </script>
 </body>
