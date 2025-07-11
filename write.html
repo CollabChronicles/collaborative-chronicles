@@ -561,6 +561,89 @@
       storyForm.reset();
       wordCounter.textContent = '0 words | suggested donation: 0 cents';
     }
+
+    // Prompt templates with {lore} and {free} dynamic slots
+const promptTemplates = [
+  "Write a scene where {lore} and a {free} collide in surprising ways.",
+  "Describe {lore} as seen through the eyes of a {free}.",
+  "Tell a tale of {lore} encountering a {free} in an unexpected place.",
+  "Invent a rumor linking {lore} with a mysterious {free}.",
+  "Explain why {lore} fears or covets a {free}.",
+  "Write about the alliance or rivalry between {lore} and a {free}.",
+  "Describe the moment {lore} loses a {free}.",
+  "Imagine {lore} discovering a hidden truth about a {free}.",
+  "Write a letter from {lore} to a {free}.",
+  "Tell the origin story of how {lore} came to possess a {free}.",
+  "Describe a conflict between {lore} and a {free}.",
+  "Reveal a secret deal between {lore} and a {free}.",
+  "Write a legend about {lore} and the cursed {free}.",
+  "Describe a negotiation or bargain between {lore} and a {free}.",
+  "Imagine {lore} sacrificing something to gain a {free}.",
+  "Tell how {lore} uses a {free} to change the world.",
+  "Describe {lore}'s memories of a lost {free}.",
+  "Write about {lore} being betrayed over a {free}.",
+  "Imagine {lore} hiding a {free} from everyone else.",
+  "Describe the bond or connection between {lore} and a {free}."
+];
+
+
+// Free slot options for variety
+const freeOptions = [
+  // Fantasy objects
+  "amulet", "sword", "journal", "orb", "map", "key", "crown", "dagger", "cloak", "crystal", "spellbook",
+  
+  // Sci-fi or tech
+  "data chip", "android", "spaceship", "portal", "laser", "nanobot", "AI core", "hologram", "power cell",
+  
+  // People / Roles
+  "prince", "merchant", "wizard", "thief", "wanderer", "librarian", "soldier", "detective", "scientist", "stranger",
+  "rival", "mentor", "spy", "child", "prophet", "pilot", "assassin", "healer",
+  
+  // Places
+  "forest", "ruins", "castle", "underground chamber", "abandoned station", "market", "temple", "lighthouse", "hidden cave",
+  "alleyway", "desert", "mountain pass", "river crossing", "moon base", "secret lab",
+  
+  // Abstract/Emotional
+  "memory", "fear", "hope", "dream", "lie", "promise", "curse", "destiny", "vision", "regret",
+  
+  // Events
+  "festival", "funeral", "trial", "escape", "betrayal", "rebellion", "ceremony", "meeting", "invasion",
+  
+  // Mundane / Real-world
+  "letter", "mirror", "photograph", "locket", "book", "newspaper", "ring", "painting", "clock", "bridge",
+  "car", "phone", "backpack", "umbrella", "ticket", "recipe"
+];
+
+// Elements from the page
+const generatePromptBtn = document.getElementById('generatePromptBtn');
+const generatedPrompt = document.getElementById('generatedPrompt');
+
+// Utility: pick random item
+function getRandomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Utility: pick random lore name from your loaded Map
+function getRandomLoreName() {
+  const loreNames = Array.from(recentLoreMap.keys());
+  if (loreNames.length === 0) return "a lost piece of lore";
+  return getRandomItem(loreNames);
+}
+
+// Generate the prompt and update the page
+function generatePrompt() {
+  const template = getRandomItem(promptTemplates);
+  const lore = getRandomLoreName();
+  const free = getRandomItem(freeOptions);
+  const prompt = template
+    .replace("{lore}", lore)
+    .replace("{free}", free);
+  generatedPrompt.textContent = prompt;
+}
+
+// Hook up the button
+generatePromptBtn.addEventListener('click', generatePrompt);
+
   </script>
 </body>
 </html>
