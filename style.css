@@ -85,12 +85,13 @@ textarea {
   resize: vertical;
 }
 
-/* Unified Button Styling */
+/* ===============================
+   Buttons and Links (Standard)
+   =============================== */
 .button-standard,
 a.button-standard,
-button.button-standard,
-input.button-standard,
-input[type="submit"].button-standard {
+button,
+input[type="submit"] {
   display: inline-block;
   font-family: Georgia, serif;
   font-weight: bold;
@@ -106,42 +107,67 @@ input[type="submit"].button-standard {
   transition: all 0.3s ease;
   margin-top: 30px;
   margin-bottom: 30px;
-  line-height: 1.2;
-  box-sizing: border-box;
 }
 
 .button-standard:hover,
 a.button-standard:hover,
-button.button-standard:hover,
-input.button-standard:hover {
+button:hover,
+input[type="submit"]:hover {
   background-color: #d4af37;
   color: #000;
 }
 
 .button-standard:active,
 a.button-standard:active,
-button.button-standard:active,
-input.button-standard:active {
+button:active,
+input[type="submit"]:active {
   background-color: #b8860b;
   color: #000;
 }
 
 .button-standard:disabled,
 a.button-standard:disabled,
-button.button-standard:disabled,
-input.button-standard:disabled {
+button:disabled,
+input[type="submit"]:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Active state for toggle buttons */
+/* ===============================
+   Toggle Buttons (Write Page)
+   =============================== */
+.toggle-button {
+  display: inline-block;
+  font-family: Georgia, serif;
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 12px 25px;
+  color: #d4af37;
+  background-color: #000;
+  border: 2px solid #d4af37;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.toggle-button:hover {
+  background-color: #d4af37;
+  color: #000;
+  opacity: 1;
+}
+
 .toggle-button.active {
   background-color: #d4af37;
   color: #000;
+  font-weight: bold;
+  opacity: 1;
 }
 
-/* Inactive Toggle Button Style */
-.toggle-button.inactive {
+.toggle-button:not(.active) {
   opacity: 0.5;
   background-color: #000;
   color: #d4af37;
@@ -157,7 +183,9 @@ input.button-standard:disabled {
   flex-wrap: wrap;
 }
 
-/* Form container */
+/* ===============================
+   Form container
+   =============================== */
 form {
   background: #000;
   padding: 20px;
@@ -207,7 +235,9 @@ form {
   box-sizing: border-box;
 }
 
-/* --- Updated Word Count Box --- */
+/* ===============================
+   Word Count Box
+   =============================== */
 .word-count-box {
   background-color: #000;
   border: 2px solid #d4af37;
@@ -240,7 +270,6 @@ form {
   padding-left: 80px;
 }
 
-/* Story submission word count and donation line */
 #storyWordCount {
   margin-top: 8px;
   margin-bottom: 20px;
@@ -250,7 +279,9 @@ form {
   font-size: 0.95rem;
 }
 
-/* Authentication Page Styling */
+/* ===============================
+   Authentication Page
+   =============================== */
 .auth-container {
   max-width: 600px;
   margin: 40px auto;
@@ -332,7 +363,7 @@ form {
 }
 
 /* ===============================
-   NEW BOOK-STYLE STORY PAGE
+   Book-Style Story Page
    =============================== */
 .story-container {
   display: flex;
