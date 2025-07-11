@@ -1,552 +1,412 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta http-equiv="Content-Security-Policy" content="img-src data: https:;">
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - Write!</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    #cancelEditBtn, #cancelEditBtnStory {
-      margin-left: 8px;
-      cursor: pointer;
-    }
-    #loreStatusMessage, #storyStatusMessage {
-      margin-top: 8px;
-      font-weight: bold;
-    }
-    #wordCounter {
-      margin-top: 6px;
-      font-style: italic;
-      color: #555;
-    }
-    #recentLoreList {
-      margin-top: 12px;
-      padding-left: 20px;
-    }
-    #recentLoreList li {
-      list-style-type: disc;
-      margin-bottom: 4px;
-    }
-    .button-group {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Collaborative Chronicles</h1>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="story.html">The Story</a> |
-      <a href="lore.html">The Lore</a> |
-      <a href="write.html">Write!</a> |
-      <a href="profile.html">Profile</a>
-    </nav>
-  </header>
+/* Fantasy fonts for story page */
+.story-bubble {
+  font-family: 'Crimson Pro', Georgia, serif;
+}
 
-  <main>
-    <h2>Add to the World</h2>
-    <p>Contribute new lore entries or add to the ongoing story below! Fantasy, sci-fi, mystery... any style is welcome, but please keep it original and avoid copyrighted materials. To maintain narrative continuity, all new Lore entries must reference at least one existing Lore, and Story entries must reference a recently referenced Lore item (shown below).</p>
-    <p>Collaborative Chronicles is a world for everyone. Hateful or inappropriate content will be removed promptly.</p>
-    <p>Have fun!</p>
+.story-bubble h2 {
+  font-family: 'Cinzel', Georgia, serif;
+}
 
-    <section id="toggleSection" class="toggle-buttons">
-      <button class="toggle-button active" id="loreToggle">Add Lore</button>
-      <button class="toggle-button" id="storyToggle">Add Story</button>
-    </section>
+/* Base styling */
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #000;
+  color: #d4af37;
+  line-height: 1.6;
+  padding: 0 20px;
+}
 
-    <!-- Lore Form -->
-    <section id="loreFormSection">
-      <form id="loreForm">
-        <label for="loreName">Name:</label>
-        <input type="text" id="loreName" required />
+/* Header */
+header {
+  background: #000;
+  color: #d4af37;
+  padding: 20px;
+  text-align: center;
+  border-bottom: 5px solid #d4af37;
+}
 
-        <label for="loreCategory">Category:</label>
-        <select id="loreCategory" required>
-          <option value="Character">Character</option>
-          <option value="Place">Place</option>
-          <option value="Faction">Faction</option>
-          <option value="Object">Object</option>
-          <option value="Tale">Tale</option>
-          <option value="Miscellaneous">Miscellaneous</option>
-        </select>
+header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px #b8860b;
+}
 
-        <label for="loreDescription">Description:</label>
-        <textarea id="loreDescription" rows="5" required></textarea>
+header nav {
+  margin-top: 10px;
+}
 
-        <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
-        <input type="text" id="loreReferences" required />
+header nav a {
+  color: #d4af37;
+  text-decoration: none;
+  margin: 0 12px;
+  font-weight: bold;
+  transition: color 0.3s;
+}
 
-        <p><em>Suggested donation: $1</em></p>
+header nav a:hover {
+  color: #fff;
+}
 
-        <div class="button-group">
-          <input class="button-standard" type="submit" value="Submit Lore" />
-          <button type="button" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
-          <a class="button-standard" href="https://www.gofundme.com/manage/support-reading-is-fundamentals-mission/edit" target="_blank" rel="noopener noreferrer">Support Literacy</a>
-        </div>
-        <p id="loreStatusMessage"></p>
-      </form>
-    </section>
+/* Footer */
+footer {
+  text-align: center;
+  padding: 15px;
+  background: #000;
+  color: #d4af37;
+  border-top: 5px solid #d4af37;
+  margin-top: 40px;
+}
 
-    <!-- Story Form -->
-    <section id="storyFormSection" style="display: none;">
-      <form id="storyForm">
-        <label for="storyName">Title (optional):</label>
-        <input type="text" id="storyName" />
+/* Headings */
+h2, h3 {
+  color: #d4af37;
+}
 
-        <label for="storyContent">Content (must mention all references):</label>
-        <textarea id="storyContent" rows="10" required></textarea>
+/* Inputs and forms */
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #d4af37;
+  border-radius: 5px;
+  background: #000;
+  color: #d4af37;
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  box-sizing: border-box;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
 
-        <div id="wordCounter">0 words | suggested donation: 0 cents</div>
-        <p></p>
+textarea {
+  resize: vertical;
+}
 
-        <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
-        <input type="text" id="storyReferences" required />
+/* ===============================
+   Buttons and Links (Standard)
+   =============================== */
+.button-standard,
+a.button-standard,
+button,
+input[type="submit"] {
+  display: inline-block;
+  font-family: Georgia, serif;
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 12px 25px;
+  color: #d4af37;
+  background-color: #000;
+  border: 2px solid #d4af37;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
 
-        <div class="button-group">
-          <input class="button-standard" type="submit" value="Submit Story" />
-          <button type="button" id="cancelEditBtnStory" style="display:none;">Cancel Edit</button>
-          <a class="button-standard" href="https://www.gofundme.com/manage/support-reading-is-fundamentals-mission/edit" target="_blank" rel="noopener noreferrer">Support Literacy</a>
-        </div>
-        <p id="storyStatusMessage"></p>
-      </form>
+.button-standard:hover,
+a.button-standard:hover,
+button:hover,
+input[type="submit"]:hover {
+  background-color: #d4af37;
+  color: #000;
+}
 
-      <h3>Recently Referenced Lore (choose from these):</h3>
-      <ul id="recentLoreList">
-        <li>Loading...</li>
-      </ul>
-    </section>
-  </main>
+.button-standard:active,
+a.button-standard:active,
+button:active,
+input[type="submit"]:active {
+  background-color: #b8860b;
+  color: #000;
+}
 
-  <footer>
-    <p>2025 Collaborative Chronicles</p>
-  </footer>
+.button-standard:disabled,
+a.button-standard:disabled,
+button:disabled,
+input[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+/* ===============================
+   Toggle Buttons (Write Page)
+   =============================== */
+.toggle-button {
+  display: inline-block;
+  font-family: Georgia, serif;
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 12px 25px;
+  color: #d4af37;
+  background-color: #000;
+  border: 2px solid #d4af37;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
-      authDomain: "collaborative-chronicles.firebaseapp.com",
-      projectId: "collaborative-chronicles",
-      storageBucket: "collaborative-chronicles.appspot.com",
-      messagingSenderId: "127752938400",
-      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-      measurementId: "G-0HXV6NGHQP"
-    };
+.toggle-button:hover {
+  background-color: #d4af37;
+  color: #000;
+  opacity: 1;
+}
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+.toggle-button.active {
+  background-color: #d4af37;
+  color: #000;
+  font-weight: bold;
+  opacity: 1;
+}
 
-    const loreToggle = document.getElementById('loreToggle');
-    const storyToggle = document.getElementById('storyToggle');
-    const loreFormSection = document.getElementById('loreFormSection');
-    const storyFormSection = document.getElementById('storyFormSection');
-    const loreStatusMessage = document.getElementById('loreStatusMessage');
-    const storyStatusMessage = document.getElementById('storyStatusMessage');
-    const storyContent = document.getElementById('storyContent');
-    const wordCounter = document.getElementById('wordCounter');
-    const recentLoreList = document.getElementById('recentLoreList');
-    const loreForm = document.getElementById('loreForm');
-    const storyForm = document.getElementById('storyForm');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const cancelEditBtnStory = document.getElementById('cancelEditBtnStory');
+.toggle-button:not(.active) {
+  opacity: 0.5;
+  background-color: #000;
+  color: #d4af37;
+  border: 2px solid #d4af37;
+}
 
-    let currentUser = null;
-    let currentUsername = null;
-    let recentLoreMap = new Map();
-    let existingLoreNamesSet = new Set();
+/* Toggle button container */
+.toggle-buttons {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
-    // New state vars for editing
-    let editingLoreId = null;
-    let editingStoryId = null;
+/* ===============================
+   Form container
+   =============================== */
+form {
+  background: #000;
+  padding: 20px;
+  border-radius: 8px;
+  border: 2px solid #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  margin-top: 20px;
+}
 
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        currentUser = user;
-        await loadUsername();
-        await loadExistingLoreNames();
-        await loadRecentLore();
-        await checkForEditParams();
-      } else {
-        currentUser = null;
-        currentUsername = null;
-      }
-    });
+/* Status messages */
+#statusMessage,
+#loreStatusMessage,
+#storyStatusMessage {
+  margin-top: 15px;
+  font-weight: bold;
+  color: #d4af37;
+}
 
-    async function loadUsername() {
-      if (!currentUser) return;
-      const doc = await db.collection('users').doc(currentUser.uid).get();
-      currentUsername = doc.exists && doc.data().username
-        ? doc.data().username
-        : currentUser.email.split('@')[0];
-    }
+/* Payment note */
+#paymentNote {
+  margin-top: 10px;
+  font-style: italic;
+  color: #d4af37;
+}
 
-    async function loadExistingLoreNames() {
-      existingLoreNamesSet.clear();
-      const snapshot = await db.collection('lore').get();
-      snapshot.forEach(doc => {
-        const name = doc.data().name;
-        if (name) existingLoreNamesSet.add(name.toLowerCase());
-      });
-    }
+/* Lore and Story listings */
+#lore-list, #story-content {
+  margin-top: 20px;
+  padding: 15px;
+  background: #000;
+  border-radius: 8px;
+  border: 2px solid #d4af37;
+  color: #d4af37;
+}
 
-    storyContent.addEventListener('input', () => {
-      const words = countWords(storyContent.value);
-      const cents = words; // 1 word = 1 cent
-      wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${cents} cent${cents !== 1 ? 's' : ''}`;
-    });
+/* Search input styling */
+#searchInput, #categoryFilter {
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 2px solid #d4af37;
+  background: #000;
+  color: #d4af37;
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-    function countWords(text) {
-      if (!text) return 0;
-      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-    }
+/* ===============================
+   Word Count Box
+   =============================== */
+.word-count-box {
+  background-color: #000;
+  border: 2px solid #d4af37;
+  padding: 30px 40px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: #d4af37;
+  box-shadow: 0 6px 15px rgba(212, 175, 55, 0.5);
+  margin: 50px auto;
+  max-width: 600px;
+  letter-spacing: 3px;
+  user-select: none;
+  position: relative;
+}
 
-    loreToggle.addEventListener('click', () => {
-      setMode('lore');
-    });
+.word-count-box::before {
+  content: "✒️";
+  font-size: 3rem;
+  margin-right: 1rem;
+  vertical-align: middle;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
-    storyToggle.addEventListener('click', () => {
-      setMode('story');
-    });
+.word-count-box {
+  padding-left: 80px;
+}
 
-    function setMode(mode) {
-      if (mode === 'lore') {
-        loreFormSection.style.display = 'block';
-        storyFormSection.style.display = 'none';
-        loreToggle.classList.add('active');
-        storyToggle.classList.remove('active');
-        loreToggle.style.opacity = '1';
-        storyToggle.style.opacity = '0.5';
-      } else {
-        loreFormSection.style.display = 'none';
-        storyFormSection.style.display = 'block';
-        storyToggle.classList.add('active');
-        loreToggle.classList.remove('active');
-        storyToggle.style.opacity = '1';
-        loreToggle.style.opacity = '0.5';
-      }
-      clearStatusMessages();
-      resetEditState();
-    }
+#storyWordCount {
+  margin-top: 8px;
+  margin-bottom: 20px;
+  font-style: italic;
+  color: #d4af37;
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+}
 
-    loreFormSection.style.display = 'block';
-    storyFormSection.style.display = 'none';
-    loreToggle.classList.add('active');
-    storyToggle.classList.remove('active');
-    loreToggle.style.opacity = '1';
-    storyToggle.style.opacity = '0.5';
+/* ===============================
+   Authentication Page
+   =============================== */
+.auth-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #000;
+  padding: 30px;
+  border-radius: 12px;
+  border: 2px solid #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+}
 
-    async function loadRecentLore() {
-      try {
-        let loreRefCounts = new Map();
-        const storySnapshot = await db.collection('story').get();
-        storySnapshot.forEach(doc => {
-          const refs = doc.data().references || [];
-          refs.forEach(r => {
-            if (r) loreRefCounts.set(r, (loreRefCounts.get(r) || 0) + 1);
-          });
-        });
+.auth-container h2 {
+  text-align: center;
+  color: #d4af37;
+  margin-bottom: 10px;
+}
 
-        const sortedRefs = Array.from(loreRefCounts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(entry => entry[0]);
+.auth-container p {
+  text-align: center;
+  color: #d4af37;
+  margin-bottom: 20px;
+}
 
-        let finalLoreNames = [];
+#userStatus {
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #d4af37;
+}
 
-        for (let name of sortedRefs) {
-          if (finalLoreNames.length >= 20) break;
-          finalLoreNames.push(name);
-        }
+#signInMessage,
+#signUpMessage {
+  margin-top: 10px;
+  color: #d4af37;
+  font-weight: bold;
+  text-align: center;
+}
 
-        if (finalLoreNames.length < 20) {
-          const moreLore = await db.collection('lore')
-            .orderBy('timestamp', 'desc')
-            .limit(20 - finalLoreNames.length)
-            .get();
+#showSignUp {
+  color: #d4af37;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
-          moreLore.forEach(doc => {
-            const name = doc.data().name;
-            if (name && !finalLoreNames.includes(name)) {
-              finalLoreNames.push(name);
-            }
-          });
-        }
+#showSignUp:hover {
+  color: #fff;
+}
 
-        recentLoreMap.clear();
+.center-text {
+  text-align: center;
+}
 
-        if (finalLoreNames.length) {
-          // Firestore "in" queries max 10, so split if needed
-          const chunks = [];
-          for (let i = 0; i < finalLoreNames.length; i += 10) {
-            chunks.push(finalLoreNames.slice(i, i + 10));
-          }
-          recentLoreList.innerHTML = ''; // clear before filling
-          for (const chunk of chunks) {
-            const loreQuery = await db.collection('lore')
-              .where('name', 'in', chunk)
-              .get();
+.auth-container form {
+  margin-top: 20px;
+}
 
-            loreQuery.forEach(doc => {
-              recentLoreMap.set(doc.data().name.toLowerCase(), doc.id);
-            });
-          }
+.button-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
 
-          recentLoreList.innerHTML = finalLoreNames
-            .map(name => {
-              const id = recentLoreMap.get(name.toLowerCase());
-              if (id) {
-                return `<li><a href="lore-detail.html?id=${id}">${name}</a></li>`;
-              } else {
-                return `<li>${name}</li>`;
-              }
-            })
-            .join('');
-        } else {
-          recentLoreList.innerHTML = '<li>None found.</li>';
-        }
-      } catch (error) {
-        console.error(error);
-        recentLoreList.innerHTML = '<li>Error loading recently referenced lore.</li>';
-      }
-    }
+.grow-button {
+  background-color: #000;
+  color: #d4af37;
+  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  border: 2px solid #d4af37;
+  box-shadow: 0 4px 6px rgba(212, 175, 55, 0.3);
+  transition: all 0.3s ease;
+}
 
-    loreForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      loreStatusMessage.textContent = '';
-      loreStatusMessage.style.color = '';
+.grow-button:hover {
+  background-color: #d4af37;
+  color: #000;
+}
 
-      if (!currentUser || !currentUsername) {
-        loreStatusMessage.style.color = 'red';
-        loreStatusMessage.textContent = 'You must be signed in to submit.';
-        return;
-      }
+/* ===============================
+   Book-Style Story Page
+   =============================== */
+.story-container {
+  display: flex;
+  justify-content: center;
+  padding: 30px 20px;
+}
 
-      const name = document.getElementById('loreName').value.trim();
-      const category = document.getElementById('loreCategory').value;
-      const description = document.getElementById('loreDescription').value.trim();
-      const references = document.getElementById('loreReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+.story-bubble {
+  max-width: 900px;
+  width: 100%;
+  background-color: #000;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2);
+  overflow-y: auto;
+  max-height: 80vh;
+  font-size: 1.2rem;
+  line-height: 1.75;
+  color: #d4af37;
+  text-align: justify;
+  border: 2px solid #d4af37;
+  font-family: 'Crimson Pro', Georgia, serif;
+}
 
-      if (!name || !category || !description || references.length === 0) {
-        loreStatusMessage.style.color = 'red';
-        loreStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
-        return;
-      }
+.story-bubble h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #d4af37;
+  font-family: 'Cinzel', Georgia, serif;
+}
 
-      // All references must be existing lore entries
-      const loreRefsValid = references.every(ref => existingLoreNamesSet.has(ref.toLowerCase()));
-      if (!loreRefsValid) {
-        loreStatusMessage.style.color = 'red';
-        loreStatusMessage.textContent = 'All references must be existing lore entries.';
-        return;
-      }
+.story-bubble p {
+  margin-bottom: 1.5rem;
+  text-indent: 2em;
+}
 
-      // All references must be mentioned in description text
-      const lowerDesc = description.toLowerCase();
-      const allRefsMentioned = references.every(ref => lowerDesc.includes(ref.toLowerCase()));
-      if (!allRefsMentioned) {
-        loreStatusMessage.style.color = 'red';
-        loreStatusMessage.textContent = 'The description must mention all listed references.';
-        return;
-      }
-
-      try {
-        if (editingLoreId) {
-          // UPDATE existing lore document
-          await db.collection('lore').doc(editingLoreId).update({
-            name,
-            category,
-            description,
-            references,
-            author: currentUsername,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          loreStatusMessage.style.color = 'green';
-          loreStatusMessage.textContent = 'Lore updated successfully!';
-        } else {
-          // ADD new lore document
-          await db.collection('lore').add({
-            name,
-            category,
-            description,
-            references,
-            author: currentUsername,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          loreStatusMessage.style.color = 'green';
-          loreStatusMessage.textContent = 'Lore submitted successfully!';
-        }
-        loreForm.reset();
-        cancelEditBtn.style.display = 'none';
-        editingLoreId = null;
-      } catch (err) {
-        loreStatusMessage.style.color = 'red';
-        loreStatusMessage.textContent = 'Error submitting lore. Please try again.';
-        console.error(err);
-      }
-    });
-
-    storyForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      storyStatusMessage.textContent = '';
-      storyStatusMessage.style.color = '';
-
-      if (!currentUser || !currentUsername) {
-        storyStatusMessage.style.color = 'red';
-        storyStatusMessage.textContent = 'You must be signed in to submit.';
-        return;
-      }
-
-      const name = document.getElementById('storyName').value.trim();
-      const content = document.getElementById('storyContent').value.trim();
-      const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-      if (!content || references.length === 0) {
-        storyStatusMessage.style.color = 'red';
-        storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
-        return;
-      }
-
-      const lowerContent = content.toLowerCase();
-
-      // All references must be mentioned in content
-      const allRefsMentioned = references.every(ref => lowerContent.includes(ref.toLowerCase()));
-      if (!allRefsMentioned) {
-        storyStatusMessage.style.color = 'red';
-        storyStatusMessage.textContent = 'Your story must mention all listed references in its content.';
-        return;
-      }
-
-      // All references must be from recent lore list
-      const allRefsValid = references.every(ref => recentLoreMap.has(ref.toLowerCase()));
-      if (!allRefsValid) {
-        storyStatusMessage.style.color = 'red';
-        storyStatusMessage.textContent = 'All references must be from the Recently Referenced Lore list.';
-        return;
-      }
-
-      try {
-        if (editingStoryId) {
-          // UPDATE existing story document
-          await db.collection('story').doc(editingStoryId).update({
-            name: name || null,
-            content,
-            references,
-            author: currentUsername,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          storyStatusMessage.style.color = 'green';
-          storyStatusMessage.textContent = 'Story updated successfully!';
-        } else {
-          // ADD new story document
-          await db.collection('story').add({
-            name: name || null,
-            content,
-            references,
-            author: currentUsername,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          storyStatusMessage.style.color = 'green';
-          storyStatusMessage.textContent = 'Story submitted successfully!';
-        }
-        storyForm.reset();
-        wordCounter.textContent = '0 words | suggested donation: 0 cents';
-        cancelEditBtnStory.style.display = 'none';
-        editingStoryId = null;
-      } catch (err) {
-        storyStatusMessage.style.color = 'red';
-        storyStatusMessage.textContent = 'Error submitting story. Please try again.';
-        console.error(err);
-      }
-    });
-
-    // Cancel edit buttons logic
-    cancelEditBtn.addEventListener('click', () => {
-      loreForm.reset();
-      loreStatusMessage.textContent = '';
-      cancelEditBtn.style.display = 'none';
-      editingLoreId = null;
-      // Switch to lore mode, default state
-      setMode('lore');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    });
-
-    cancelEditBtnStory.addEventListener('click', () => {
-      storyForm.reset();
-      storyStatusMessage.textContent = '';
-      wordCounter.textContent = '0 words | suggested donation: 0 cents';
-      cancelEditBtnStory.style.display = 'none';
-      editingStoryId = null;
-      setMode('story');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    });
-
-    // Check for ?edit=loreID or ?editStory=storyID in URL params
-    async function checkForEditParams() {
-      const params = new URLSearchParams(window.location.search);
-      const loreId = params.get('edit');
-      const storyId = params.get('editStory');
-
-      if (loreId) {
-        setMode('lore');
-        try {
-          const doc = await db.collection('lore').doc(loreId).get();
-          if (doc.exists) {
-            const data = doc.data();
-            document.getElementById('loreName').value = data.name || '';
-            document.getElementById('loreCategory').value = data.category || 'Miscellaneous';
-            document.getElementById('loreDescription').value = data.description || '';
-            document.getElementById('loreReferences').value = (data.references || []).join(', ');
-            editingLoreId = loreId;
-            cancelEditBtn.style.display = 'inline-block';
-            loreStatusMessage.textContent = 'Editing existing lore entry';
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      } else if (storyId) {
-        setMode('story');
-        try {
-          const doc = await db.collection('story').doc(storyId).get();
-          if (doc.exists) {
-            const data = doc.data();
-            document.getElementById('storyName').value = data.name || '';
-            document.getElementById('storyContent').value = data.content || '';
-            document.getElementById('storyReferences').value = (data.references || []).join(', ');
-            editingStoryId = storyId;
-            cancelEditBtnStory.style.display = 'inline-block';
-            storyStatusMessage.textContent = 'Editing existing story entry';
-            storyContent.dispatchEvent(new Event('input'));
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    }
-
-    function clearStatusMessages() {
-      loreStatusMessage.textContent = '';
-      storyStatusMessage.textContent = '';
-    }
-
-    function resetEditState() {
-      editingLoreId = null;
-      editingStoryId = null;
-      cancelEditBtn.style.display = 'none';
-      cancelEditBtnStory.style.display = 'none';
-      loreForm.reset();
-      storyForm.reset();
-      wordCounter.textContent = '0 words | suggested donation: 0 cents';
-    }
-  </script>
-</body>
-</html>
+/* Responsive for smaller screens */
+@media (max-width: 600px) {
+  .story-bubble {
+    padding: 2rem 1rem;
+    font-size: 1rem;
+    max-height: none;
+  }
+}
