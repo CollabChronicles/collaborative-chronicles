@@ -415,7 +415,7 @@ form {
 }
 
 .thought-bubble.encouragement::before {
-  content: "💭";
+  content: "";
   font-size: 2rem;
   position: absolute;
   top: -20px;
