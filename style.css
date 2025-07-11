@@ -398,3 +398,39 @@ form {
     max-height: none;
   }
 }
+
+.thought-bubble.encouragement {
+  background-color: #000;
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  padding: 20px 30px;
+  margin: 30px auto;
+  max-width: 700px;
+  color: #d4af37;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+  position: relative;
+  font-family: Georgia, serif;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.thought-bubble.encouragement::before {
+  content: "💭";
+  font-size: 2rem;
+  position: absolute;
+  top: -20px;
+  left: 20px;
+  background-color: #000;
+  padding: 5px 10px;
+  border-radius: 50%;
+  border: 2px solid #d4af37;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.thought-bubble.encouragement h3 {
+  margin-top: 0;
+  color: #d4af37;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
