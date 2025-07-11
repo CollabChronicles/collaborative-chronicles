@@ -24,8 +24,10 @@
     <p>Explore the ongoing collaborative tale below. Use the search to find parts by content, title, or reference.</p>
     <input type="text" id="searchInput" placeholder="Search the story by content, name, or references..." />
 
-    <div id="story-content">
-      <p><em>Loading story entries...</em></p>
+    <div class="story-container">
+      <div class="story-bubble" id="story-content">
+        <p><em>Loading story entries...</em></p>
+      </div>
     </div>
 
     <a class="button-standard" href="write.html">Help this world grow!</a>
@@ -39,7 +41,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-
 
   <script>
     const firebaseConfig = {
@@ -56,7 +57,6 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-
     const storyContentDiv = document.getElementById('story-content');
     const searchInput = document.getElementById('searchInput');
 
@@ -72,6 +72,7 @@
         return;
       }
       let combined = stories.map(s => s.content.trim()).join("\n\n");
+      // Escape HTML to prevent XSS
       storyContentDiv.textContent = combined;
     }
 
