@@ -50,11 +50,14 @@ I only started logging a few days into the project so the first few days are app
 - Set up profile system by implementing sign in/out and usernames
 - Allows users to see their submissions and word count they've contributed
 
-07-08-2025
+07-09-2025
 - Expanded on site text
 - Made each Lore entry a link that takes it to its own page featuring: category, author, description, and references
 
-07-09-2025
+07-10-2025
 - Cleaned up profile page
 - Fixed a whole lot of issues with Lore and Story links
 - Improved on edit function by auto-filling original entry to make it easier for writers to see what they originally had and edit it
+
+07-11-2025
+- Added random prompt generator on "Write!" page  
