@@ -1,102 +1,662 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="img-src data: https:;">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Write | Collaborative Chronicles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collaborative Chronicles - Write!</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    #cancelEditBtn, #cancelEditBtnStory {
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    #loreStatusMessage, #storyStatusMessage {
+      margin-top: 8px;
+      font-weight: bold;
+    }
+    #wordCounter {
+      margin-top: 6px;
+      font-style: italic;
+      color: #555;
+    }
+    #recentLoreList {
+      margin-top: 12px;
+      padding-left: 20px;
+    }
+    #recentLoreList li {
+      list-style-type: disc;
+      margin-bottom: 4px;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>Write!</h1>
+    <h1>Collaborative Chronicles</h1>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="story.html">The Story</a>
-      <a href="lore.html">The Lore</a>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a> |
       <a href="profile.html">Profile</a>
     </nav>
   </header>
 
   <main>
-    <section class="thought-bubble">
-      <p>Getting started is easier than you think. Whether you're writing lore or story, you're shaping the world one word at a time. Don't worry about being first—just be creative.</p>
-    </section>
+    <h2>Add to the World</h2>
+    <p>Contribute new lore entries or add to the ongoing story below! Fantasy, sci-fi, mystery... any style is welcome, but please keep it original and avoid copyrighted materials. To maintain narrative continuity, all new Lore entries must reference at least one existing Lore, and Story entries must reference a recently referenced Lore item (shown below).</p>
+    <p>Collaborative Chronicles is a world for everyone. Hateful or inappropriate content will be removed promptly.</p>
+    <p> </p>
+    
 
-    <section id="prompt-generator">
-      <h2>Need Inspiration?</h2>
-      <div class="prompt-box">
-        <span id="generatedPrompt">Click below to generate a prompt!</span>
-        <button id="generatePrompt" class="button-standard">Generate Prompt</button>
-      </div>
-    </section>
+    <div class="thought-bubble encouragement">
+  <h3>✨ New World, Needs Your Voice!</h3>
+  <p>Be the first to write! Don’t worry about being perfect—your ideas help spark the world for everyone else. Every legend starts with one voice. Share your lore or story and inspire others to build on it!</p>
+</div>
 
-    <section class="toggle-buttons">
-      <button id="toggleLore" class="button-standard active">Add Lore</button>
-      <button id="toggleStory" class="button-standard">Add Story</button>
+    <section class="prompt-generator">
+  <h3>🪄 Need inspiration?</h3>
+  <p id="generatedPrompt">Click the button below to get a random writing prompt!</p>
+  <button class="button-standard" id="generatePromptBtn">Generate Prompt</button>
+</section>
+
+
+
+    <section id="toggleSection" class="toggle-buttons">
+      <button class="toggle-button active" id="loreToggle">Add Lore</button>
+      <button class="toggle-button" id="storyToggle">Add Story</button>
     </section>
 
     <!-- Lore Form -->
-    <form id="loreForm" class="entry-form">
-      <h2>Create Lore</h2>
-      <label for="loreName">Name:</label>
-      <input type="text" id="loreName" required />
+<section id="loreFormSection">
+  <form id="loreForm">
+    <label for="loreName">Name:</label>
+    <input type="text" id="loreName" required />
 
-      <label for="loreCategory">Category:</label>
-      <input type="text" id="loreCategory" required />
+    <label for="loreCategory">Category:</label>
+    <select id="loreCategory" required>
+      <option value="Character">Character</option>
+      <option value="Place">Place</option>
+      <option value="Faction">Faction</option>
+      <option value="Object">Object</option>
+      <option value="Tale">Tale</option>
+      <option value="Miscellaneous">Miscellaneous</option>
+    </select>
 
-      <label for="loreDescription">Description:</label>
-      <textarea id="loreDescription" required></textarea>
+    <label for="loreDescription">Description:</label>
+    <textarea id="loreDescription" rows="5" required></textarea>
 
-      <label for="loreReferences">References (comma-separated):</label>
-      <input type="text" id="loreReferences" required />
+    <label for="loreReferences">References (comma-separated, must include one existing lore):</label>
+    <input type="text" id="loreReferences" required />
 
-      <p class="donation-note">Suggested donation: $1 to support literacy.</p>
+    <!-- ADDED: Terms checkbox -->
+    <label>
+      <input type="checkbox" id="loreAgreeTerms" required />
+      I agree to the <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms of Use</a>.
+    </label>
 
-      <div class="terms-checkbox">
-        <input type="checkbox" id="loreTermsCheckbox" required>
-        <label for="loreTermsCheckbox">
-          By submitting, you agree to our <a href="terms.html" target="_blank">Terms of Use</a>.
-        </label>
-      </div>
+    <p><em>Suggested donation: $1</em></p>
 
-      <div class="form-buttons">
-        <button type="submit" class="button-standard submit-button">Submit Lore</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" class="button-standard support-button">Support Literacy</a>
-      </div>
-    </form>
+    <div class="button-group">
+      <input class="button-standard" type="submit" value="Submit Lore" />
+      <button type="button" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+      <a class="button-standard toggle-button" href="https://www.gofundme.com/manage/support-reading-is-fundamentals-mission/edit" target="_blank" rel="noopener noreferrer">Support Literacy</a>
+    </div>
+    <p id="loreStatusMessage"></p>
+  </form>
+</section>
 
-    <!-- Story Form -->
-    <form id="storyForm" class="entry-form hidden">
-      <h2>Create Story</h2>
-      <label for="storyTitle">Title:</label>
-      <input type="text" id="storyTitle" required />
+<!-- Story Form -->
+<section id="storyFormSection" style="display: none;">
+  <form id="storyForm">
+    <label for="storyName">Title (optional):</label>
+    <input type="text" id="storyName" />
 
-      <label for="storyContent">Content:</label>
-      <textarea id="storyContent" required></textarea>
+    <label for="storyContent">Content (must mention all references):</label>
+    <textarea id="storyContent" rows="10" required></textarea>
 
-      <label for="storyReferences">Lore References (comma-separated):</label>
-      <input type="text" id="storyReferences" required />
+    <div id="wordCounter">0 words | suggested donation: 0 cents</div>
+    <p></p>
 
-      <p class="donation-note">Suggested donation: 1¢ per word to support literacy.</p>
+    <label for="storyReferences">References (comma-separated, must include one recent lore):</label>
+    <input type="text" id="storyReferences" required />
 
-      <div class="terms-checkbox">
-        <input type="checkbox" id="storyTermsCheckbox" required>
-        <label for="storyTermsCheckbox">
-          By submitting, you agree to our <a href="terms.html" target="_blank">Terms of Use</a>.
-        </label>
-      </div>
+    <!-- ADDED: Terms checkbox -->
+    <label>
+      <input type="checkbox" id="storyAgreeTerms" required />
+      I agree to the <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms of Use</a>.
+    </label>
 
-      <div class="form-buttons">
-        <button type="submit" class="button-standard submit-button">Submit Story</button>
-        <a href="https://www.gofundme.com/f/support-reading-is-fundamentals-mission" target="_blank" class="button-standard support-button">Support Literacy</a>
-      </div>
-    </form>
+    <div class="button-group">
+      <input class="button-standard" type="submit" value="Submit Story" />
+      <button type="button" id="cancelEditBtnStory" style="display:none;">Cancel Edit</button>
+      <a class="button-standard toggle-button" href="https://www.gofundme.com/manage/support-reading-is-fundamentals-mission/edit" target="_blank" rel="noopener noreferrer">Support Literacy</a>
+    </div>
+    <p id="storyStatusMessage"></p>
+  </form>
+
+  <h3>Recently Referenced Lore (choose from these):</h3>
+  <ul id="recentLoreList">
+    <li>Loading...</li>
+  </ul>
+</section>
+
   </main>
 
   <footer>
-    <p>&copy; 2025 Collaborative Chronicles. All rights reserved.</p>
+    <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <script src="write.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const loreToggle = document.getElementById('loreToggle');
+    const storyToggle = document.getElementById('storyToggle');
+    const loreFormSection = document.getElementById('loreFormSection');
+    const storyFormSection = document.getElementById('storyFormSection');
+    const loreStatusMessage = document.getElementById('loreStatusMessage');
+    const storyStatusMessage = document.getElementById('storyStatusMessage');
+    const storyContent = document.getElementById('storyContent');
+    const wordCounter = document.getElementById('wordCounter');
+    const recentLoreList = document.getElementById('recentLoreList');
+    const loreForm = document.getElementById('loreForm');
+    const storyForm = document.getElementById('storyForm');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const cancelEditBtnStory = document.getElementById('cancelEditBtnStory');
+
+    let currentUser = null;
+    let currentUsername = null;
+    let recentLoreMap = new Map();
+    let existingLoreNamesSet = new Set();
+
+    // New state vars for editing
+    let editingLoreId = null;
+    let editingStoryId = null;
+
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        await loadUsername();
+        await loadExistingLoreNames();
+        await loadRecentLore();
+        await checkForEditParams();
+      } else {
+        currentUser = null;
+        currentUsername = null;
+      }
+    });
+
+    async function loadUsername() {
+      if (!currentUser) return;
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      currentUsername = doc.exists && doc.data().username
+        ? doc.data().username
+        : currentUser.email.split('@')[0];
+    }
+
+    async function loadExistingLoreNames() {
+      existingLoreNamesSet.clear();
+      const snapshot = await db.collection('lore').get();
+      snapshot.forEach(doc => {
+        const name = doc.data().name;
+        if (name) existingLoreNamesSet.add(name.toLowerCase());
+      });
+    }
+
+    storyContent.addEventListener('input', () => {
+      const words = countWords(storyContent.value);
+      const cents = words; // 1 word = 1 cent
+      wordCounter.textContent = `${words} word${words !== 1 ? 's' : ''} | suggested donation: ${cents} cent${cents !== 1 ? 's' : ''}`;
+    });
+
+    function countWords(text) {
+      if (!text) return 0;
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    loreToggle.addEventListener('click', () => {
+      setMode('lore');
+    });
+
+    storyToggle.addEventListener('click', () => {
+      setMode('story');
+    });
+
+    function setMode(mode) {
+      if (mode === 'lore') {
+        loreFormSection.style.display = 'block';
+        storyFormSection.style.display = 'none';
+        loreToggle.classList.add('active');
+        storyToggle.classList.remove('active');
+        loreToggle.style.opacity = '1';
+        storyToggle.style.opacity = '0.5';
+      } else {
+        loreFormSection.style.display = 'none';
+        storyFormSection.style.display = 'block';
+        storyToggle.classList.add('active');
+        loreToggle.classList.remove('active');
+        storyToggle.style.opacity = '1';
+        loreToggle.style.opacity = '0.5';
+      }
+      clearStatusMessages();
+      resetEditState();
+    }
+
+    loreFormSection.style.display = 'block';
+    storyFormSection.style.display = 'none';
+    loreToggle.classList.add('active');
+    storyToggle.classList.remove('active');
+    loreToggle.style.opacity = '1';
+    storyToggle.style.opacity = '0.5';
+
+    async function loadRecentLore() {
+      try {
+        let loreRefCounts = new Map();
+        const storySnapshot = await db.collection('story').get();
+        storySnapshot.forEach(doc => {
+          const refs = doc.data().references || [];
+          refs.forEach(r => {
+            if (r) loreRefCounts.set(r, (loreRefCounts.get(r) || 0) + 1);
+          });
+        });
+
+        const sortedRefs = Array.from(loreRefCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(entry => entry[0]);
+
+        let finalLoreNames = [];
+
+        for (let name of sortedRefs) {
+          if (finalLoreNames.length >= 20) break;
+          finalLoreNames.push(name);
+        }
+
+        if (finalLoreNames.length < 20) {
+          const moreLore = await db.collection('lore')
+            .orderBy('timestamp', 'desc')
+            .limit(20 - finalLoreNames.length)
+            .get();
+
+          moreLore.forEach(doc => {
+            const name = doc.data().name;
+            if (name && !finalLoreNames.includes(name)) {
+              finalLoreNames.push(name);
+            }
+          });
+        }
+
+        recentLoreMap.clear();
+
+        if (finalLoreNames.length) {
+          // Firestore "in" queries max 10, so split if needed
+          const chunks = [];
+          for (let i = 0; i < finalLoreNames.length; i += 10) {
+            chunks.push(finalLoreNames.slice(i, i + 10));
+          }
+          recentLoreList.innerHTML = ''; // clear before filling
+          for (const chunk of chunks) {
+            const loreQuery = await db.collection('lore')
+              .where('name', 'in', chunk)
+              .get();
+
+            loreQuery.forEach(doc => {
+              recentLoreMap.set(doc.data().name.toLowerCase(), doc.id);
+            });
+          }
+
+          recentLoreList.innerHTML = finalLoreNames
+            .map(name => {
+              const id = recentLoreMap.get(name.toLowerCase());
+              if (id) {
+                return `<li><a href="lore-detail.html?id=${id}">${name}</a></li>`;
+              } else {
+                return `<li>${name}</li>`;
+              }
+            })
+            .join('');
+        } else {
+          recentLoreList.innerHTML = '<li>None found.</li>';
+        }
+      } catch (error) {
+        console.error(error);
+        recentLoreList.innerHTML = '<li>Error loading recently referenced lore.</li>';
+      }
+    }
+
+    loreForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loreStatusMessage.textContent = '';
+      loreStatusMessage.style.color = '';
+
+      if (!currentUser || !currentUsername) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'You must be signed in to submit.';
+        return;
+      }
+
+      const name = document.getElementById('loreName').value.trim();
+      const category = document.getElementById('loreCategory').value;
+      const description = document.getElementById('loreDescription').value.trim();
+      const references = document.getElementById('loreReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+      if (!name || !category || !description || references.length === 0) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+        return;
+      }
+
+      // All references must be existing lore entries
+      const loreRefsValid = references.every(ref => existingLoreNamesSet.has(ref.toLowerCase()));
+      if (!loreRefsValid) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'All references must be existing lore entries.';
+        return;
+      }
+
+      // All references must be mentioned in description text
+      const lowerDesc = description.toLowerCase();
+      const allRefsMentioned = references.every(ref => lowerDesc.includes(ref.toLowerCase()));
+      if (!allRefsMentioned) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'The description must mention all listed references.';
+        return;
+      }
+
+      try {
+        if (editingLoreId) {
+          // UPDATE existing lore document
+          await db.collection('lore').doc(editingLoreId).update({
+            name,
+            category,
+            description,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          loreStatusMessage.style.color = 'green';
+          loreStatusMessage.textContent = 'Lore updated successfully!';
+        } else {
+          // ADD new lore document
+          await db.collection('lore').add({
+            name,
+            category,
+            description,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          loreStatusMessage.style.color = 'green';
+          loreStatusMessage.textContent = 'Lore submitted successfully!';
+        }
+        loreForm.reset();
+        cancelEditBtn.style.display = 'none';
+        editingLoreId = null;
+      } catch (err) {
+        loreStatusMessage.style.color = 'red';
+        loreStatusMessage.textContent = 'Error submitting lore. Please try again.';
+        console.error(err);
+      }
+    });
+
+    storyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      storyStatusMessage.textContent = '';
+      storyStatusMessage.style.color = '';
+
+      if (!currentUser || !currentUsername) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'You must be signed in to submit.';
+        return;
+      }
+
+      const name = document.getElementById('storyName').value.trim();
+      const content = document.getElementById('storyContent').value.trim();
+      const references = document.getElementById('storyReferences').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+      if (!content || references.length === 0) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'Please fill out all fields and include at least one reference.';
+        return;
+      }
+
+      const lowerContent = content.toLowerCase();
+
+      // All references must be mentioned in content
+      const allRefsMentioned = references.every(ref => lowerContent.includes(ref.toLowerCase()));
+      if (!allRefsMentioned) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'Your story must mention all listed references in its content.';
+        return;
+      }
+
+      // All references must be from recent lore list
+      const allRefsValid = references.every(ref => recentLoreMap.has(ref.toLowerCase()));
+      if (!allRefsValid) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'All references must be from the Recently Referenced Lore list.';
+        return;
+      }
+
+      try {
+        if (editingStoryId) {
+          // UPDATE existing story document
+          await db.collection('story').doc(editingStoryId).update({
+            name: name || null,
+            content,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          storyStatusMessage.style.color = 'green';
+          storyStatusMessage.textContent = 'Story updated successfully!';
+        } else {
+          // ADD new story document
+          await db.collection('story').add({
+            name: name || null,
+            content,
+            references,
+            author: currentUsername,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          storyStatusMessage.style.color = 'green';
+          storyStatusMessage.textContent = 'Story submitted successfully!';
+        }
+        storyForm.reset();
+        wordCounter.textContent = '0 words | suggested donation: 0 cents';
+        cancelEditBtnStory.style.display = 'none';
+        editingStoryId = null;
+      } catch (err) {
+        storyStatusMessage.style.color = 'red';
+        storyStatusMessage.textContent = 'Error submitting story. Please try again.';
+        console.error(err);
+      }
+    });
+
+    // Cancel edit buttons logic
+    cancelEditBtn.addEventListener('click', () => {
+      loreForm.reset();
+      loreStatusMessage.textContent = '';
+      cancelEditBtn.style.display = 'none';
+      editingLoreId = null;
+      // Switch to lore mode, default state
+      setMode('lore');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    });
+
+    cancelEditBtnStory.addEventListener('click', () => {
+      storyForm.reset();
+      storyStatusMessage.textContent = '';
+      wordCounter.textContent = '0 words | suggested donation: 0 cents';
+      cancelEditBtnStory.style.display = 'none';
+      editingStoryId = null;
+      setMode('story');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    });
+
+    // Check for ?edit=loreID or ?editStory=storyID in URL params
+    async function checkForEditParams() {
+      const params = new URLSearchParams(window.location.search);
+      const loreId = params.get('edit');
+      const storyId = params.get('editStory');
+
+      if (loreId) {
+        setMode('lore');
+        try {
+          const doc = await db.collection('lore').doc(loreId).get();
+          if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('loreName').value = data.name || '';
+            document.getElementById('loreCategory').value = data.category || 'Miscellaneous';
+            document.getElementById('loreDescription').value = data.description || '';
+            document.getElementById('loreReferences').value = (data.references || []).join(', ');
+            editingLoreId = loreId;
+            cancelEditBtn.style.display = 'inline-block';
+            loreStatusMessage.textContent = 'Editing existing lore entry';
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      } else if (storyId) {
+        setMode('story');
+        try {
+          const doc = await db.collection('story').doc(storyId).get();
+          if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('storyName').value = data.name || '';
+            document.getElementById('storyContent').value = data.content || '';
+            document.getElementById('storyReferences').value = (data.references || []).join(', ');
+            editingStoryId = storyId;
+            cancelEditBtnStory.style.display = 'inline-block';
+            storyStatusMessage.textContent = 'Editing existing story entry';
+            storyContent.dispatchEvent(new Event('input'));
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+
+    function clearStatusMessages() {
+      loreStatusMessage.textContent = '';
+      storyStatusMessage.textContent = '';
+    }
+
+    function resetEditState() {
+      editingLoreId = null;
+      editingStoryId = null;
+      cancelEditBtn.style.display = 'none';
+      cancelEditBtnStory.style.display = 'none';
+      loreForm.reset();
+      storyForm.reset();
+      wordCounter.textContent = '0 words | suggested donation: 0 cents';
+    }
+
+    // Prompt templates with {lore} and {free} dynamic slots
+const promptTemplates = [
+  "Write a scene where {lore} and a {free} collide in surprising ways.",
+  "Describe {lore} as seen through the eyes of a {free}.",
+  "Tell a tale of {lore} encountering a {free} in an unexpected place.",
+  "Invent a rumor linking {lore} with a mysterious {free}.",
+  "Explain why {lore} fears or covets a {free}.",
+  "Write about the alliance or rivalry between {lore} and a {free}.",
+  "Describe the moment {lore} loses a {free}.",
+  "Imagine {lore} discovering a hidden truth about a {free}.",
+  "Write a letter from {lore} to a {free}.",
+  "Tell the origin story of how {lore} came to possess a {free}.",
+  "Describe a conflict between {lore} and a {free}.",
+  "Reveal a secret deal between {lore} and a {free}.",
+  "Write a legend about {lore} and the cursed {free}.",
+  "Describe a negotiation or bargain between {lore} and a {free}.",
+  "Imagine {lore} sacrificing something to gain a {free}.",
+  "Tell how {lore} uses a {free} to change the world.",
+  "Describe {lore}'s memories of a lost {free}.",
+  "Write about {lore} being betrayed over a {free}.",
+  "Imagine {lore} hiding a {free} from everyone else.",
+  "Describe the bond or connection between {lore} and a {free}."
+];
+
+
+// Free slot options for variety
+const freeOptions = [
+  // Fantasy objects
+  "amulet", "sword", "journal", "orb", "map", "key", "crown", "dagger", "cloak", "crystal", "spellbook",
+  
+  // Sci-fi or tech
+  "data chip", "android", "spaceship", "portal", "laser", "nanobot", "AI core", "hologram", "power cell",
+  
+  // People / Roles
+  "prince", "merchant", "wizard", "thief", "wanderer", "librarian", "soldier", "detective", "scientist", "stranger",
+  "rival", "mentor", "spy", "child", "prophet", "pilot", "assassin", "healer",
+  
+  // Places
+  "forest", "ruins", "castle", "underground chamber", "abandoned station", "market", "temple", "lighthouse", "hidden cave",
+  "alleyway", "desert", "mountain pass", "river crossing", "moon base", "secret lab",
+  
+  // Abstract/Emotional
+  "memory", "fear", "hope", "dream", "lie", "promise", "curse", "destiny", "vision", "regret",
+  
+  // Events
+  "festival", "funeral", "trial", "escape", "betrayal", "rebellion", "ceremony", "meeting", "invasion",
+  
+  // Mundane / Real-world
+  "letter", "mirror", "photograph", "locket", "book", "newspaper", "ring", "painting", "clock", "bridge",
+  "car", "phone", "backpack", "umbrella", "ticket", "recipe"
+];
+
+// Elements from the page
+const generatePromptBtn = document.getElementById('generatePromptBtn');
+const generatedPrompt = document.getElementById('generatedPrompt');
+
+// Utility: pick random item
+function getRandomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Utility: pick random lore name from your loaded Map
+function getRandomLoreName() {
+  const loreNames = Array.from(recentLoreMap.keys());
+  if (loreNames.length === 0) return "a lost piece of lore";
+  return getRandomItem(loreNames);
+}
+
+// Generate the prompt and update the page
+function generatePrompt() {
+  const template = getRandomItem(promptTemplates);
+  const lore = getRandomLoreName();
+  const free = getRandomItem(freeOptions);
+  const prompt = template
+    .replace("{lore}", lore)
+    .replace("{free}", free);
+  generatedPrompt.textContent = prompt;
+}
+
+// Hook up the button
+generatePromptBtn.addEventListener('click', generatePrompt);
+
+  </script>
 </body>
 </html>
