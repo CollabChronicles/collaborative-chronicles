@@ -8,9 +8,18 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     .edit-input {
-      margin: 0 8px;
+      margin: 0 8px 6px 0;
       padding: 4px 6px;
       font-size: 1em;
+    }
+    .edit-textarea {
+      width: 100%;
+      min-height: 80px;
+      margin: 6px 0;
+      font-size: 1em;
+      padding: 6px;
+      font-family: inherit;
+      resize: vertical;
     }
     .btn-small {
       font-size: 0.8em;
@@ -281,7 +290,7 @@
             <a class="entry-title-link" href="lore-detail.html?id=${doc.id}">${escapeHtml(data.name)}</a>
             (${escapeHtml(data.category)}) <br />
             <em>Author:</em> ${escapeHtml(data.author)} <br />
-            <em>References:</em> ${escapeHtml(data.references.join(', '))} <br />
+            <em>References:</em> ${escapeHtml((data.references || []).join(', '))} <br />
             <button class="btn-small" onclick="editEntry('lore', '${doc.id}')">Edit</button>
             <button class="btn-small" onclick="deleteEntry('lore', '${doc.id}')">Delete</button>
           `;
@@ -332,8 +341,127 @@
       return text.trim().split(/\s+/).length;
     }
 
-    window.editEntry = function(collection, docId) {
-      window.location.href = `write.html?edit=${collection}&id=${docId}`;
+    window.editEntry = async function(collection, docId) {
+      const container = collection === 'lore' ? userLoreList : userStoryList;
+      const entryDiv = Array.from(container.children).find(div => 
+        div.querySelector(`button[onclick="editEntry('${collection}', '${docId}')"]`)
+      );
+      if (!entryDiv) return;
+
+      // Prevent multiple edits simultaneously
+      if (container.querySelector('.editing')) {
+        alert('Please finish the current edit before editing another entry.');
+        return;
+      }
+
+      entryDiv.classList.add('editing');
+
+      // Fetch the document data
+      let docSnap;
+      try {
+        docSnap = await db.collection(collection).doc(docId).get();
+        if (!docSnap.exists) {
+          alert('Entry no longer exists.');
+          if(collection === 'lore') loadUserLore(); else loadUserStories();
+          return;
+        }
+      } catch (e) {
+        alert('Error loading entry.');
+        return;
+      }
+
+      const data = docSnap.data();
+
+      // Clear current content
+      entryDiv.innerHTML = '';
+
+      // Title input
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.value = data.name || '';
+      titleInput.className = 'edit-input';
+      titleInput.placeholder = 'Title';
+      entryDiv.appendChild(titleInput);
+
+      if (collection === 'lore') {
+        // Category input
+        const categoryInput = document.createElement('input');
+        categoryInput.type = 'text';
+        categoryInput.value = data.category || '';
+        categoryInput.className = 'edit-input';
+        categoryInput.placeholder = 'Category';
+        entryDiv.appendChild(categoryInput);
+
+        // References input (comma-separated)
+        const referencesInput = document.createElement('input');
+        referencesInput.type = 'text';
+        referencesInput.value = (data.references || []).join(', ');
+        referencesInput.className = 'edit-input';
+        referencesInput.placeholder = 'References (comma-separated)';
+        entryDiv.appendChild(referencesInput);
+
+      } else if (collection === 'story') {
+        // Content textarea
+        const contentTextarea = document.createElement('textarea');
+        contentTextarea.className = 'edit-textarea';
+        contentTextarea.value = data.content || '';
+        contentTextarea.placeholder = 'Content';
+        entryDiv.appendChild(contentTextarea);
+      }
+
+      // Save and Cancel buttons
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Save';
+      saveBtn.className = 'btn-small';
+      entryDiv.appendChild(saveBtn);
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.className = 'btn-small';
+      entryDiv.appendChild(cancelBtn);
+
+      const messageP = document.createElement('p');
+      messageP.style.color = 'red';
+      messageP.style.minHeight = '1.2em';
+      entryDiv.appendChild(messageP);
+
+      cancelBtn.onclick = () => {
+        entryDiv.classList.remove('editing');
+        if(collection === 'lore') loadUserLore(); else loadUserStories();
+      };
+
+      saveBtn.onclick = async () => {
+        messageP.style.color = 'red';
+        messageP.textContent = '';
+
+        const newName = titleInput.value.trim();
+        if (!newName || newName.length < 3) {
+          messageP.textContent = 'Title must be at least 3 characters.';
+          return;
+        }
+
+        const updateData = { name: newName };
+
+        if (collection === 'lore') {
+          updateData.category = categoryInput.value.trim();
+          updateData.references = referencesInput.value.split(',').map(s => s.trim()).filter(s => s);
+        } else if (collection === 'story') {
+          const newContent = contentTextarea.value.trim();
+          if (!newContent || newContent.length < 10) {
+            messageP.textContent = 'Content must be at least 10 characters.';
+            return;
+          }
+          updateData.content = newContent;
+        }
+
+        try {
+          await db.collection(collection).doc(docId).update(updateData);
+          entryDiv.classList.remove('editing');
+          if(collection === 'lore') loadUserLore(); else loadUserStories();
+        } catch (err) {
+          messageP.textContent = 'Error saving changes: ' + err.message;
+        }
+      };
     };
 
     window.deleteEntry = async function(collection, docId) {
@@ -343,7 +471,7 @@
         if (collection === 'lore') loadUserLore();
         else loadUserStories();
       } catch {}
-    }
+    };
 
     function clearProfileData() {
       displayUsername.textContent = '';
