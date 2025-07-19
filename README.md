@@ -60,4 +60,8 @@ I only started logging a few days into the project so the first few days are app
 - Improved on edit function by auto-filling original entry to make it easier for writers to see what they originally had and edit it
 
 07-11-2025
-- Added random prompt generator on "Write!" page  
+- Added random prompt generator on "Write!" page
+
+07-19-2025
+- Added Terms of Use and Privacy Policy
+- Need to fix "edit" button on Profile page
