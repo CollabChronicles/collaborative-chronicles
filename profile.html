@@ -1,69 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="img-src data: https:;">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Collaborative Chronicles - Profile</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    .edit-input {
-      margin: 0 8px 6px 0;
-      padding: 4px 6px;
-      font-size: 1em;
-    }
-    .edit-textarea {
-      width: 100%;
-      min-height: 80px;
-      margin: 6px 0;
-      font-size: 1em;
-      padding: 6px;
-      font-family: inherit;
-      resize: vertical;
-    }
-    .btn-small {
-      font-size: 0.8em;
-      padding: 4px 8px;
-      margin-left: 4px;
-      cursor: pointer;
-    }
-    .entry-item {
-      margin-bottom: 10px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 6px;
-    }
-    .entry-title-link {
-      font-weight: bold;
-      text-decoration: none;
-      color: #333;
-    }
-    .entry-title-link:hover {
-      text-decoration: underline;
-    }
-    #notSignedInSection input {
-      margin: 6px 0;
-      padding: 8px;
-      font-size: 1em;
-      width: 250px;
-      max-width: 90vw;
-    }
-    #notSignedInSection button {
-      margin: 6px 6px 6px 0;
-      padding: 8px 16px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    #authMessage {
-      margin-top: 8px;
-      font-weight: bold;
-      color: red;
-      min-height: 1.2em;
-    }
-    #usernameMessage {
-      color: red;
-      min-height: 1.2em;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
 </head>
 <body>
   <header>
@@ -78,39 +19,16 @@
   </header>
 
   <main>
-    <section id="notSignedInSection" style="text-align:center;">
-      <h2>Sign In or Create an Account</h2>
-      <input type="email" id="emailInput" placeholder="Email" autocomplete="username" /><br />
-      <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" /><br />
-      <button id="signInBtn" class="button-standard">Sign In</button>
-      <button id="signUpBtn" class="button-standard">Create Account</button>
-      <p id="authMessage"></p>
-    </section>
-
-    <section id="profileSection" style="display:none;">
+    <section class="profile-section">
       <h2>Your Profile</h2>
-      <p>
-        Signed in as: <span id="displayUsername"></span>
-        <button id="editUsernameBtn" class="btn-small">Edit Username</button>
-      </p>
-
-      <div id="editUsernameDiv" style="display:none; margin-bottom: 20px;">
-        <input type="text" id="usernameInput" placeholder="Enter new username" />
-        <button id="saveUsernameBtn" class="btn-small">Save</button>
-        <button id="cancelUsernameBtn" class="btn-small">Cancel</button>
-        <p id="usernameMessage"></p>
+      <div id="profileInfo">
+        <p><strong>Username:</strong> <span id="username">Loading...</span></p>
+        <p><strong>Total Word Count:</strong> <span id="wordCount">Loading...</span></p>
+        <h3>Your Contributions</h3>
+        <ul id="contributionsList">
+          <li>Loading...</li>
+        </ul>
       </div>
-
-      <button id="signOutButton" class="button-standard">Sign Out</button>
-
-      <h3>Total Words Contributed</h3>
-      <p id="totalWordCount">Loading...</p>
-
-      <h3>Your Lore Entries</h3>
-      <div id="userLoreList">Loading...</div>
-
-      <h3>Your Story Entries</h3>
-      <div id="userStoryList">Loading...</div>
     </section>
   </main>
 
@@ -118,7 +36,6 @@
     <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -133,359 +50,49 @@
       appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
       measurementId: "G-0HXV6NGHQP"
     };
+
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    const notSignedInSection = document.getElementById('notSignedInSection');
-    const profileSection = document.getElementById('profileSection');
-    const displayUsername = document.getElementById('displayUsername');
-    const userLoreList = document.getElementById('userLoreList');
-    const userStoryList = document.getElementById('userStoryList');
-    const totalWordCount = document.getElementById('totalWordCount');
-    const editUsernameBtn = document.getElementById('editUsernameBtn');
-    const editUsernameDiv = document.getElementById('editUsernameDiv');
-    const usernameInput = document.getElementById('usernameInput');
-    const saveUsernameBtn = document.getElementById('saveUsernameBtn');
-    const cancelUsernameBtn = document.getElementById('cancelUsernameBtn');
-    const usernameMessage = document.getElementById('usernameMessage');
-    const signOutButton = document.getElementById('signOutButton');
-    const emailInput = document.getElementById('emailInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const signInBtn = document.getElementById('signInBtn');
-    const signUpBtn = document.getElementById('signUpBtn');
-    const authMessage = document.getElementById('authMessage');
+    const usernameSpan = document.getElementById('username');
+    const wordCountSpan = document.getElementById('wordCount');
+    const contributionsList = document.getElementById('contributionsList');
 
-    let currentUser = null;
-    let currentUsername = null;
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        usernameSpan.textContent = user.displayName || user.email;
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        notSignedInSection.style.display = 'block';
-        profileSection.style.display = 'none';
-        clearProfileData();
-      } else {
-        currentUser = user;
-        notSignedInSection.style.display = 'none';
-        profileSection.style.display = 'block';
-        authMessage.textContent = '';
-        await loadUsername();
-        displayUsername.textContent = currentUsername;
-        loadUserLore();
-        loadUserStories();
-      }
-    });
+        let totalWords = 0;
+        contributionsList.innerHTML = '';
 
-    signInBtn.addEventListener('click', async () => {
-      await handleAuth(emailInput.value.trim(), passwordInput.value, 'signIn');
-    });
-
-    signUpBtn.addEventListener('click', async () => {
-      await handleAuth(emailInput.value.trim(), passwordInput.value, 'signUp');
-    });
-
-    async function handleAuth(email, password, mode) {
-      authMessage.style.color = 'red';
-      authMessage.textContent = '';
-      if (!email || !password) {
-        authMessage.textContent = 'Please enter email and password.';
-        return;
-      }
-      if (mode === 'signUp' && password.length < 6) {
-        authMessage.textContent = 'Password must be at least 6 characters.';
-        return;
-      }
-      try {
-        if (mode === 'signIn') {
-          await auth.signInWithEmailAndPassword(email, password);
-        } else {
-          await auth.createUserWithEmailAndPassword(email, password);
-          currentUsername = email.split('@')[0];
-          await db.collection('users').doc(auth.currentUser.uid).set({ username: currentUsername });
-        }
-        emailInput.value = '';
-        passwordInput.value = '';
-        authMessage.textContent = '';
-      } catch (err) {
-        authMessage.textContent = 'Error: ' + err.message;
-      }
-    }
-
-    async function loadUsername() {
-      const userDoc = await db.collection('users').doc(currentUser.uid).get();
-      if (userDoc.exists && userDoc.data().username) {
-        currentUsername = userDoc.data().username;
-      } else {
-        currentUsername = currentUser.email.split('@')[0];
-        await db.collection('users').doc(currentUser.uid).set({ username: currentUsername });
-      }
-    }
-
-    editUsernameBtn.addEventListener('click', () => {
-      usernameInput.value = currentUsername;
-      usernameMessage.textContent = '';
-      editUsernameDiv.style.display = 'block';
-      editUsernameBtn.style.display = 'none';
-    });
-
-    cancelUsernameBtn.addEventListener('click', () => {
-      editUsernameDiv.style.display = 'none';
-      editUsernameBtn.style.display = 'inline-block';
-      usernameMessage.textContent = '';
-    });
-
-    saveUsernameBtn.addEventListener('click', async () => {
-      const newUsername = usernameInput.value.trim();
-      usernameMessage.textContent = '';
-      if (!newUsername || newUsername.length < 3) {
-        usernameMessage.textContent = 'Username must be at least 3 characters.';
-        return;
-      }
-      if (newUsername === currentUsername) {
-        usernameMessage.textContent = 'This is already your username.';
-        return;
-      }
-      const usersSnapshot = await db.collection('users').where('username', '==', newUsername).get();
-      if (!usersSnapshot.empty) {
-        usernameMessage.textContent = 'Username already taken.';
-        return;
-      }
-      const batch = db.batch();
-      const userRef = db.collection('users').doc(currentUser.uid);
-      batch.update(userRef, { username: newUsername });
-
-      const loreSnapshot = await db.collection('lore').where('author', '==', currentUsername).get();
-      loreSnapshot.forEach(doc => batch.update(doc.ref, { author: newUsername }));
-
-      const storySnapshot = await db.collection('story').where('author', '==', currentUsername).get();
-      storySnapshot.forEach(doc => batch.update(doc.ref, { author: newUsername }));
-
-      await batch.commit();
-      currentUsername = newUsername;
-      displayUsername.textContent = currentUsername;
-      usernameMessage.style.color = 'green';
-      usernameMessage.textContent = 'Username updated!';
-      editUsernameDiv.style.display = 'none';
-      editUsernameBtn.style.display = 'inline-block';
-      loadUserLore();
-      loadUserStories();
-    });
-
-    signOutButton.addEventListener('click', () => auth.signOut());
-
-    async function loadUserLore() {
-      userLoreList.innerHTML = 'Loading...';
-      try {
-        const snapshot = await db.collection('lore').where('author', '==', currentUsername).orderBy('timestamp', 'desc').get();
-        if (snapshot.empty) {
-          userLoreList.innerHTML = '<p>No lore entries found.</p>';
-          return;
-        }
-        userLoreList.innerHTML = '';
-        snapshot.forEach(doc => {
+        const displayContribution = (doc, type) => {
           const data = doc.data();
-          const div = document.createElement('div');
-          div.className = 'entry-item';
-          div.innerHTML = `
-            <a class="entry-title-link" href="lore-detail.html?id=${doc.id}">${escapeHtml(data.name)}</a>
-            (${escapeHtml(data.category)}) <br />
-            <em>Author:</em> ${escapeHtml(data.author)} <br />
-            <em>References:</em> ${escapeHtml((data.references || []).join(', '))} <br />
-            <button class="btn-small" onclick="editEntry('lore', '${doc.id}')">Edit</button>
-            <button class="btn-small" onclick="deleteEntry('lore', '${doc.id}')">Delete</button>
-          `;
-          userLoreList.appendChild(div);
-        });
-      } catch (err) {
-        userLoreList.innerHTML = '<p>Error loading lore entries.</p>';
-      }
-    }
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${type}</strong>: ${data.title || 'Untitled'} (${countWords(data.content)} words)`;
+          contributionsList.appendChild(li);
+          totalWords += countWords(data.content);
+          wordCountSpan.textContent = totalWords.toLocaleString();
+        };
 
-    async function loadUserStories() {
-      userStoryList.innerHTML = 'Loading...';
-      let totalWords = 0;
-      try {
-        const snapshot = await db.collection('story').where('author', '==', currentUsername).orderBy('timestamp', 'desc').get();
-        if (snapshot.empty) {
-          userStoryList.innerHTML = '<p>No story entries found.</p>';
-          totalWordCount.textContent = '0 words';
-          return;
-        }
-        userStoryList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const words = countWords(data.content);
-          totalWords += words;
-          const excerpt = data.content.split(/\s+/).slice(0, 20).join(' ') + (words > 20 ? '...' : '');
-          const div = document.createElement('div');
-          div.className = 'entry-item';
-          div.innerHTML = `
-            <a class="entry-title-link" href="view-story.html?id=${doc.id}">${escapeHtml(data.name || '(Untitled)')}</a><br />
-            <em>Author:</em> ${escapeHtml(data.author)} <br />
-            <em>${words} words</em> <br />
-            "${escapeHtml(excerpt)}" <br />
-            <button class="btn-small" onclick="editEntry('story', '${doc.id}')">Edit</button>
-            <button class="btn-small" onclick="deleteEntry('story', '${doc.id}')">Delete</button>
-          `;
-          userStoryList.appendChild(div);
+        db.collection('lore').where('uid', '==', user.uid).get().then(snapshot => {
+          snapshot.forEach(doc => displayContribution(doc, 'Lore'));
         });
-        totalWordCount.textContent = `${totalWords} word${totalWords !== 1 ? 's' : ''}`;
-      } catch (err) {
-        userStoryList.innerHTML = '<p>Error loading story entries.</p>';
-        totalWordCount.textContent = 'Error';
+
+        db.collection('story').where('uid', '==', user.uid).get().then(snapshot => {
+          snapshot.forEach(doc => displayContribution(doc, 'Story'));
+        });
+
+      } else {
+        usernameSpan.textContent = 'Not signed in';
+        wordCountSpan.textContent = '0';
+        contributionsList.innerHTML = '<li>Please sign in to view your contributions.</li>';
       }
-    }
+    });
 
     function countWords(text) {
       if (!text) return 0;
       return text.trim().split(/\s+/).length;
-    }
-
-    window.editEntry = async function(collection, docId) {
-      const container = collection === 'lore' ? userLoreList : userStoryList;
-      const entryDiv = Array.from(container.children).find(div => 
-        div.querySelector(`button[onclick="editEntry('${collection}', '${docId}')"]`)
-      );
-      if (!entryDiv) return;
-
-      // Prevent multiple edits simultaneously
-      if (container.querySelector('.editing')) {
-        alert('Please finish the current edit before editing another entry.');
-        return;
-      }
-
-      entryDiv.classList.add('editing');
-
-      // Fetch the document data
-      let docSnap;
-      try {
-        docSnap = await db.collection(collection).doc(docId).get();
-        if (!docSnap.exists) {
-          alert('Entry no longer exists.');
-          if(collection === 'lore') loadUserLore(); else loadUserStories();
-          return;
-        }
-      } catch (e) {
-        alert('Error loading entry.');
-        return;
-      }
-
-      const data = docSnap.data();
-
-      // Clear current content
-      entryDiv.innerHTML = '';
-
-      // Title input
-      const titleInput = document.createElement('input');
-      titleInput.type = 'text';
-      titleInput.value = data.name || '';
-      titleInput.className = 'edit-input';
-      titleInput.placeholder = 'Title';
-      entryDiv.appendChild(titleInput);
-
-      if (collection === 'lore') {
-        // Category input
-        const categoryInput = document.createElement('input');
-        categoryInput.type = 'text';
-        categoryInput.value = data.category || '';
-        categoryInput.className = 'edit-input';
-        categoryInput.placeholder = 'Category';
-        entryDiv.appendChild(categoryInput);
-
-        // References input (comma-separated)
-        const referencesInput = document.createElement('input');
-        referencesInput.type = 'text';
-        referencesInput.value = (data.references || []).join(', ');
-        referencesInput.className = 'edit-input';
-        referencesInput.placeholder = 'References (comma-separated)';
-        entryDiv.appendChild(referencesInput);
-
-      } else if (collection === 'story') {
-        // Content textarea
-        const contentTextarea = document.createElement('textarea');
-        contentTextarea.className = 'edit-textarea';
-        contentTextarea.value = data.content || '';
-        contentTextarea.placeholder = 'Content';
-        entryDiv.appendChild(contentTextarea);
-      }
-
-      // Save and Cancel buttons
-      const saveBtn = document.createElement('button');
-      saveBtn.textContent = 'Save';
-      saveBtn.className = 'btn-small';
-      entryDiv.appendChild(saveBtn);
-
-      const cancelBtn = document.createElement('button');
-      cancelBtn.textContent = 'Cancel';
-      cancelBtn.className = 'btn-small';
-      entryDiv.appendChild(cancelBtn);
-
-      const messageP = document.createElement('p');
-      messageP.style.color = 'red';
-      messageP.style.minHeight = '1.2em';
-      entryDiv.appendChild(messageP);
-
-      cancelBtn.onclick = () => {
-        entryDiv.classList.remove('editing');
-        if(collection === 'lore') loadUserLore(); else loadUserStories();
-      };
-
-      saveBtn.onclick = async () => {
-        messageP.style.color = 'red';
-        messageP.textContent = '';
-
-        const newName = titleInput.value.trim();
-        if (!newName || newName.length < 3) {
-          messageP.textContent = 'Title must be at least 3 characters.';
-          return;
-        }
-
-        const updateData = { name: newName };
-
-        if (collection === 'lore') {
-          updateData.category = categoryInput.value.trim();
-          updateData.references = referencesInput.value.split(',').map(s => s.trim()).filter(s => s);
-        } else if (collection === 'story') {
-          const newContent = contentTextarea.value.trim();
-          if (!newContent || newContent.length < 10) {
-            messageP.textContent = 'Content must be at least 10 characters.';
-            return;
-          }
-          updateData.content = newContent;
-        }
-
-        try {
-          await db.collection(collection).doc(docId).update(updateData);
-          entryDiv.classList.remove('editing');
-          if(collection === 'lore') loadUserLore(); else loadUserStories();
-        } catch (err) {
-          messageP.textContent = 'Error saving changes: ' + err.message;
-        }
-      };
-    };
-
-    window.deleteEntry = async function(collection, docId) {
-      if (!confirm('Are you sure you want to delete this entry?')) return;
-      try {
-        await db.collection(collection).doc(docId).delete();
-        if (collection === 'lore') loadUserLore();
-        else loadUserStories();
-      } catch {}
-    };
-
-    function clearProfileData() {
-      displayUsername.textContent = '';
-      totalWordCount.textContent = '';
-      userLoreList.innerHTML = '';
-      userStoryList.innerHTML = '';
-      editUsernameDiv.style.display = 'none';
-      editUsernameBtn.style.display = 'inline-block';
-      usernameMessage.textContent = '';
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
     }
   </script>
 </body>
