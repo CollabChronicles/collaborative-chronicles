@@ -7,6 +7,28 @@
   <link rel="stylesheet" href="style.css" />
   <script type="module" src="authGuard.js"></script>
   <script type="module" src="profile.js" defer></script>
+  <style>
+    .edit-input {
+      margin: 4px 0;
+      padding: 6px 8px;
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #inlineEditForm {
+      margin-top: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+    }
+    #inlineEditForm h3 {
+      margin-top: 0;
+    }
+    #inlineEditForm button {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -36,6 +58,9 @@
       <h2>Your Story Entries</h2>
       <div id="storyEntries"></div>
     </section>
+
+    <!-- Inline edit form container -->
+    <div id="inlineEditForm" style="display:none;"></div>
 
     <section id="editFormContainer" class="edit-form hidden">
       <h2>Edit Entry</h2>
@@ -119,6 +144,172 @@
       // Submit the edited data to Firebase here
       alert('Entry successfully edited!');
     });
+
+    // --- New inline editing code below ---
+
+    let currentlyEditing = null;
+
+    // Escape HTML for safe insertion
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+    }
+
+    window.editEntry = async function(collection, docId) {
+      if (currentlyEditing) {
+        alert('Finish the current edit before editing another entry.');
+        return;
+      }
+      currentlyEditing = { collection, docId };
+
+      try {
+        const doc = await db.collection(collection).doc(docId).get();
+        if (!doc.exists) {
+          alert('Entry not found.');
+          currentlyEditing = null;
+          return;
+        }
+        const data = doc.data();
+
+        const container = document.getElementById('inlineEditForm');
+        container.style.display = 'block';
+
+        container.innerHTML = `
+          <h3>Edit ${collection === 'lore' ? 'Lore' : 'Story'} Entry</h3>
+          <form id="inlineEditFormElement">
+            ${collection === 'lore' ? `
+              <label>Name (required): <input id="editName" class="edit-input" required value="${escapeHtml(data.name || '')}"></label><br/>
+              <label>Category (required): 
+                <select id="editCategory" required>
+                  <option value="">Select Category</option>
+                  <option value="Character" ${data.category === 'Character' ? 'selected' : ''}>Character</option>
+                  <option value="Place" ${data.category === 'Place' ? 'selected' : ''}>Place</option>
+                  <option value="Faction" ${data.category === 'Faction' ? 'selected' : ''}>Faction</option>
+                  <option value="Object" ${data.category === 'Object' ? 'selected' : ''}>Object</option>
+                </select>
+              </label><br/>
+              <label>Description (required):<br/>
+                <textarea id="editDescription" required style="width:100%; height:120px;">${escapeHtml(data.content || '')}</textarea>
+              </label><br/>
+              <label>References (comma-separated, required):<br/>
+                <input id="editReferences" required class="edit-input" value="${escapeHtml(data.references.join(', '))}">
+              </label><br/>
+            ` : `
+              <label>Title (optional): <input id="editTitle" class="edit-input" value="${escapeHtml(data.name || '')}"></label><br/>
+              <label>Content (required):<br/>
+                <textarea id="editContent" required style="width:100%; height:120px;">${escapeHtml(data.content || '')}</textarea>
+              </label><br/>
+              <label>References (comma-separated, required, recent):<br/>
+                <input id="editReferences" required class="edit-input" value="${escapeHtml(data.references.join(', '))}">
+              </label><br/>
+            `}
+            <p id="editErrorMsg" style="color:red; min-height:1.2em;"></p>
+            <button type="submit" class="btn-small">Save</button>
+            <button type="button" id="cancelInlineEdit" class="btn-small">Cancel</button>
+          </form>
+        `;
+
+        const form = document.getElementById('inlineEditFormElement');
+        const errorMsg = document.getElementById('editErrorMsg');
+        const cancelBtn = document.getElementById('cancelInlineEdit');
+
+        cancelBtn.onclick = () => {
+          container.style.display = 'none';
+          container.innerHTML = '';
+          currentlyEditing = null;
+        };
+
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          errorMsg.textContent = '';
+
+          if (collection === 'lore') {
+            const name = document.getElementById('editName').value.trim();
+            const category = document.getElementById('editCategory').value;
+            const description = document.getElementById('editDescription').value;
+            const references = document.getElementById('editReferences').value.split(',').map(r => r.trim()).filter(r => r);
+
+            if (!name || !category || !description || references.length === 0) {
+              errorMsg.textContent = 'All fields except Title (for stories) are required.';
+              return;
+            }
+
+            // Validate references appear in description
+            const missingRefs = references.filter(ref => !description.toLowerCase().includes(ref.toLowerCase()));
+            if (missingRefs.length > 0) {
+              errorMsg.textContent = 'References must appear in the description. Missing: ' + missingRefs.join(', ');
+              return;
+            }
+
+            try {
+              await db.collection(collection).doc(docId).update({
+                name,
+                category,
+                content: description,
+                references,
+                timestamp: new Date()
+              });
+              container.style.display = 'none';
+              container.innerHTML = '';
+              currentlyEditing = null;
+              loadUserLore();
+            } catch {
+              errorMsg.textContent = 'Failed to save changes.';
+            }
+          } else { // story
+            const title = document.getElementById('editTitle').value.trim();
+            const content = document.getElementById('editContent').value;
+            const references = document.getElementById('editReferences').value.split(',').map(r => r.trim()).filter(r => r);
+
+            if (!content || references.length === 0) {
+              errorMsg.textContent = 'All fields except Title are required.';
+              return;
+            }
+
+            // Validate references appear in content
+            const missingRefs = references.filter(ref => !content.toLowerCase().includes(ref.toLowerCase()));
+            if (missingRefs.length > 0) {
+              errorMsg.textContent = 'References must appear in the content. Missing: ' + missingRefs.join(', ');
+              return;
+            }
+
+            // Check references are recent
+            try {
+              const recentRefs = await Promise.all(references.map(async (ref) => {
+                const snap = await db.collection('lore').where('name', '==', ref).get();
+                return snap.docs.some(doc => {
+                  const ts = doc.data().timestamp?.toDate?.() || new Date(0);
+                  return (Date.now() - ts.getTime()) <= 1000 * 60 * 60 * 24 * 90; // 90 days
+                });
+              }));
+
+              if (recentRefs.includes(false)) {
+                errorMsg.textContent = 'All references must be recent.';
+                return;
+              }
+
+              await db.collection(collection).doc(docId).update({
+                name: title,
+                content,
+                references,
+                timestamp: new Date()
+              });
+
+              container.style.display = 'none';
+              container.innerHTML = '';
+              currentlyEditing = null;
+              loadUserStories();
+            } catch {
+              errorMsg.textContent = 'Failed to save changes.';
+            }
+          }
+        };
+      } catch (err) {
+        alert('Error loading entry: ' + err.message);
+        currentlyEditing = null;
+      }
+    };
+
   </script>
 </body>
 </html>
