@@ -45,7 +45,9 @@
         </div>
 
         <div id="editLoreForm">
-          <input type="text" id="editLoreName" placeholder="Name" required />
+          <label for="editLoreName">Name:</label>
+          <input type="text" id="editLoreName" required />
+          <label for="editLoreCategory">Category:</label>
           <select id="editLoreCategory" required>
             <option value="">Select Category</option>
             <option value="Character">Character</option>
@@ -53,14 +55,19 @@
             <option value="Faction">Faction</option>
             <option value="Object">Object</option>
           </select>
-          <textarea id="editLoreDescription" placeholder="Description (must include all listed references)" required></textarea>
-          <input type="text" id="editLoreReferences" placeholder="References (comma-separated)" required />
+          <label for="editLoreDescription">Description:</label>
+          <textarea id="editLoreDescription" required></textarea>
+          <label for="editLoreReferences">References (comma-separated):</label>
+          <input type="text" id="editLoreReferences" required />
         </div>
 
         <div id="editStoryForm" style="display:none;">
-          <input type="text" id="editStoryTitle" placeholder="Title" />
-          <textarea id="editStoryContent" placeholder="Content (must include all listed references)" required></textarea>
-          <input type="text" id="editStoryReferences" placeholder="References (comma-separated, must be recent)" required />
+          <label for="editStoryTitle">Title:</label>
+          <input type="text" id="editStoryTitle" required />
+          <label for="editStoryContent">Content:</label>
+          <textarea id="editStoryContent" required></textarea>
+          <label for="editStoryReferences">References (comma-separated):</label>
+          <input type="text" id="editStoryReferences" required />
         </div>
 
         <button type="submit">Save Changes</button>
@@ -99,7 +106,6 @@
     const storyEntriesDiv = document.getElementById('storyEntries');
     const editFormContainer = document.getElementById('editFormContainer');
     const editEntryForm = document.getElementById('editEntryForm');
-
     const editLoreBtn = document.getElementById('editLoreBtn');
     const editStoryBtn = document.getElementById('editStoryBtn');
     const editLoreForm = document.getElementById('editLoreForm');
@@ -120,9 +126,6 @@
         currentUsername = userDoc.data().username;
         usernameDisplay.textContent = currentUsername;
         newUsernameInput.value = currentUsername;
-      } else {
-        usernameDisplay.textContent = 'No username found';
-        currentUsername = null;
       }
     }
 
