@@ -79,21 +79,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
   <script>
-    // Initialize Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
       authDomain: "collaborative-chronicles.firebaseapp.com",
       projectId: "collaborative-chronicles",
       storageBucket: "collaborative-chronicles.appspot.com",
       messagingSenderId: "127752938400",
-      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-      measurementId: "G-0HXV6NGHQP"
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // Elements
     const usernameDisplay = document.getElementById('usernameDisplay');
     const newUsernameInput = document.getElementById('newUsername');
     const updateUsernameBtn = document.getElementById('updateUsername');
@@ -108,72 +105,64 @@
     const editLoreForm = document.getElementById('editLoreForm');
     const editStoryForm = document.getElementById('editStoryForm');
 
-    // State
     let currentUser = null;
     let currentUsername = null;
     let currentEditingId = null;
     let currentEditingType = 'lore';
 
-    // Helper: count words
     function countWords(text) {
-      if (!text) return 0;
-      return text.trim().split(/\s+/).length;
+      return text ? text.trim().split(/\s+/).length : 0;
     }
 
-    // Load user data: username from users collection by UID
     async function loadUserProfile(uid) {
       const userDoc = await db.collection('users').doc(uid).get();
-      if (!userDoc.exists) {
-        usernameDisplay.textContent = 'No username found';
-        currentUsername = null;
-      } else {
+      if (userDoc.exists) {
         currentUsername = userDoc.data().username;
         usernameDisplay.textContent = currentUsername;
         newUsernameInput.value = currentUsername;
+      } else {
+        usernameDisplay.textContent = 'No username found';
+        currentUsername = null;
       }
     }
 
-    // Load entries by author == username
     async function loadEntries() {
       if (!currentUsername) return;
       loreEntriesDiv.innerHTML = '';
       storyEntriesDiv.innerHTML = '';
-
       let totalWords = 0;
 
-      // Load lore
       const loreSnapshot = await db.collection('lore').where('author', '==', currentUsername).get();
       loreSnapshot.forEach(doc => {
         const data = doc.data();
         const div = document.createElement('div');
         div.classList.add('entry');
         div.innerHTML = `
-          <h3>${data.name || '(No Name)'}</h3>
+          <h3><a href="lore-detail.html?id=${doc.id}">${data.name || '(No Name)'}</a></h3>
           <p>${data.description || '(No Description)'}</p>
-          <button data-id="${doc.id}" data-type="lore" class="edit-btn">Edit</button>
-          <button data-id="${doc.id}" data-type="lore" class="delete-btn">Delete</button>
+          <button class="edit-btn" data-id="${doc.id}" data-type="lore">Edit</button>
+          <button class="delete-btn" data-id="${doc.id}" data-type="lore">Delete</button>
         `;
-        loreEntriesDiv.appendChild(div);
         totalWords += countWords(data.description);
+        loreEntriesDiv.appendChild(div);
 
         div.querySelector('.edit-btn').addEventListener('click', () => openEditForm(doc.id, 'lore', data));
         div.querySelector('.delete-btn').addEventListener('click', () => deleteEntry(doc.id, 'lore'));
       });
 
-      // Load story
       const storySnapshot = await db.collection('story').where('author', '==', currentUsername).get();
       storySnapshot.forEach(doc => {
         const data = doc.data();
         const div = document.createElement('div');
         div.classList.add('entry');
         div.innerHTML = `
-          <h3>${data.title || '(No Title)'}</h3>
+          <h3><a href="story-detail.html?id=${doc.id}">${data.title || '(No Title)'}</a></h3>
           <p>${data.content || '(No Content)'}</p>
-          <button data-id="${doc.id}" data-type="story" class="edit-btn">Edit</button>
-          <button data-id="${doc.id}" data-type="story" class="delete-btn">Delete</button>
+          <button class="edit-btn" data-id="${doc.id}" data-type="story">Edit</button>
+          <button class="delete-btn" data-id="${doc.id}" data-type="story">Delete</button>
         `;
-        storyEntriesDiv.appendChild(div);
         totalWords += countWords(data.content);
+        storyEntriesDiv.appendChild(div);
 
         div.querySelector('.edit-btn').addEventListener('click', () => openEditForm(doc.id, 'story', data));
         div.querySelector('.delete-btn').addEventListener('click', () => deleteEntry(doc.id, 'story'));
@@ -182,7 +171,6 @@
       totalWordCountSpan.textContent = totalWords.toLocaleString();
     }
 
-    // Open edit form with data populated
     function openEditForm(id, type, data) {
       currentEditingId = id;
       currentEditingType = type;
@@ -193,7 +181,6 @@
         editStoryBtn.classList.remove('active');
         editLoreForm.style.display = 'block';
         editStoryForm.style.display = 'none';
-
         document.getElementById('editLoreName').value = data.name || '';
         document.getElementById('editLoreCategory').value = data.category || '';
         document.getElementById('editLoreDescription').value = data.description || '';
@@ -203,26 +190,18 @@
         editLoreBtn.classList.remove('active');
         editStoryForm.style.display = 'block';
         editLoreForm.style.display = 'none';
-
         document.getElementById('editStoryTitle').value = data.title || '';
         document.getElementById('editStoryContent').value = data.content || '';
         document.getElementById('editStoryReferences').value = (data.references || []).join(', ');
       }
     }
 
-    // Delete an entry
     async function deleteEntry(id, type) {
       if (!confirm('Are you sure you want to delete this entry?')) return;
-      try {
-        await db.collection(type).doc(id).delete();
-        alert('Entry deleted.');
-        loadEntries();
-      } catch (e) {
-        alert('Error deleting entry: ' + e.message);
-      }
+      await db.collection(type).doc(id).delete();
+      loadEntries();
     }
 
-    // Form toggles
     editLoreBtn.addEventListener('click', () => {
       currentEditingType = 'lore';
       editLoreBtn.classList.add('active');
@@ -239,88 +218,50 @@
       editLoreForm.style.display = 'none';
     });
 
-    // Cancel edit
     document.getElementById('cancelEdit').addEventListener('click', () => {
       editFormContainer.style.display = 'none';
       currentEditingId = null;
     });
 
-    // Save edits
     editEntryForm.addEventListener('submit', async e => {
       e.preventDefault();
-
       try {
         if (currentEditingType === 'lore') {
           const name = document.getElementById('editLoreName').value.trim();
           const category = document.getElementById('editLoreCategory').value;
           const description = document.getElementById('editLoreDescription').value.trim();
-          const references = document.getElementById('editLoreReferences').value
-            .split(',')
-            .map(r => r.trim())
-            .filter(r => r);
-
-          // Validate references appear in description
-          const missingRefs = references.filter(r => !description.toLowerCase().includes(r.toLowerCase()));
-          if (missingRefs.length) {
-            alert('All references must appear in the description. Missing: ' + missingRefs.join(', '));
-            return;
-          }
-
-          await db.collection('lore').doc(currentEditingId).update({
-            name, category, description, references
-          });
+          const references = document.getElementById('editLoreReferences').value.split(',').map(r => r.trim()).filter(r => r);
+          const missing = references.filter(r => !description.toLowerCase().includes(r.toLowerCase()));
+          if (missing.length) return alert('Missing references: ' + missing.join(', '));
+          await db.collection('lore').doc(currentEditingId).update({ name, category, description, references });
         } else {
           const title = document.getElementById('editStoryTitle').value.trim();
           const content = document.getElementById('editStoryContent').value.trim();
-          const references = document.getElementById('editStoryReferences').value
-            .split(',')
-            .map(r => r.trim())
-            .filter(r => r);
-
-          // Validate references appear in content
-          const missingRefs = references.filter(r => !content.toLowerCase().includes(r.toLowerCase()));
-          if (missingRefs.length) {
-            alert('All references must appear in the content. Missing: ' + missingRefs.join(', '));
-            return;
-          }
-
-          // Optional: you could add recency check here for references if needed
-
-          await db.collection('story').doc(currentEditingId).update({
-            title, content, references
-          });
+          const references = document.getElementById('editStoryReferences').value.split(',').map(r => r.trim()).filter(r => r);
+          const missing = references.filter(r => !content.toLowerCase().includes(r.toLowerCase()));
+          if (missing.length) return alert('Missing references: ' + missing.join(', '));
+          await db.collection('story').doc(currentEditingId).update({ title, content, references });
         }
-        alert('Entry updated!');
         editFormContainer.style.display = 'none';
         loadEntries();
       } catch (err) {
-        alert('Error updating entry: ' + err.message);
+        alert('Error: ' + err.message);
       }
     });
 
-    // Update username button
     updateUsernameBtn.addEventListener('click', async () => {
       const newName = newUsernameInput.value.trim();
-      if (!newName) {
-        alert('Username cannot be empty');
-        return;
-      }
-      try {
-        await db.collection('users').doc(currentUser.uid).update({ username: newName });
-        currentUsername = newName;
-        usernameDisplay.textContent = newName;
-        alert('Username updated!');
-        loadEntries();
-      } catch (e) {
-        alert('Error updating username: ' + e.message);
-      }
+      if (!newName) return alert('Username cannot be empty');
+      await db.collection('users').doc(currentUser.uid).update({ username: newName });
+      currentUsername = newName;
+      usernameDisplay.textContent = newName;
+      loadEntries();
     });
 
-    // Listen to auth state changes
     auth.onAuthStateChanged(async user => {
       if (!user) {
-        alert('Please sign in to view your profile.');
-        window.location.href = 'index.html';
+        alert('Please sign in.');
+        location.href = 'index.html';
         return;
       }
       currentUser = user;
