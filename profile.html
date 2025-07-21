@@ -39,6 +39,11 @@
     <section id="editFormContainer" class="edit-form" style="display:none;">
       <h2>Edit Entry</h2>
       <form id="editEntryForm">
+        <div>
+          <button type="button" id="editLoreBtn" class="active">Edit Lore</button>
+          <button type="button" id="editStoryBtn">Edit Story</button>
+        </div>
+
         <div id="editLoreForm">
           <label for="editLoreName">Name:</label>
           <input type="text" id="editLoreName" required />
@@ -101,6 +106,8 @@
     const storyEntriesDiv = document.getElementById('storyEntries');
     const editFormContainer = document.getElementById('editFormContainer');
     const editEntryForm = document.getElementById('editEntryForm');
+    const editLoreBtn = document.getElementById('editLoreBtn');
+    const editStoryBtn = document.getElementById('editStoryBtn');
     const editLoreForm = document.getElementById('editLoreForm');
     const editStoryForm = document.getElementById('editStoryForm');
 
@@ -173,6 +180,8 @@
       editFormContainer.style.display = 'block';
 
       if (type === 'lore') {
+        editLoreBtn.classList.add('active');
+        editStoryBtn.classList.remove('active');
         editLoreForm.style.display = 'block';
         editStoryForm.style.display = 'none';
         document.getElementById('editLoreName').value = data.name || '';
@@ -180,6 +189,8 @@
         document.getElementById('editLoreDescription').value = data.description || '';
         document.getElementById('editLoreReferences').value = (data.references || []).join(', ');
       } else {
+        editStoryBtn.classList.add('active');
+        editLoreBtn.classList.remove('active');
         editStoryForm.style.display = 'block';
         editLoreForm.style.display = 'none';
         document.getElementById('editStoryTitle').value = data.title || '';
@@ -193,6 +204,22 @@
       await db.collection(type).doc(id).delete();
       loadEntries();
     }
+
+    editLoreBtn.addEventListener('click', () => {
+      currentEditingType = 'lore';
+      editLoreBtn.classList.add('active');
+      editStoryBtn.classList.remove('active');
+      editLoreForm.style.display = 'block';
+      editStoryForm.style.display = 'none';
+    });
+
+    editStoryBtn.addEventListener('click', () => {
+      currentEditingType = 'story';
+      editStoryBtn.classList.add('active');
+      editLoreBtn.classList.remove('active');
+      editStoryForm.style.display = 'block';
+      editLoreForm.style.display = 'none';
+    });
 
     document.getElementById('cancelEdit').addEventListener('click', () => {
       editFormContainer.style.display = 'none';
@@ -228,7 +255,27 @@
     updateUsernameBtn.addEventListener('click', async () => {
       const newName = newUsernameInput.value.trim();
       if (!newName) return alert('Username cannot be empty');
-      await db.collection('users').doc(currentUser.uid).update({ username: newName });
+
+      const batch = db.batch();
+
+      // Update user profile username
+      const userRef = db.collection('users').doc(currentUser.uid);
+      batch.update(userRef, { username: newName });
+
+      // Update author field in all lore docs by this user
+      const loreSnapshot = await db.collection('lore').where('author', '==', currentUsername).get();
+      loreSnapshot.forEach(doc => {
+        batch.update(doc.ref, { author: newName });
+      });
+
+      // Update author field in all story docs by this user
+      const storySnapshot = await db.collection('story').where('author', '==', currentUsername).get();
+      storySnapshot.forEach(doc => {
+        batch.update(doc.ref, { author: newName });
+      });
+
+      await batch.commit();
+
       currentUsername = newName;
       usernameDisplay.textContent = newName;
       loadEntries();
