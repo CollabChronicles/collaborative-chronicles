@@ -4,312 +4,96 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profile</title>
-  <link rel="stylesheet" href="style.css" />
-  <script type="module" src="authGuard.js"></script>
-  <script type="module" src="profile.js" defer></script>
-  <style>
-    .edit-input {
-      margin: 4px 0;
-      padding: 6px 8px;
-      font-size: 1em;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    #inlineEditForm {
-      margin-top: 15px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      background: #fafafa;
-    }
-    #inlineEditForm h3 {
-      margin-top: 0;
-    }
-    #inlineEditForm button {
-      margin-right: 8px;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="/collaborative-chronicles/style.css" />
 </head>
 <body>
   <header>
+    <h1>Collaborative Chronicles</h1>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="story.html">The Story</a>
-      <a href="lore.html">The Lore</a>
-      <a href="write.html">Write!</a>
-      <a href="profile.html" class="active">Profile</a>
-      <a href="terms.html">Terms</a>
+      <a href="index.html">Home</a> |
+      <a href="story.html">The Story</a> |
+      <a href="lore.html">The Lore</a> |
+      <a href="write.html">Write!</a> |
+      <a href="profile.html">Profile</a>
     </nav>
   </header>
 
-  <main class="profile-container">
-    <section class="profile-header">
-      <h1>Your Profile</h1>
-      <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
-      <input type="text" id="newUsername" placeholder="Enter new username" />
-      <button id="updateUsername">Update Username</button>
-      <p><strong>Total Word Count:</strong> <span id="totalWordCount">0</span></p>
-    </section>
-
-    <section class="entries-section">
-      <h2>Your Lore Entries</h2>
-      <div id="loreEntries"></div>
-
-      <h2>Your Story Entries</h2>
-      <div id="storyEntries"></div>
-    </section>
-
-    <!-- Inline edit form container -->
-    <div id="inlineEditForm" style="display:none;"></div>
-
-    <section id="editFormContainer" class="edit-form hidden">
-      <h2>Edit Entry</h2>
-      <form id="editEntryForm">
-        <div class="toggle-buttons">
-          <button type="button" id="editLoreBtn" class="active">Edit Lore</button>
-          <button type="button" id="editStoryBtn">Edit Story</button>
-        </div>
-
-        <div id="editLoreForm">
-          <input type="text" id="editLoreName" placeholder="Name" required />
-          <select id="editLoreCategory" required>
-            <option value="">Select Category</option>
-            <option value="Character">Character</option>
-            <option value="Place">Place</option>
-            <option value="Faction">Faction</option>
-            <option value="Object">Object</option>
-          </select>
-          <textarea id="editLoreDescription" placeholder="Description (must include all listed references)" required></textarea>
-          <input type="text" id="editLoreReferences" placeholder="References (comma-separated)" required />
-        </div>
-
-        <div id="editStoryForm" class="hidden">
-          <input type="text" id="editStoryTitle" placeholder="Title" />
-          <textarea id="editStoryContent" placeholder="Content (must include all listed references)" required></textarea>
-          <input type="text" id="editStoryReferences" placeholder="References (comma-separated, must be recently used)" required />
-        </div>
-
-        <button type="submit">Save Changes</button>
-        <button type="button" id="cancelEdit">Cancel</button>
-      </form>
+  <main>
+    <section class="profile-section">
+      <h2>Your Profile</h2>
+      <div id="profileInfo">
+        <p><strong>Username:</strong> <span id="username">Loading...</span></p>
+        <p><strong>Total Word Count:</strong> <span id="wordCount">Loading...</span></p>
+        <h3>Your Contributions</h3>
+        <ul id="contributionsList">
+          <li>Loading...</li>
+        </ul>
+      </div>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Collaborative Chronicles</p>
+    <p>2025 Collaborative Chronicles</p>
   </footer>
 
-  <script type="module">
-    import { getRecentReferences } from './firebaseUtils.js';
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-    const form = document.getElementById('editEntryForm');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const isEditingLore = !document.getElementById('editLoreForm').classList.contains('hidden');
-
-      if (isEditingLore) {
-        const name = document.getElementById('editLoreName').value.trim();
-        const category = document.getElementById('editLoreCategory').value;
-        const description = document.getElementById('editLoreDescription').value.toLowerCase();
-        const references = document.getElementById('editLoreReferences').value.toLowerCase().split(',').map(r => r.trim()).filter(r => r);
-
-        const missingRefs = references.filter(ref => !description.includes(ref));
-
-        if (missingRefs.length > 0) {
-          alert('All references must appear in the description. Missing: ' + missingRefs.join(', '));
-          return;
-        }
-      } else {
-        const title = document.getElementById('editStoryTitle').value.trim();
-        const content = document.getElementById('editStoryContent').value.toLowerCase();
-        const references = document.getElementById('editStoryReferences').value.toLowerCase().split(',').map(r => r.trim()).filter(r => r);
-
-        const missingRefs = references.filter(ref => !content.includes(ref));
-        if (missingRefs.length > 0) {
-          alert('All references must appear in the content. Missing: ' + missingRefs.join(', '));
-          return;
-        }
-
-        const recentReferences = await getRecentReferences();
-        const staleRefs = references.filter(ref => !recentReferences.includes(ref));
-
-        if (staleRefs.length > 0) {
-          alert('Some references are not recent: ' + staleRefs.join(', '));
-          return;
-        }
-      }
-
-      // Submit the edited data to Firebase here
-      alert('Entry successfully edited!');
-    });
-
-    // --- New inline editing code below ---
-
-    let currentlyEditing = null;
-
-    // Escape HTML for safe insertion
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-    }
-
-    window.editEntry = async function(collection, docId) {
-      if (currentlyEditing) {
-        alert('Finish the current edit before editing another entry.');
-        return;
-      }
-      currentlyEditing = { collection, docId };
-
-      try {
-        const doc = await db.collection(collection).doc(docId).get();
-        if (!doc.exists) {
-          alert('Entry not found.');
-          currentlyEditing = null;
-          return;
-        }
-        const data = doc.data();
-
-        const container = document.getElementById('inlineEditForm');
-        container.style.display = 'block';
-
-        container.innerHTML = `
-          <h3>Edit ${collection === 'lore' ? 'Lore' : 'Story'} Entry</h3>
-          <form id="inlineEditFormElement">
-            ${collection === 'lore' ? `
-              <label>Name (required): <input id="editName" class="edit-input" required value="${escapeHtml(data.name || '')}"></label><br/>
-              <label>Category (required): 
-                <select id="editCategory" required>
-                  <option value="">Select Category</option>
-                  <option value="Character" ${data.category === 'Character' ? 'selected' : ''}>Character</option>
-                  <option value="Place" ${data.category === 'Place' ? 'selected' : ''}>Place</option>
-                  <option value="Faction" ${data.category === 'Faction' ? 'selected' : ''}>Faction</option>
-                  <option value="Object" ${data.category === 'Object' ? 'selected' : ''}>Object</option>
-                </select>
-              </label><br/>
-              <label>Description (required):<br/>
-                <textarea id="editDescription" required style="width:100%; height:120px;">${escapeHtml(data.content || '')}</textarea>
-              </label><br/>
-              <label>References (comma-separated, required):<br/>
-                <input id="editReferences" required class="edit-input" value="${escapeHtml(data.references.join(', '))}">
-              </label><br/>
-            ` : `
-              <label>Title (optional): <input id="editTitle" class="edit-input" value="${escapeHtml(data.name || '')}"></label><br/>
-              <label>Content (required):<br/>
-                <textarea id="editContent" required style="width:100%; height:120px;">${escapeHtml(data.content || '')}</textarea>
-              </label><br/>
-              <label>References (comma-separated, required, recent):<br/>
-                <input id="editReferences" required class="edit-input" value="${escapeHtml(data.references.join(', '))}">
-              </label><br/>
-            `}
-            <p id="editErrorMsg" style="color:red; min-height:1.2em;"></p>
-            <button type="submit" class="btn-small">Save</button>
-            <button type="button" id="cancelInlineEdit" class="btn-small">Cancel</button>
-          </form>
-        `;
-
-        const form = document.getElementById('inlineEditFormElement');
-        const errorMsg = document.getElementById('editErrorMsg');
-        const cancelBtn = document.getElementById('cancelInlineEdit');
-
-        cancelBtn.onclick = () => {
-          container.style.display = 'none';
-          container.innerHTML = '';
-          currentlyEditing = null;
-        };
-
-        form.onsubmit = async (e) => {
-          e.preventDefault();
-          errorMsg.textContent = '';
-
-          if (collection === 'lore') {
-            const name = document.getElementById('editName').value.trim();
-            const category = document.getElementById('editCategory').value;
-            const description = document.getElementById('editDescription').value;
-            const references = document.getElementById('editReferences').value.split(',').map(r => r.trim()).filter(r => r);
-
-            if (!name || !category || !description || references.length === 0) {
-              errorMsg.textContent = 'All fields except Title (for stories) are required.';
-              return;
-            }
-
-            // Validate references appear in description
-            const missingRefs = references.filter(ref => !description.toLowerCase().includes(ref.toLowerCase()));
-            if (missingRefs.length > 0) {
-              errorMsg.textContent = 'References must appear in the description. Missing: ' + missingRefs.join(', ');
-              return;
-            }
-
-            try {
-              await db.collection(collection).doc(docId).update({
-                name,
-                category,
-                content: description,
-                references,
-                timestamp: new Date()
-              });
-              container.style.display = 'none';
-              container.innerHTML = '';
-              currentlyEditing = null;
-              loadUserLore();
-            } catch {
-              errorMsg.textContent = 'Failed to save changes.';
-            }
-          } else { // story
-            const title = document.getElementById('editTitle').value.trim();
-            const content = document.getElementById('editContent').value;
-            const references = document.getElementById('editReferences').value.split(',').map(r => r.trim()).filter(r => r);
-
-            if (!content || references.length === 0) {
-              errorMsg.textContent = 'All fields except Title are required.';
-              return;
-            }
-
-            // Validate references appear in content
-            const missingRefs = references.filter(ref => !content.toLowerCase().includes(ref.toLowerCase()));
-            if (missingRefs.length > 0) {
-              errorMsg.textContent = 'References must appear in the content. Missing: ' + missingRefs.join(', ');
-              return;
-            }
-
-            // Check references are recent
-            try {
-              const recentRefs = await Promise.all(references.map(async (ref) => {
-                const snap = await db.collection('lore').where('name', '==', ref).get();
-                return snap.docs.some(doc => {
-                  const ts = doc.data().timestamp?.toDate?.() || new Date(0);
-                  return (Date.now() - ts.getTime()) <= 1000 * 60 * 60 * 24 * 90; // 90 days
-                });
-              }));
-
-              if (recentRefs.includes(false)) {
-                errorMsg.textContent = 'All references must be recent.';
-                return;
-              }
-
-              await db.collection(collection).doc(docId).update({
-                name: title,
-                content,
-                references,
-                timestamp: new Date()
-              });
-
-              container.style.display = 'none';
-              container.innerHTML = '';
-              currentlyEditing = null;
-              loadUserStories();
-            } catch {
-              errorMsg.textContent = 'Failed to save changes.';
-            }
-          }
-        };
-      } catch (err) {
-        alert('Error loading entry: ' + err.message);
-        currentlyEditing = null;
-      }
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      authDomain: "collaborative-chronicles.firebaseapp.com",
+      projectId: "collaborative-chronicles",
+      storageBucket: "collaborative-chronicles.appspot.com",
+      messagingSenderId: "127752938400",
+      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+      measurementId: "G-0HXV6NGHQP"
     };
 
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const usernameSpan = document.getElementById('username');
+    const wordCountSpan = document.getElementById('wordCount');
+    const contributionsList = document.getElementById('contributionsList');
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        usernameSpan.textContent = user.displayName || user.email;
+
+        let totalWords = 0;
+        contributionsList.innerHTML = '';
+
+        const displayContribution = (doc, type) => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${type}</strong>: ${data.title || 'Untitled'} (${countWords(data.content)} words)`;
+          contributionsList.appendChild(li);
+          totalWords += countWords(data.content);
+          wordCountSpan.textContent = totalWords.toLocaleString();
+        };
+
+        db.collection('lore').where('uid', '==', user.uid).get().then(snapshot => {
+          snapshot.forEach(doc => displayContribution(doc, 'Lore'));
+        });
+
+        db.collection('story').where('uid', '==', user.uid).get().then(snapshot => {
+          snapshot.forEach(doc => displayContribution(doc, 'Story'));
+        });
+
+      } else {
+        usernameSpan.textContent = 'Not signed in';
+        wordCountSpan.textContent = '0';
+        contributionsList.innerHTML = '<li>Please sign in to view your contributions.</li>';
+      }
+    });
+
+    function countWords(text) {
+      if (!text) return 0;
+      return text.trim().split(/\s+/).length;
+    }
   </script>
 </body>
 </html>
