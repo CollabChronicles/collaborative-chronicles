@@ -2,15 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profile</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    /* Minimal CSS to hide edit form initially */
-    .hidden { display: none; }
-    .entry { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
-    button { margin-right: 5px; }
-  </style>
 </head>
 <body>
   <header>
@@ -79,254 +73,134 @@
     <p>&copy; 2025 Collaborative Chronicles</p>
   </footer>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script type="module">
+    import { getRecentReferences, db, auth } from './firebaseUtils.js';
 
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
-      authDomain: "collaborative-chronicles.firebaseapp.com",
-      projectId: "collaborative-chronicles",
-      storageBucket: "collaborative-chronicles.appspot.com",
-      messagingSenderId: "127752938400",
-      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-      measurementId: "G-0HXV6NGHQP"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    // DOM elements
-    const usernameDisplay = document.getElementById('usernameDisplay');
-    const newUsernameInput = document.getElementById('newUsername');
-    const updateUsernameBtn = document.getElementById('updateUsername');
-    const totalWordCountSpan = document.getElementById('totalWordCount');
-    const loreEntriesDiv = document.getElementById('loreEntries');
-    const storyEntriesDiv = document.getElementById('storyEntries');
-    const editFormContainer = document.getElementById('editFormContainer');
-    const editEntryForm = document.getElementById('editEntryForm');
-
-    // Edit form fields
-    const editLoreBtn = document.getElementById('editLoreBtn');
-    const editStoryBtn = document.getElementById('editStoryBtn');
-    const editLoreForm = document.getElementById('editLoreForm');
-    const editStoryForm = document.getElementById('editStoryForm');
-
-    const editLoreName = document.getElementById('editLoreName');
-    const editLoreCategory = document.getElementById('editLoreCategory');
-    const editLoreDescription = document.getElementById('editLoreDescription');
-    const editLoreReferences = document.getElementById('editLoreReferences');
-
-    const editStoryTitle = document.getElementById('editStoryTitle');
-    const editStoryContent = document.getElementById('editStoryContent');
-    const editStoryReferences = document.getElementById('editStoryReferences');
-
-    const cancelEditBtn = document.getElementById('cancelEdit');
-
+    const form = document.getElementById('editEntryForm');
     let currentEditingId = null;
     let currentType = 'lore';
-    let currentUser = null;
+    let currentUsername = '';
 
-    // Helper: count words
-    function countWords(text) {
-      if (!text) return 0;
-      return text.trim().split(/\s+/).length;
-    }
-
-    // Load recent references for stories (last 3 months)
-    async function getRecentReferences() {
-      const threeMonthsAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 90);
-      const recentRefs = [];
-      const snapshot = await db.collection('lore').where('timestamp', '>=', threeMonthsAgo).get();
-      snapshot.forEach(doc => {
-        if (doc.data().name) recentRefs.push(doc.data().name.toLowerCase());
-      });
-      return recentRefs;
-    }
-
-    // Show/hide lore or story edit form
-    editLoreBtn.addEventListener('click', () => {
-      editLoreBtn.classList.add('active');
-      editStoryBtn.classList.remove('active');
-      editLoreForm.classList.remove('hidden');
-      editStoryForm.classList.add('hidden');
-      currentType = 'lore';
-    });
-
-    editStoryBtn.addEventListener('click', () => {
-      editStoryBtn.classList.add('active');
-      editLoreBtn.classList.remove('active');
-      editStoryForm.classList.remove('hidden');
-      editLoreForm.classList.add('hidden');
-      currentType = 'story';
-    });
-
-    // Cancel editing
-    cancelEditBtn.addEventListener('click', () => {
-      editFormContainer.classList.add('hidden');
-      currentEditingId = null;
-    });
-
-    // Update username
-    updateUsernameBtn.addEventListener('click', async () => {
-      const newName = newUsernameInput.value.trim();
-      if (!newName) {
-        alert('Please enter a new username.');
-        return;
-      }
-      try {
-        await currentUser.updateProfile({ displayName: newName });
-        alert('Username updated!');
-        usernameDisplay.textContent = newName;
-        newUsernameInput.value = '';
-      } catch (err) {
-        alert('Error updating username: ' + err.message);
-      }
-    });
-
-    // Load entries and display
-    async function loadEntries() {
-      if (!currentUser) return;
-      loreEntriesDiv.innerHTML = '';
-      storyEntriesDiv.innerHTML = '';
-      let totalWords = 0;
-
-      // Helper to create entry div with buttons
-      function createEntryDiv(doc, type) {
-        const data = doc.data();
-        const div = document.createElement('div');
-        div.classList.add('entry');
-        div.innerHTML = `
-          <h3>${data.title || data.name || '(No Title)'}</h3>
-          <p>${data.description || data.content || '(No Content)'}</p>
-          <button class="edit-btn">Edit</button>
-          <button class="delete-btn">Delete</button>
-        `;
-
-        const contentText = data.description || data.content || '';
-        totalWords += countWords(contentText);
-
-        // Edit button click
-        div.querySelector('.edit-btn').addEventListener('click', () => {
-          currentEditingId = doc.id;
-          currentType = type;
-          editFormContainer.classList.remove('hidden');
-          if (type === 'lore') {
-            editLoreBtn.click();
-            editLoreName.value = data.name || '';
-            editLoreCategory.value = data.category || '';
-            editLoreDescription.value = data.description || '';
-            editLoreReferences.value = (data.references || []).join(', ');
-          } else {
-            editStoryBtn.click();
-            editStoryTitle.value = data.title || '';
-            editStoryContent.value = data.content || '';
-            editStoryReferences.value = (data.references || []).join(', ');
-          }
-        });
-
-        // Delete button click
-        div.querySelector('.delete-btn').addEventListener('click', async () => {
-          if (confirm('Are you sure you want to delete this entry?')) {
-            try {
-              await db.collection(type).doc(doc.id).delete();
-              alert('Entry deleted.');
-              await loadEntries();
-            } catch (err) {
-              alert('Error deleting entry: ' + err.message);
-            }
-          }
-        });
-
-        return div;
-      }
-
-      // Load lore
-      const loreSnapshot = await db.collection('lore').where('author', '==', currentUser.uid).get();
-      loreSnapshot.forEach(doc => {
-        loreEntriesDiv.appendChild(createEntryDiv(doc, 'lore'));
-      });
-
-      // Load story
-      const storySnapshot = await db.collection('story').where('author', '==', currentUser.uid).get();
-      storySnapshot.forEach(doc => {
-        storyEntriesDiv.appendChild(createEntryDiv(doc, 'story'));
-      });
-
-      totalWordCountSpan.textContent = totalWords.toLocaleString();
-    }
-
-    // Submit edit form
-    editEntryForm.addEventListener('submit', async e => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentEditingId) return alert('No entry selected.');
 
       if (currentType === 'lore') {
-        const name = editLoreName.value.trim();
-        const category = editLoreCategory.value;
-        const description = editLoreDescription.value.toLowerCase();
-        const references = editLoreReferences.value.toLowerCase().split(',').map(r => r.trim()).filter(r => r);
+        const name = document.getElementById('editLoreName').value.trim();
+        const category = document.getElementById('editLoreCategory').value;
+        const description = document.getElementById('editLoreDescription').value.toLowerCase();
+        const references = document.getElementById('editLoreReferences').value.toLowerCase().split(',').map(r => r.trim()).filter(r => r);
 
-        // Validate refs present in description
-        const missingRefs = references.filter(r => !description.includes(r));
+        const missingRefs = references.filter(ref => !description.includes(ref));
         if (missingRefs.length > 0) {
           alert('All references must appear in the description. Missing: ' + missingRefs.join(', '));
           return;
         }
 
-        try {
-          await db.collection('lore').doc(currentEditingId).update({ name, category, description, references, timestamp: new Date() });
-          alert('Lore entry updated!');
-          editFormContainer.classList.add('hidden');
-          await loadEntries();
-        } catch (err) {
-          alert('Error updating lore: ' + err.message);
-        }
-
+        await db.collection('lore').doc(currentEditingId).update({ name, category, description, references });
       } else {
-        const title = editStoryTitle.value.trim();
-        const content = editStoryContent.value.toLowerCase();
-        const references = editStoryReferences.value.toLowerCase().split(',').map(r => r.trim()).filter(r => r);
+        const title = document.getElementById('editStoryTitle').value.trim();
+        const content = document.getElementById('editStoryContent').value.toLowerCase();
+        const references = document.getElementById('editStoryReferences').value.toLowerCase().split(',').map(r => r.trim()).filter(r => r);
 
-        // Validate refs present in content
-        const missingRefs = references.filter(r => !content.includes(r));
+        const missingRefs = references.filter(ref => !content.includes(ref));
         if (missingRefs.length > 0) {
           alert('All references must appear in the content. Missing: ' + missingRefs.join(', '));
           return;
         }
 
-        // Validate recent references
-        const recentRefs = await getRecentReferences();
-        const staleRefs = references.filter(r => !recentRefs.includes(r));
+        const recentReferences = await getRecentReferences();
+        const staleRefs = references.filter(ref => !recentReferences.includes(ref));
         if (staleRefs.length > 0) {
           alert('Some references are not recent: ' + staleRefs.join(', '));
           return;
         }
 
-        try {
-          await db.collection('story').doc(currentEditingId).update({ title, content, references, timestamp: new Date() });
-          alert('Story entry updated!');
-          editFormContainer.classList.add('hidden');
-          await loadEntries();
-        } catch (err) {
-          alert('Error updating story: ' + err.message);
-        }
+        await db.collection('story').doc(currentEditingId).update({ title, content, references });
       }
+
+      alert('Entry successfully edited!');
+      location.reload();
     });
 
-    // Listen for auth state changes
+    document.getElementById('editLoreBtn').addEventListener('click', () => {
+      document.getElementById('editLoreForm').classList.remove('hidden');
+      document.getElementById('editStoryForm').classList.add('hidden');
+      currentType = 'lore';
+    });
+
+    document.getElementById('editStoryBtn').addEventListener('click', () => {
+      document.getElementById('editStoryForm').classList.remove('hidden');
+      document.getElementById('editLoreForm').classList.add('hidden');
+      currentType = 'story';
+    });
+
+    document.getElementById('cancelEdit').addEventListener('click', () => {
+      document.getElementById('editFormContainer').classList.add('hidden');
+    });
+
     auth.onAuthStateChanged(async user => {
-      if (!user) {
-        usernameDisplay.textContent = 'Not signed in';
-        return;
-      }
-      currentUser = user;
-      usernameDisplay.textContent = user.displayName || user.email;
-      await loadEntries();
+      if (!user) return;
+
+      // Get username from 'users' collection using user.uid
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      currentUsername = userDoc.exists ? userDoc.data().username : '';
+
+      document.getElementById('usernameDisplay').textContent = currentUsername || user.email;
+
+      let totalWords = 0;
+
+      const loadEntries = async (collectionName, containerId, type) => {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; // Clear before loading
+        const snapshot = await db.collection(collectionName).where('author', '==', currentUsername).get();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement('div');
+          div.classList.add('entry');
+          div.innerHTML = `
+            <h3>${data.title || data.name}</h3>
+            <p>${data.description || data.content}</p>
+            <button data-id="${doc.id}" data-type="${type}" class="edit-btn">Edit</button>
+            <button data-id="${doc.id}" data-type="${type}" class="delete-btn">Delete</button>
+          `;
+          container.appendChild(div);
+
+          const wordCount = (data.description || data.content || '').trim().split(/\s+/).length;
+          totalWords += wordCount;
+
+          div.querySelector('.edit-btn').addEventListener('click', () => {
+            currentEditingId = doc.id;
+            currentType = type;
+            document.getElementById('editFormContainer').classList.remove('hidden');
+
+            if (type === 'lore') {
+              document.getElementById('editLoreBtn').click();
+              document.getElementById('editLoreName').value = data.name;
+              document.getElementById('editLoreCategory').value = data.category;
+              document.getElementById('editLoreDescription').value = data.description;
+              document.getElementById('editLoreReferences').value = data.references?.join(', ') || '';
+            } else {
+              document.getElementById('editStoryBtn').click();
+              document.getElementById('editStoryTitle').value = data.title;
+              document.getElementById('editStoryContent').value = data.content;
+              document.getElementById('editStoryReferences').value = data.references?.join(', ') || '';
+            }
+          });
+
+          div.querySelector('.delete-btn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to delete this entry?')) {
+              await db.collection(collectionName).doc(doc.id).delete();
+              alert('Entry deleted.');
+              location.reload();
+            }
+          });
+        });
+      };
+
+      await loadEntries('lore', 'loreEntries', 'lore');
+      await loadEntries('story', 'storyEntries', 'story');
+
+      document.getElementById('totalWordCount').textContent = totalWords.toLocaleString();
     });
   </script>
 </body>
