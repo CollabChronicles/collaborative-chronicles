@@ -121,188 +121,182 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
+    window.addEventListener("DOMContentLoaded", () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+        authDomain: "collaborative-chronicles.firebaseapp.com",
+        projectId: "collaborative-chronicles",
+        storageBucket: "collaborative-chronicles.firebasestorage.app",
+        messagingSenderId: "127752938400",
+        appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
+        measurementId: "G-0HXV6NGHQP"
+      };
 
-  apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth();
 
-  authDomain: "collaborative-chronicles.firebaseapp.com",
+      let currentUsername = "";
+      let currentEditingId = null;
+      let currentEditingType = null;
 
-  projectId: "collaborative-chronicles",
+      const profileContent = document.getElementById("profile-content");
+      const authSection = document.getElementById("auth-section");
 
-  storageBucket: "collaborative-chronicles.firebasestorage.app",
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const uid = user.uid;
+          const userDoc = await getDoc(doc(db, "users", uid));
+          currentUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
+          document.getElementById("usernameDisplay").textContent = currentUsername;
 
-  messagingSenderId: "127752938400",
+          profileContent.style.display = "block";
+          authSection.style.display = "none";
 
-  appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-
-  measurementId: "G-0HXV6NGHQP"
-
-};
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth();
-
-    let currentUsername = "";
-    let currentEditingId = null;
-    let currentEditingType = null;
-
-    const profileContent = document.getElementById("profile-content");
-    const authSection = document.getElementById("auth-section");
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const uid = user.uid;
-        const userDoc = await getDoc(doc(db, "users", uid));
-        currentUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
-        document.getElementById("usernameDisplay").textContent = currentUsername;
-
-        profileContent.style.display = "block";
-        authSection.style.display = "none";
-
-        loadEntries("lore", "lore-entries", createLoreElement);
-        loadEntries("story", "story-entries", createStoryElement);
-      } else {
-        profileContent.style.display = "none";
-        authSection.style.display = "block";
-      }
-    });
-
-    async function loadEntries(collectionName, containerId, createElementFn) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = "";
-
-      const q = query(collection(db, collectionName), where("author", "==", currentUsername));
-      const querySnapshot = await getDocs(q);
-
-      querySnapshot.forEach((docSnap) => {
-        const entryData = docSnap.data();
-        const entryId = docSnap.id;
-        const entryElement = createElementFn(entryData, entryId);
-        container.appendChild(entryElement);
+          loadEntries("lore", "lore-entries", createLoreElement);
+          loadEntries("story", "story-entries", createStoryElement);
+        } else {
+          profileContent.style.display = "none";
+          authSection.style.display = "block";
+        }
       });
-    }
 
-    function createLoreElement(entry, id) {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <h3><a href="lore-detail.html?id=${id}">${entry.name}</a></h3>
-        <p><strong>Category:</strong> ${entry.category}</p>
-        <p>${entry.description}</p>
-        <button onclick="editEntry('${id}', 'lore')">Edit</button>
-        <button onclick="deleteEntry('${id}', 'lore')">Delete</button>
-      `;
-      return div;
-    }
+      async function loadEntries(collectionName, containerId, createElementFn) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
 
-    function createStoryElement(entry, id) {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <h3><a href="story-detail.html?id=${id}">${entry.title}</a></h3>
-        <p>${entry.content.substring(0, 100)}...</p>
-        <button onclick="editEntry('${id}', 'story')">Edit</button>
-        <button onclick="deleteEntry('${id}', 'story')">Delete</button>
-      `;
-      return div;
-    }
+        const q = query(collection(db, collectionName), where("author", "==", currentUsername));
+        const querySnapshot = await getDocs(q);
 
-    window.editEntry = async function(id, type) {
-      currentEditingId = id;
-      currentEditingType = type;
-      document.getElementById("edit-entry-section").style.display = "block";
-      document.getElementById("edit-lore-form").style.display = "none";
-      document.getElementById("edit-story-form").style.display = "none";
-
-      const docRef = doc(db, type, id);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
-
-      if (type === "lore") {
-        const data = docSnap.data();
-        document.getElementById("edit-lore-name").value = data.name;
-        document.getElementById("edit-lore-category").value = data.category;
-        document.getElementById("edit-lore-description").value = data.description;
-        document.getElementById("edit-lore-references").value = (data.references || []).join(", ");
-        document.getElementById("edit-lore-form").style.display = "block";
-      } else {
-        const data = docSnap.data();
-        document.getElementById("edit-story-title").value = data.title;
-        document.getElementById("edit-story-content").value = data.content;
-        document.getElementById("edit-story-references").value = (data.references || []).join(", ");
-        document.getElementById("edit-story-form").style.display = "block";
+        querySnapshot.forEach((docSnap) => {
+          const entryData = docSnap.data();
+          const entryId = docSnap.id;
+          const entryElement = createElementFn(entryData, entryId);
+          container.appendChild(entryElement);
+        });
       }
-    };
 
-    window.deleteEntry = async function(id, type) {
-      if (confirm("Are you sure you want to delete this entry?")) {
-        await deleteDoc(doc(db, type, id));
+      function createLoreElement(entry, id) {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <h3><a href="lore-detail.html?id=${id}">${entry.name}</a></h3>
+          <p><strong>Category:</strong> ${entry.category}</p>
+          <p>${entry.description}</p>
+          <button onclick="editEntry('${id}', 'lore')">Edit</button>
+          <button onclick="deleteEntry('${id}', 'lore')">Delete</button>
+        `;
+        return div;
+      }
+
+      function createStoryElement(entry, id) {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <h3><a href="story-detail.html?id=${id}">${entry.title}</a></h3>
+          <p>${entry.content.substring(0, 100)}...</p>
+          <button onclick="editEntry('${id}', 'story')">Edit</button>
+          <button onclick="deleteEntry('${id}', 'story')">Delete</button>
+        `;
+        return div;
+      }
+
+      window.editEntry = async function(id, type) {
+        currentEditingId = id;
+        currentEditingType = type;
+        document.getElementById("edit-entry-section").style.display = "block";
+        document.getElementById("edit-lore-form").style.display = "none";
+        document.getElementById("edit-story-form").style.display = "none";
+
+        const docRef = doc(db, type, id);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) return;
+
+        if (type === "lore") {
+          const data = docSnap.data();
+          document.getElementById("edit-lore-name").value = data.name;
+          document.getElementById("edit-lore-category").value = data.category;
+          document.getElementById("edit-lore-description").value = data.description;
+          document.getElementById("edit-lore-references").value = (data.references || []).join(", ");
+          document.getElementById("edit-lore-form").style.display = "block";
+        } else {
+          const data = docSnap.data();
+          document.getElementById("edit-story-title").value = data.title;
+          document.getElementById("edit-story-content").value = data.content;
+          document.getElementById("edit-story-references").value = (data.references || []).join(", ");
+          document.getElementById("edit-story-form").style.display = "block";
+        }
+      };
+
+      window.deleteEntry = async function(id, type) {
+        if (confirm("Are you sure you want to delete this entry?")) {
+          await deleteDoc(doc(db, type, id));
+          loadEntries("lore", "lore-entries", createLoreElement);
+          loadEntries("story", "story-entries", createStoryElement);
+        }
+      };
+
+      document.getElementById("edit-entry-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!currentEditingId || !currentEditingType) return;
+
+        if (currentEditingType === "lore") {
+          const name = document.getElementById("edit-lore-name").value;
+          const category = document.getElementById("edit-lore-category").value;
+          const description = document.getElementById("edit-lore-description").value;
+          const references = document.getElementById("edit-lore-references").value
+            .split(",").map(r => r.trim()).filter(r => r);
+
+          await updateDoc(doc(db, "lore", currentEditingId), {
+            name, category, description, references, author: currentUsername
+          });
+        } else {
+          const title = document.getElementById("edit-story-title").value;
+          const content = document.getElementById("edit-story-content").value;
+          const references = document.getElementById("edit-story-references").value
+            .split(",").map(r => r.trim()).filter(r => r);
+
+          await updateDoc(doc(db, "story", currentEditingId), {
+            title, content, references, author: currentUsername
+          });
+        }
+
         loadEntries("lore", "lore-entries", createLoreElement);
         loadEntries("story", "story-entries", createStoryElement);
-      }
-    };
+        document.getElementById("edit-entry-section").style.display = "none";
+        currentEditingId = null;
+        currentEditingType = null;
+      });
 
-    document.getElementById("edit-entry-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!currentEditingId || !currentEditingType) return;
+      document.getElementById("cancel-edit").addEventListener("click", () => {
+        document.getElementById("edit-entry-section").style.display = "none";
+        currentEditingId = null;
+        currentEditingType = null;
+      });
 
-      if (currentEditingType === "lore") {
-        const name = document.getElementById("edit-lore-name").value;
-        const category = document.getElementById("edit-lore-category").value;
-        const description = document.getElementById("edit-lore-description").value;
-        const references = document.getElementById("edit-lore-references").value
-          .split(",").map(r => r.trim()).filter(r => r);
+      document.getElementById("login-button").addEventListener("click", async () => {
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (err) {
+          alert("Login failed: " + err.message);
+        }
+      });
 
-        await updateDoc(doc(db, "lore", currentEditingId), {
-          name, category, description, references, author: currentUsername
-        });
-      } else {
-        const title = document.getElementById("edit-story-title").value;
-        const content = document.getElementById("edit-story-content").value;
-        const references = document.getElementById("edit-story-references").value
-          .split(",").map(r => r.trim()).filter(r => r);
+      document.getElementById("signup-button").addEventListener("click", async () => {
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+        const username = document.getElementById("signup-username").value;
+        try {
+          const userCred = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(db, "users", userCred.user.uid), { username });
+        } catch (err) {
+          alert("Signup failed: " + err.message);
+        }
+      });
 
-        await updateDoc(doc(db, "story", currentEditingId), {
-          title, content, references, author: currentUsername
-        });
-      }
-
-      loadEntries("lore", "lore-entries", createLoreElement);
-      loadEntries("story", "story-entries", createStoryElement);
-      document.getElementById("edit-entry-section").style.display = "none";
-      currentEditingId = null;
-      currentEditingType = null;
-    });
-
-    document.getElementById("cancel-edit").addEventListener("click", () => {
-      document.getElementById("edit-entry-section").style.display = "none";
-      currentEditingId = null;
-      currentEditingType = null;
-    });
-
-    document.getElementById("login-button").addEventListener("click", async () => {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert("Login failed: " + err.message);
-      }
-    });
-
-    document.getElementById("signup-button").addEventListener("click", async () => {
-      const email = document.getElementById("signup-email").value;
-      const password = document.getElementById("signup-password").value;
-      const username = document.getElementById("signup-username").value;
-      try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", userCred.user.uid), { username });
-      } catch (err) {
-        alert("Signup failed: " + err.message);
-      }
-    });
-
-    document.getElementById("logout-button").addEventListener("click", async () => {
-      await signOut(auth);
+      document.getElementById("logout-button").addEventListener("click", async () => {
+        await signOut(auth);
+      });
     });
   </script>
 </body>
