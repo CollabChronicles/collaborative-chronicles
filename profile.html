@@ -152,7 +152,11 @@
       }
 
       editForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+  e.preventDefault();
+
+  // Ensure form is visible before proceeding
+  editSection.style.display = "block";
+
 
         const id = editId.value;
         const type = editType.value;
