@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Profile</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:,"> <!-- Removes favicon warning -->
 </head>
 <body>
   <header>
@@ -19,60 +20,71 @@
   </header>
 
   <main class="profile-container">
-    <section class="profile-header">
-      <h1>Your Profile</h1>
-      <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
-      <input type="text" id="newUsername" placeholder="Enter new username" />
-      <button id="updateUsername">Update Username</button>
-      <p><strong>Total Word Count:</strong> <span id="totalWordCount">0</span></p>
+    <!-- Login/Signup Section (only shown if user not logged in) -->
+    <section id="auth-section" style="display: none;">
+      <h2>Log In</h2>
+      <input type="email" id="login-email" placeholder="Email" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button id="login-button">Log In</button>
+
+      <h2>Sign Up</h2>
+      <input type="email" id="signup-email" placeholder="Email" />
+      <input type="password" id="signup-password" placeholder="Password" />
+      <input type="text" id="signup-username" placeholder="Username" />
+      <button id="signup-button">Sign Up</button>
     </section>
 
-    <section class="entries-section">
-      <h2>Your Lore Entries</h2>
-      <!-- Changed IDs here -->
-      <div id="lore-entries"></div>
+    <section id="profile-content" style="display: none;">
+      <section class="profile-header">
+        <h1>Your Profile</h1>
+        <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
+        <input type="text" id="newUsername" placeholder="Enter new username" />
+        <button id="updateUsername">Update Username</button>
+        <p><strong>Total Word Count:</strong> <span id="totalWordCount">0</span></p>
+        <button id="logout-button">Log Out</button>
+      </section>
 
-      <h2>Your Story Entries</h2>
-      <!-- Changed IDs here -->
-      <div id="story-entries"></div>
-    </section>
+      <section class="entries-section">
+        <h2>Your Lore Entries</h2>
+        <div id="lore-entries"></div>
 
-    <!-- Changed ID here -->
-    <section id="edit-entry-section" class="edit-form" style="display:none;">
-      <h2>Edit Entry</h2>
-      <form id="edit-entry-form">
-        <!-- Lore edit form -->
-        <div id="edit-lore-form" style="display:none;">
-          <label for="edit-lore-name">Name:</label>
-          <input type="text" id="edit-lore-name" required />
-          <label for="edit-lore-category">Category:</label>
-          <select id="edit-lore-category" required>
-            <option value="">Select Category</option>
-            <option value="Character">Character</option>
-            <option value="Place">Place</option>
-            <option value="Faction">Faction</option>
-            <option value="Object">Object</option>
-          </select>
-          <label for="edit-lore-description">Description:</label>
-          <textarea id="edit-lore-description" required></textarea>
-          <label for="edit-lore-references">References (comma-separated):</label>
-          <input type="text" id="edit-lore-references" required />
-        </div>
+        <h2>Your Story Entries</h2>
+        <div id="story-entries"></div>
+      </section>
 
-        <!-- Story edit form -->
-        <div id="edit-story-form" style="display:none;">
-          <label for="edit-story-title">Title:</label>
-          <input type="text" id="edit-story-title" required />
-          <label for="edit-story-content">Content:</label>
-          <textarea id="edit-story-content" required></textarea>
-          <label for="edit-story-references">References (comma-separated):</label>
-          <input type="text" id="edit-story-references" required />
-        </div>
+      <section id="edit-entry-section" class="edit-form" style="display:none;">
+        <h2>Edit Entry</h2>
+        <form id="edit-entry-form">
+          <div id="edit-lore-form" style="display:none;">
+            <label for="edit-lore-name">Name:</label>
+            <input type="text" id="edit-lore-name" required />
+            <label for="edit-lore-category">Category:</label>
+            <select id="edit-lore-category" required>
+              <option value="">Select Category</option>
+              <option value="Character">Character</option>
+              <option value="Place">Place</option>
+              <option value="Faction">Faction</option>
+              <option value="Object">Object</option>
+            </select>
+            <label for="edit-lore-description">Description:</label>
+            <textarea id="edit-lore-description" required></textarea>
+            <label for="edit-lore-references">References (comma-separated):</label>
+            <input type="text" id="edit-lore-references" required />
+          </div>
 
-        <button type="submit">Save Changes</button>
-        <!-- Changed ID here -->
-        <button type="button" id="cancel-edit">Cancel</button>
-      </form>
+          <div id="edit-story-form" style="display:none;">
+            <label for="edit-story-title">Title:</label>
+            <input type="text" id="edit-story-title" required />
+            <label for="edit-story-content">Content:</label>
+            <textarea id="edit-story-content" required></textarea>
+            <label for="edit-story-references">References (comma-separated):</label>
+            <input type="text" id="edit-story-references" required />
+          </div>
+
+          <button type="submit">Save Changes</button>
+          <button type="button" id="cancel-edit">Cancel</button>
+        </form>
+      </section>
     </section>
   </main>
 
@@ -86,7 +98,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getFirestore,
       collection,
@@ -96,11 +110,15 @@
       doc,
       getDoc,
       updateDoc,
-      deleteDoc
+      deleteDoc,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import {
       getAuth,
-      onAuthStateChanged
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -116,22 +134,28 @@
     const db = getFirestore(app);
     const auth = getAuth();
 
+    let currentUsername = "";
     let currentEditingId = null;
     let currentEditingType = null;
-    let currentUsername = "";
+
+    const profileContent = document.getElementById("profile-content");
+    const authSection = document.getElementById("auth-section");
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const uid = user.uid;
         const userDoc = await getDoc(doc(db, "users", uid));
         currentUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
-        // Fixed ID here
         document.getElementById("usernameDisplay").textContent = currentUsername;
+
+        profileContent.style.display = "block";
+        authSection.style.display = "none";
 
         loadEntries("lore", "lore-entries", createLoreElement);
         loadEntries("story", "story-entries", createStoryElement);
       } else {
-        window.location.href = "profile.html";
+        profileContent.style.display = "none";
+        authSection.style.display = "block";
       }
     });
 
@@ -176,7 +200,6 @@
     window.editEntry = async function(id, type) {
       currentEditingId = id;
       currentEditingType = type;
-      // Fixed ID here
       document.getElementById("edit-entry-section").style.display = "block";
       document.getElementById("edit-lore-form").style.display = "none";
       document.getElementById("edit-story-form").style.display = "none";
@@ -211,44 +234,29 @@
 
     document.getElementById("edit-entry-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-
       if (!currentEditingId || !currentEditingType) return;
 
       if (currentEditingType === "lore") {
         const name = document.getElementById("edit-lore-name").value;
         const category = document.getElementById("edit-lore-category").value;
         const description = document.getElementById("edit-lore-description").value;
-        // Parse references to array here
         const references = document.getElementById("edit-lore-references").value
-          .split(",")
-          .map(r => r.trim())
-          .filter(r => r);
+          .split(",").map(r => r.trim()).filter(r => r);
 
         await updateDoc(doc(db, "lore", currentEditingId), {
-          name,
-          category,
-          description,
-          references,
-          author: currentUsername
+          name, category, description, references, author: currentUsername
         });
       } else {
         const title = document.getElementById("edit-story-title").value;
         const content = document.getElementById("edit-story-content").value;
-        // Parse references to array here
         const references = document.getElementById("edit-story-references").value
-          .split(",")
-          .map(r => r.trim())
-          .filter(r => r);
+          .split(",").map(r => r.trim()).filter(r => r);
 
         await updateDoc(doc(db, "story", currentEditingId), {
-          title,
-          content,
-          references,
-          author: currentUsername
+          title, content, references, author: currentUsername
         });
       }
 
-      // Reload entries after saving
       loadEntries("lore", "lore-entries", createLoreElement);
       loadEntries("story", "story-entries", createStoryElement);
       document.getElementById("edit-entry-section").style.display = "none";
@@ -256,11 +264,36 @@
       currentEditingType = null;
     });
 
-    // Added cancel button listener
     document.getElementById("cancel-edit").addEventListener("click", () => {
       document.getElementById("edit-entry-section").style.display = "none";
       currentEditingId = null;
       currentEditingType = null;
+    });
+
+    document.getElementById("login-button").addEventListener("click", async () => {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert("Login failed: " + err.message);
+      }
+    });
+
+    document.getElementById("signup-button").addEventListener("click", async () => {
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
+      const username = document.getElementById("signup-username").value;
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCred.user.uid), { username });
+      } catch (err) {
+        alert("Signup failed: " + err.message);
+      }
+    });
+
+    document.getElementById("logout-button").addEventListener("click", async () => {
+      await signOut(auth);
     });
   </script>
 </body>
