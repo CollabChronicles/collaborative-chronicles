@@ -82,205 +82,167 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
-      authDomain: "collaborative-chronicles.firebaseapp.com",
-      projectId: "collaborative-chronicles",
-      storageBucket: "collaborative-chronicles.appspot.com",
-      messagingSenderId: "127752938400",
-      appId: "1:127752938400:web:9fa9b38012352d02ed7ac5"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    doc,
+    getDoc,
+    updateDoc,
+    deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const usernameDisplay = document.getElementById('usernameDisplay');
-    const newUsernameInput = document.getElementById('newUsername');
-    const updateUsernameBtn = document.getElementById('updateUsername');
-    const totalWordCountSpan = document.getElementById('totalWordCount');
-    const loreEntriesDiv = document.getElementById('loreEntries');
-    const storyEntriesDiv = document.getElementById('storyEntries');
-    const editFormContainer = document.getElementById('editFormContainer');
-    const editEntryForm = document.getElementById('editEntryForm');
-    const editLoreForm = document.getElementById('editLoreForm');
-    const editStoryForm = document.getElementById('editStoryForm');
-    const cancelEditBtn = document.getElementById('cancelEdit');
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-    let currentUser = null;
-    let currentUsername = null;
-    let currentEditingId = null;
-    let currentEditingType = null; // 'lore' or 'story'
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth();
 
-    function countWords(text) {
-      return text ? text.trim().split(/\s+/).length : 0;
+  let currentEditingId = null;
+  let currentEditingType = null;
+  let currentUsername = "";
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const uid = user.uid;
+      const userDoc = await getDoc(doc(db, "users", uid));
+      currentUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
+      document.getElementById("username").textContent = currentUsername;
+
+      loadEntries("lore", "lore-entries", createLoreElement);
+      loadEntries("story", "story-entries", createStoryElement);
+    } else {
+      window.location.href = "login.html";
     }
+  });
 
-    async function loadUserProfile(uid) {
-      const userDoc = await db.collection('users').doc(uid).get();
-      if (userDoc.exists) {
-        currentUsername = userDoc.data().username;
-        usernameDisplay.textContent = currentUsername;
-        newUsernameInput.value = currentUsername;
-      }
-    }
+  async function loadEntries(collectionName, containerId, createElementFn) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
 
-    async function loadEntries() {
-      if (!currentUsername) return;
-      loreEntriesDiv.innerHTML = '';
-      storyEntriesDiv.innerHTML = '';
-      let totalWords = 0;
+    const q = query(collection(db, collectionName), where("author", "==", currentUsername));
+    const querySnapshot = await getDocs(q);
 
-      const loreSnapshot = await db.collection('lore').where('author', '==', currentUsername).get();
-      loreSnapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement('div');
-        div.classList.add('entry');
-        div.innerHTML = `
-          <h3><a href="lore-detail.html?id=${doc.id}">${data.name || '(No Name)'}</a></h3>
-          <p>${data.description || '(No Description)'}</p>
-          <button class="edit-btn" data-id="${doc.id}" data-type="lore">Edit</button>
-          <button class="delete-btn" data-id="${doc.id}" data-type="lore">Delete</button>
-        `;
-        totalWords += countWords(data.description);
-        loreEntriesDiv.appendChild(div);
-
-        div.querySelector('.edit-btn').addEventListener('click', () => openEditForm(doc.id, 'lore', data));
-        div.querySelector('.delete-btn').addEventListener('click', () => deleteEntry(doc.id, 'lore'));
-      });
-
-      const storySnapshot = await db.collection('story').where('author', '==', currentUsername).get();
-      storySnapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement('div');
-        div.classList.add('entry');
-        div.innerHTML = `
-          <h3><a href="story-detail.html?id=${doc.id}">${data.title || '(No Title)'}</a></h3>
-          <p>${data.content || '(No Content)'}</p>
-          <button class="edit-btn" data-id="${doc.id}" data-type="story">Edit</button>
-          <button class="delete-btn" data-id="${doc.id}" data-type="story">Delete</button>
-        `;
-        totalWords += countWords(data.content);
-        storyEntriesDiv.appendChild(div);
-
-        div.querySelector('.edit-btn').addEventListener('click', () => openEditForm(doc.id, 'story', data));
-        div.querySelector('.delete-btn').addEventListener('click', () => deleteEntry(doc.id, 'story'));
-      });
-
-      totalWordCountSpan.textContent = totalWords.toLocaleString();
-    }
-
-    function openEditForm(id, type, data) {
-      currentEditingId = id;
-      currentEditingType = type;
-      editFormContainer.style.display = 'block';
-
-      if (type === 'lore') {
-        editLoreForm.style.display = 'block';
-        editStoryForm.style.display = 'none';
-
-        document.getElementById('editLoreName').value = data.name || '';
-        document.getElementById('editLoreCategory').value = data.category || '';
-        document.getElementById('editLoreDescription').value = data.description || '';
-        document.getElementById('editLoreReferences').value = (data.references || []).join(', ');
-      } else {
-        editLoreForm.style.display = 'none';
-        editStoryForm.style.display = 'block';
-
-        document.getElementById('editStoryTitle').value = data.title || '';
-        document.getElementById('editStoryContent').value = data.content || '';
-        document.getElementById('editStoryReferences').value = (data.references || []).join(', ');
-      }
-    }
-
-    async function deleteEntry(id, type) {
-      if (!confirm('Are you sure you want to delete this entry?')) return;
-      await db.collection(type).doc(id).delete();
-      loadEntries();
-    }
-
-    cancelEditBtn.addEventListener('click', () => {
-      editFormContainer.style.display = 'none';
-      currentEditingId = null;
-      currentEditingType = null;
+    querySnapshot.forEach((docSnap) => {
+      const entryData = docSnap.data();
+      const entryId = docSnap.id;
+      const entryElement = createElementFn(entryData, entryId);
+      container.appendChild(entryElement);
     });
+  }
 
-    editEntryForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      try {
-        if (!currentEditingId || !currentEditingType) {
-          alert('No entry selected for editing.');
-          return;
-        }
-        if (currentEditingType === 'lore') {
-          const name = document.getElementById('editLoreName').value.trim();
-          const category = document.getElementById('editLoreCategory').value;
-          const description = document.getElementById('editLoreDescription').value.trim();
-          const references = document.getElementById('editLoreReferences').value.split(',').map(r => r.trim()).filter(r => r);
-          const missing = references.filter(r => !description.toLowerCase().includes(r.toLowerCase()));
-          if (missing.length) {
-            alert('Missing references: ' + missing.join(', '));
-            return;
-          }
-          await db.collection('lore').doc(currentEditingId).update({ name, category, description, references });
-        } else if (currentEditingType === 'story') {
-          const title = document.getElementById('editStoryTitle').value.trim();
-          const content = document.getElementById('editStoryContent').value.trim();
-          const references = document.getElementById('editStoryReferences').value.split(',').map(r => r.trim()).filter(r => r);
-          const missing = references.filter(r => !content.toLowerCase().includes(r.toLowerCase()));
-          if (missing.length) {
-            alert('Missing references: ' + missing.join(', '));
-            return;
-          }
-          await db.collection('story').doc(currentEditingId).update({ title, content, references });
-        }
-        editFormContainer.style.display = 'none';
-        currentEditingId = null;
-        currentEditingType = null;
-        loadEntries();
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    });
+  function createLoreElement(entry, id) {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <h3><a href="lore-detail.html?id=${id}">${entry.name}</a></h3>
+      <p><strong>Category:</strong> ${entry.category}</p>
+      <p>${entry.description}</p>
+      <button onclick="editEntry('${id}', 'lore')">Edit</button>
+      <button onclick="deleteEntry('${id}', 'lore')">Delete</button>
+    `;
+    return div;
+  }
 
-    updateUsernameBtn.addEventListener('click', async () => {
-      const newName = newUsernameInput.value.trim();
-      if (!newName) return alert('Username cannot be empty');
+  function createStoryElement(entry, id) {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <h3><a href="story-detail.html?id=${id}">${entry.title}</a></h3>
+      <p>${entry.content.substring(0, 100)}...</p>
+      <button onclick="editEntry('${id}', 'story')">Edit</button>
+      <button onclick="deleteEntry('${id}', 'story')">Delete</button>
+    `;
+    return div;
+  }
 
-      const batch = db.batch();
+  window.editEntry = async function(id, type) {
+    currentEditingId = id;
+    currentEditingType = type;
+    document.getElementById("edit-entry-section").style.display = "block";
+    document.getElementById("edit-lore-form").style.display = "none";
+    document.getElementById("edit-story-form").style.display = "none";
 
-      const userRef = db.collection('users').doc(currentUser.uid);
-      batch.update(userRef, { username: newName });
+    const docRef = doc(db, type, id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return;
 
-      // Update author field in lore
-      const loreSnapshot = await db.collection('lore').where('author', '==', currentUsername).get();
-      loreSnapshot.forEach(doc => {
-        batch.update(doc.ref, { author: newName });
+    if (type === "lore") {
+      const data = docSnap.data();
+      document.getElementById("edit-lore-name").value = data.name;
+      document.getElementById("edit-lore-category").value = data.category;
+      document.getElementById("edit-lore-description").value = data.description;
+      document.getElementById("edit-lore-references").value = data.references;
+      document.getElementById("edit-lore-form").style.display = "block";
+    } else {
+      const data = docSnap.data();
+      document.getElementById("edit-story-title").value = data.title;
+      document.getElementById("edit-story-content").value = data.content;
+      document.getElementById("edit-story-references").value = data.references;
+      document.getElementById("edit-story-form").style.display = "block";
+    }
+  };
+
+  window.deleteEntry = async function(id, type) {
+    if (confirm("Are you sure you want to delete this entry?")) {
+      await deleteDoc(doc(db, type, id));
+      loadEntries("lore", "lore-entries", createLoreElement);
+      loadEntries("story", "story-entries", createStoryElement);
+    }
+  };
+
+  document.getElementById("edit-entry-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!currentEditingId || !currentEditingType) return;
+
+    if (currentEditingType === "lore") {
+      const name = document.getElementById("edit-lore-name").value;
+      const category = document.getElementById("edit-lore-category").value;
+      const description = document.getElementById("edit-lore-description").value;
+      const references = document.getElementById("edit-lore-references").value;
+
+      await updateDoc(doc(db, "lore", currentEditingId), {
+        name,
+        category,
+        description,
+        references,
+        author: currentUsername
       });
+    } else {
+      const title = document.getElementById("edit-story-title").value;
+      const content = document.getElementById("edit-story-content").value;
+      const references = document.getElementById("edit-story-references").value;
 
-      // Update author field in story
-      const storySnapshot = await db.collection('story').where('author', '==', currentUsername).get();
-      storySnapshot.forEach(doc => {
-        batch.update(doc.ref, { author: newName });
+      await updateDoc(doc(db, "story", currentEditingId), {
+        title,
+        content,
+        references,
+        author: currentUsername
       });
+    }
 
-      await batch.commit();
+    // Reload entries after saving
+    loadEntries("lore", "lore-entries", createLoreElement);
+    loadEntries("story", "story-entries", createStoryElement);
+    document.getElementById("edit-entry-section").style.display = "none";
+    currentEditingId = null;
+    currentEditingType = null;
+  });
+</script>
 
-      currentUsername = newName;
-      usernameDisplay.textContent = newName;
-      loadEntries();
-    });
-
-    auth.onAuthStateChanged(async user => {
-      if (!user) {
-        alert('Please sign in.');
-        location.href = 'index.html';
-        return;
-      }
-      currentUser = user;
-      await loadUserProfile(user.uid);
-      await loadEntries();
-    });
-  </script>
 </body>
 </html>
