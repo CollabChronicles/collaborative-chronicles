@@ -2,102 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Profile</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="data:,"> <!-- Removes favicon warning -->
 </head>
 <body>
-  <header>
-    <h1>Collaborative Chronicles</h1>
-    <nav>
-      <a href="index.html">Home</a> |
-      <a href="story.html">The Story</a> |
-      <a href="lore.html">The Lore</a> |
-      <a href="write.html">Write!</a> |
-      <a href="profile.html">Profile</a> 
-    </nav>
-  </header>
+  <div id="profile-info">
+    <h2>Welcome, <span id="username"></span>!</h2>
+    <p>Total Word Count: <span id="word-count">0</span></p>
+  </div>
 
-  <main class="profile-container">
-    <!-- Login/Signup Section (only shown if user not logged in) -->
-    <section id="auth-section" style="display: none;">
-      <h2>Log In</h2>
-      <input type="email" id="login-email" placeholder="Email" />
-      <input type="password" id="login-password" placeholder="Password" />
-      <button id="login-button">Log In</button>
+  <h3>Your Lore Entries</h3>
+  <div id="user-lore-list"></div>
 
-      <h2>Sign Up</h2>
-      <input type="email" id="signup-email" placeholder="Email" />
-      <input type="password" id="signup-password" placeholder="Password" />
-      <input type="text" id="signup-username" placeholder="Username" />
-      <button id="signup-button">Sign Up</button>
-    </section>
+  <h3>Your Story Entries</h3>
+  <div id="user-story-list"></div>
 
-    <section id="profile-content" style="display: none;">
-      <section class="profile-header">
-        <h1>Your Profile</h1>
-        <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
-        <input type="text" id="newUsername" placeholder="Enter new username" />
-        <button id="updateUsername">Update Username</button>
-        <button id="logout-button">Log Out</button>
-        <p><strong>Total Word Count:</strong> <span id="totalWordCount">0</span></p>
-      </section>
-
-      <section class="entries-section">
-        <h2>Your Lore Entries</h2>
-        <div id="lore-entries"></div>
-
-        <h2>Your Story Entries</h2>
-        <div id="story-entries"></div>
-      </section>
-
-      <section id="edit-entry-section" class="edit-form" style="display:none;">
-        <h2>Edit Entry</h2>
-        <form id="edit-entry-form">
-          <div id="edit-lore-form" style="display:none;">
-            <label for="edit-lore-name">Name:</label>
-            <input type="text" id="edit-lore-name" required />
-            <label for="edit-lore-category">Category:</label>
-            <select id="edit-lore-category" required>
-              <option value="">Select Category</option>
-              <option value="Character">Character</option>
-              <option value="Place">Place</option>
-              <option value="Faction">Faction</option>
-              <option value="Object">Object</option>
-            </select>
-            <label for="edit-lore-description">Description:</label>
-            <textarea id="edit-lore-description" required></textarea>
-            <label for="edit-lore-references">References (comma-separated):</label>
-            <input type="text" id="edit-lore-references" required />
-          </div>
-
-          <div id="edit-story-form" style="display:none;">
-            <label for="edit-story-title">Title:</label>
-            <input type="text" id="edit-story-title" required />
-            <label for="edit-story-content">Content:</label>
-            <textarea id="edit-story-content" required></textarea>
-            <label for="edit-story-references">References (comma-separated):</label>
-            <input type="text" id="edit-story-references" required />
-          </div>
-
-          <button type="submit">Save Changes</button>
-          <button type="button" id="cancel-edit">Cancel</button>
-        </form>
-      </section>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2025 Collaborative Chronicles</p>
-  </footer>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <!-- Edit Form -->
+  <div id="edit-entry-section" style="display: none;">
+    <h3>Edit Entry</h3>
+    <form id="edit-entry-form">
+      <input type="hidden" id="edit-entry-id" />
+      <input type="hidden" id="edit-entry-type" />
+      <input type="text" id="edit-entry-name" placeholder="Name" required />
+      <input type="text" id="edit-entry-category" placeholder="Category" required />
+      <textarea id="edit-entry-description" placeholder="Description" required></textarea>
+      <button type="submit">Save Changes</button>
+    </form>
+  </div>
 
   <script type="module">
+    // Top-level imports
     import {
       initializeApp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -110,192 +44,127 @@
       doc,
       getDoc,
       updateDoc,
-      deleteDoc,
-      setDoc
+      deleteDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import {
       getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+    // Run after DOM is ready
     window.addEventListener("DOMContentLoaded", () => {
       const firebaseConfig = {
-        apiKey: "AIzaSyCJNGG0dKMpNwiFT-bomUR0ufSUIaoksFE",
+        apiKey: "AIzaSyDTkZsxDOnakRj7nGIBOdcW7wTt0Qgb94k",
         authDomain: "collaborative-chronicles.firebaseapp.com",
         projectId: "collaborative-chronicles",
-        storageBucket: "collaborative-chronicles.firebasestorage.app",
-        messagingSenderId: "127752938400",
-        appId: "1:127752938400:web:9fa9b38012352d02ed7ac5",
-        measurementId: "G-0HXV6NGHQP"
+        storageBucket: "collaborative-chronicles.appspot.com",
+        messagingSenderId: "568983973011",
+        appId: "1:568983973011:web:db4fc6dcba3c989709f983"
       };
 
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
       const auth = getAuth();
 
-      let currentUsername = "";
-      let currentEditingId = null;
-      let currentEditingType = null;
+      const usernameSpan = document.getElementById("username");
+      const wordCountSpan = document.getElementById("word-count");
+      const userLoreList = document.getElementById("user-lore-list");
+      const userStoryList = document.getElementById("user-story-list");
 
-      const profileContent = document.getElementById("profile-content");
-      const authSection = document.getElementById("auth-section");
+      const editSection = document.getElementById("edit-entry-section");
+      const editForm = document.getElementById("edit-entry-form");
+      const editId = document.getElementById("edit-entry-id");
+      const editType = document.getElementById("edit-entry-type");
+      const editName = document.getElementById("edit-entry-name");
+      const editCategory = document.getElementById("edit-entry-category");
+      const editDescription = document.getElementById("edit-entry-description");
+
+      let currentUser;
 
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-          const uid = user.uid;
-          const userDoc = await getDoc(doc(db, "users", uid));
-          currentUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
-          document.getElementById("usernameDisplay").textContent = currentUsername;
+          currentUser = user;
+          usernameSpan.textContent = user.email;
 
-          profileContent.style.display = "block";
-          authSection.style.display = "none";
+          let totalWordCount = 0;
 
-          loadEntries("lore", "lore-entries", createLoreElement);
-          loadEntries("story", "story-entries", createStoryElement);
+          const loreQuery = query(collection(db, "lore"), where("userId", "==", user.uid));
+          const loreSnapshot = await getDocs(loreQuery);
+          loreSnapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            totalWordCount += (data.description.match(/\w+/g) || []).length;
+            const entry = createEntryElement(data, docSnap.id, 'lore');
+            userLoreList.appendChild(entry);
+          });
+
+          const storyQuery = query(collection(db, "stories"), where("userId", "==", user.uid));
+          const storySnapshot = await getDocs(storyQuery);
+          storySnapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            totalWordCount += (data.description.match(/\w+/g) || []).length;
+            const entry = createEntryElement(data, docSnap.id, 'stories');
+            userStoryList.appendChild(entry);
+          });
+
+          wordCountSpan.textContent = totalWordCount;
+
         } else {
-          profileContent.style.display = "none";
-          authSection.style.display = "block";
+          window.location.href = "login.html";
         }
       });
 
-      async function loadEntries(collectionName, containerId, createElementFn) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = "";
-
-        const q = query(collection(db, collectionName), where("author", "==", currentUsername));
-        const querySnapshot = await getDocs(q);
-
-        querySnapshot.forEach((docSnap) => {
-          const entryData = docSnap.data();
-          const entryId = docSnap.id;
-          const entryElement = createElementFn(entryData, entryId);
-          container.appendChild(entryElement);
-        });
-      }
-
-      function createLoreElement(entry, id) {
+      function createEntryElement(entry, id, type) {
         const div = document.createElement("div");
         div.innerHTML = `
-          <h3><a href="lore-detail.html?id=${id}">${entry.name}</a></h3>
+          <h3><a href="${type}-detail.html?id=${id}">${entry.name}</a></h3>
           <p><strong>Category:</strong> ${entry.category}</p>
           <p>${entry.description}</p>
-          <button onclick="editEntry('${id}', 'lore')">Edit</button>
-          <button onclick="deleteEntry('${id}', 'lore')">Delete</button>
+          <button>Edit</button>
+          <button>Delete</button>
         `;
+
+        const [editBtn, deleteBtn] = div.querySelectorAll("button");
+        editBtn.addEventListener("click", () => editEntry(id, type));
+        deleteBtn.addEventListener("click", () => deleteEntry(id, type));
         return div;
       }
 
-      function createStoryElement(entry, id) {
-        const div = document.createElement("div");
-        div.innerHTML = `
-          <h3><a href="story-detail.html?id=${id}">${entry.title}</a></h3>
-          <p>${entry.content.substring(0, 100)}...</p>
-          <button onclick="editEntry('${id}', 'story')">Edit</button>
-          <button onclick="deleteEntry('${id}', 'story')">Delete</button>
-        `;
-        return div;
+      async function editEntry(id, type) {
+        const ref = doc(db, type, id);
+        const snapshot = await getDoc(ref);
+        const data = snapshot.data();
+
+        editId.value = id;
+        editType.value = type;
+        editName.value = data.name;
+        editCategory.value = data.category;
+        editDescription.value = data.description;
+
+        editSection.style.display = "block";
+        window.scrollTo(0, editSection.offsetTop);
       }
 
-      window.editEntry = async function(id, type) {
-        currentEditingId = id;
-        currentEditingType = type;
-        document.getElementById("edit-entry-section").style.display = "block";
-        document.getElementById("edit-lore-form").style.display = "none";
-        document.getElementById("edit-story-form").style.display = "none";
-
-        const docRef = doc(db, type, id);
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) return;
-
-        if (type === "lore") {
-          const data = docSnap.data();
-          document.getElementById("edit-lore-name").value = data.name;
-          document.getElementById("edit-lore-category").value = data.category;
-          document.getElementById("edit-lore-description").value = data.description;
-          document.getElementById("edit-lore-references").value = (data.references || []).join(", ");
-          document.getElementById("edit-lore-form").style.display = "block";
-        } else {
-          const data = docSnap.data();
-          document.getElementById("edit-story-title").value = data.title;
-          document.getElementById("edit-story-content").value = data.content;
-          document.getElementById("edit-story-references").value = (data.references || []).join(", ");
-          document.getElementById("edit-story-form").style.display = "block";
-        }
-      };
-
-      window.deleteEntry = async function(id, type) {
+      async function deleteEntry(id, type) {
         if (confirm("Are you sure you want to delete this entry?")) {
           await deleteDoc(doc(db, type, id));
-          loadEntries("lore", "lore-entries", createLoreElement);
-          loadEntries("story", "story-entries", createStoryElement);
+          location.reload();
         }
-      };
+      }
 
-      document.getElementById("edit-entry-form").addEventListener("submit", async (e) => {
+      editForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        if (!currentEditingId || !currentEditingType) return;
 
-        if (currentEditingType === "lore") {
-          const name = document.getElementById("edit-lore-name").value;
-          const category = document.getElementById("edit-lore-category").value;
-          const description = document.getElementById("edit-lore-description").value;
-          const references = document.getElementById("edit-lore-references").value
-            .split(",").map(r => r.trim()).filter(r => r);
+        const id = editId.value;
+        const type = editType.value;
 
-          await updateDoc(doc(db, "lore", currentEditingId), {
-            name, category, description, references, author: currentUsername
-          });
-        } else {
-          const title = document.getElementById("edit-story-title").value;
-          const content = document.getElementById("edit-story-content").value;
-          const references = document.getElementById("edit-story-references").value
-            .split(",").map(r => r.trim()).filter(r => r);
+        const ref = doc(db, type, id);
+        await updateDoc(ref, {
+          name: editName.value,
+          category: editCategory.value,
+          description: editDescription.value
+        });
 
-          await updateDoc(doc(db, "story", currentEditingId), {
-            title, content, references, author: currentUsername
-          });
-        }
-
-        loadEntries("lore", "lore-entries", createLoreElement);
-        loadEntries("story", "story-entries", createStoryElement);
-        document.getElementById("edit-entry-section").style.display = "none";
-        currentEditingId = null;
-        currentEditingType = null;
-      });
-
-      document.getElementById("cancel-edit").addEventListener("click", () => {
-        document.getElementById("edit-entry-section").style.display = "none";
-        currentEditingId = null;
-        currentEditingType = null;
-      });
-
-      document.getElementById("login-button").addEventListener("click", async () => {
-        const email = document.getElementById("login-email").value;
-        const password = document.getElementById("login-password").value;
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-        } catch (err) {
-          alert("Login failed: " + err.message);
-        }
-      });
-
-      document.getElementById("signup-button").addEventListener("click", async () => {
-        const email = document.getElementById("signup-email").value;
-        const password = document.getElementById("signup-password").value;
-        const username = document.getElementById("signup-username").value;
-        try {
-          const userCred = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, "users", userCred.user.uid), { username });
-        } catch (err) {
-          alert("Signup failed: " + err.message);
-        }
-      });
-
-      document.getElementById("logout-button").addEventListener("click", async () => {
-        await signOut(auth);
+        location.reload();
       });
     });
   </script>
