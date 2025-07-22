@@ -1,176 +1,171 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Profile</title>
+  <meta charset="UTF-8">
+  <title>Profile | Collaborative Chronicles</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div id="profile-info">
-    <h2>Welcome, <span id="username"></span>!</h2>
-    <p>Total Word Count: <span id="word-count">0</span></p>
+
+<header>
+  <h1><a href="index.html">Collaborative Chronicles</a></h1>
+  <nav>
+    <a href="write.html">Write!</a>
+    <a href="lore.html">Lore</a>
+    <a href="story.html">Stories</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<main>
+  <!-- LOGIN / SIGNUP SECTION -->
+  <div id="auth-section" class="auth-block">
+    <h2>Log in or Sign up</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Log In</button>
+    <button onclick="signup()">Sign Up</button>
   </div>
 
-  <h3>Your Lore Entries</h3>
-  <div id="user-lore-list"></div>
+  <!-- PROFILE SECTION -->
+  <div id="profile-section" class="hidden">
+    <h2>Welcome, <span id="username-display"></span></h2>
+    <input type="text" id="edit-username" placeholder="Edit Username">
+    <button onclick="updateUsername()">Save Username</button>
+    <button onclick="logout()">Log Out</button>
 
-  <h3>Your Story Entries</h3>
-  <div id="user-story-list"></div>
+    <!-- LORE SUBMISSIONS -->
+    <section>
+      <h3>Your Lore Submissions</h3>
+      <div id="lore-entries"></div>
+    </section>
 
-  <!-- Edit Form -->
-  <div id="edit-entry-section" style="display: none;">
-    <h3>Edit Entry</h3>
-    <form id="edit-entry-form">
-      <input type="hidden" id="edit-entry-id" />
-      <input type="hidden" id="edit-entry-type" />
-      <input type="text" id="edit-entry-name" placeholder="Name" required />
-      <input type="text" id="edit-entry-category" placeholder="Category" required />
-      <textarea id="edit-entry-description" placeholder="Description" required></textarea>
-      <button type="submit">Save Changes</button>
-    </form>
+    <!-- STORY SUBMISSIONS -->
+    <section>
+      <h3>Your Story Submissions</h3>
+      <div id="story-entries"></div>
+    </section>
   </div>
+</main>
 
-  <script type="module">
-    // Top-level imports
-    import {
-      initializeApp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs,
-      doc,
-      getDoc,
-      updateDoc,
-      deleteDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    // Run after DOM is ready
-    window.addEventListener("DOMContentLoaded", () => {
-      const firebaseConfig = {
-        apiKey: "AIzaSyDTkZsxDOnakRj7nGIBOdcW7wTt0Qgb94k",
-        authDomain: "collaborative-chronicles.firebaseapp.com",
-        projectId: "collaborative-chronicles",
-        storageBucket: "collaborative-chronicles.appspot.com",
-        messagingSenderId: "568983973011",
-        appId: "1:568983973011:web:db4fc6dcba3c989709f983"
-      };
+  const authSection = document.getElementById("auth-section");
+  const profileSection = document.getElementById("profile-section");
+  const usernameDisplay = document.getElementById("username-display");
+  const editUsernameInput = document.getElementById("edit-username");
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      const auth = getAuth();
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      authSection.classList.add("hidden");
+      profileSection.classList.remove("hidden");
+      usernameDisplay.textContent = user.email;
+      editUsernameInput.value = user.email;
+      loadEntries("lore", "lore-entries");
+      loadEntries("story", "story-entries");
+    } else {
+      authSection.classList.remove("hidden");
+      profileSection.classList.add("hidden");
+    }
+  });
 
-      const usernameSpan = document.getElementById("username");
-      const wordCountSpan = document.getElementById("word-count");
-      const userLoreList = document.getElementById("user-lore-list");
-      const userStoryList = document.getElementById("user-story-list");
+  function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(err => alert("Login Error: " + err.message));
+  }
 
-      const editSection = document.getElementById("edit-entry-section");
-      const editForm = document.getElementById("edit-entry-form");
-      const editId = document.getElementById("edit-entry-id");
-      const editType = document.getElementById("edit-entry-type");
-      const editName = document.getElementById("edit-entry-name");
-      const editCategory = document.getElementById("edit-entry-category");
-      const editDescription = document.getElementById("edit-entry-description");
+  function signup() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    auth.createUserWithEmailAndPassword(email, password)
+      .catch(err => alert("Signup Error: " + err.message));
+  }
 
-      let currentUser;
+  function logout() {
+    auth.signOut();
+  }
 
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          currentUser = user;
-          usernameSpan.textContent = user.email;
+  function updateUsername() {
+    const newEmail = editUsernameInput.value;
+    const user = auth.currentUser;
+    if (user) {
+      user.updateEmail(newEmail).then(() => {
+        usernameDisplay.textContent = newEmail;
+        alert("Username updated.");
+      }).catch(err => alert("Update failed: " + err.message));
+    }
+  }
 
-          let totalWordCount = 0;
+  function loadEntries(type, containerId) {
+    const user = auth.currentUser;
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
 
-          const loreQuery = query(collection(db, "lore"), where("userId", "==", user.uid));
-          const loreSnapshot = await getDocs(loreQuery);
-          loreSnapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            totalWordCount += (data.description.match(/\w+/g) || []).length;
-            const entry = createEntryElement(data, docSnap.id, 'lore');
-            userLoreList.appendChild(entry);
-          });
-
-          const storyQuery = query(collection(db, "stories"), where("userId", "==", user.uid));
-          const storySnapshot = await getDocs(storyQuery);
-          storySnapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            totalWordCount += (data.description.match(/\w+/g) || []).length;
-            const entry = createEntryElement(data, docSnap.id, 'stories');
-            userStoryList.appendChild(entry);
-          });
-
-          wordCountSpan.textContent = totalWordCount;
-
-        } else {
-          window.location.href = "profile.html";
-        }
-      });
-
-      function createEntryElement(entry, id, type) {
+    db.collection(type).where("author", "==", user.uid).get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
         const div = document.createElement("div");
+        div.className = "entry";
         div.innerHTML = `
-          <h3><a href="${type}-detail.html?id=${id}">${entry.name}</a></h3>
-          <p><strong>Category:</strong> ${entry.category}</p>
-          <p>${entry.description}</p>
-          <button>Edit</button>
-          <button>Delete</button>
+          <a href="${type}-entry.html?id=${doc.id}">${data.title}</a>
+          <div class="entry-buttons">
+            <button onclick="showEditForm('${type}', '${doc.id}', '${data.title}', \`${data.body.replace(/`/g, '\\`')}\`)">Edit</button>
+            <button onclick="deleteEntry('${type}', '${doc.id}')">Delete</button>
+          </div>
+          <div id="edit-form-${doc.id}" class="hidden">
+            <form onsubmit="saveEdit(event, '${type}', '${doc.id}')">
+              <input type="text" id="edit-title-${doc.id}" value="${data.title}">
+              <textarea id="edit-body-${doc.id}" rows="8">${data.body}</textarea>
+              <button type="submit">Save</button>
+              <button type="button" onclick="cancelEdit('${doc.id}')">Cancel</button>
+            </form>
+          </div>
         `;
-
-        const [editBtn, deleteBtn] = div.querySelectorAll("button");
-        editBtn.addEventListener("click", () => editEntry(id, type));
-        deleteBtn.addEventListener("click", () => deleteEntry(id, type));
-        return div;
-      }
-
-      async function editEntry(id, type) {
-        const ref = doc(db, type, id);
-        const snapshot = await getDoc(ref);
-        const data = snapshot.data();
-
-        editId.value = id;
-        editType.value = type;
-        editName.value = data.name;
-        editCategory.value = data.category;
-        editDescription.value = data.description;
-
-        editSection.style.display = "block";
-        window.scrollTo(0, editSection.offsetTop);
-      }
-
-      async function deleteEntry(id, type) {
-        if (confirm("Are you sure you want to delete this entry?")) {
-          await deleteDoc(doc(db, type, id));
-          location.reload();
-        }
-      }
-
-      editForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  // Ensure form is visible before proceeding
-  editSection.style.display = "block";
-
-
-        const id = editId.value;
-        const type = editType.value;
-
-        const ref = doc(db, type, id);
-        await updateDoc(ref, {
-          name: editName.value,
-          category: editCategory.value,
-          description: editDescription.value
-        });
-
-        location.reload();
+        container.appendChild(div);
       });
     });
-  </script>
+  }
+
+  function showEditForm(type, id, title, body) {
+    document.getElementById(`edit-form-${id}`).classList.remove("hidden");
+  }
+
+  function cancelEdit(id) {
+    document.getElementById(`edit-form-${id}`).classList.add("hidden");
+  }
+
+  function saveEdit(event, type, id) {
+    event.preventDefault();
+    const title = document.getElementById(`edit-title-${id}`).value;
+    const body = document.getElementById(`edit-body-${id}`).value;
+    db.collection(type).doc(id).update({ title, body }).then(() => {
+      alert("Saved!");
+      loadEntries(type, `${type}-entries`);
+    });
+  }
+
+  function deleteEntry(type, id) {
+    if (confirm("Are you sure you want to delete this?")) {
+      db.collection(type).doc(id).delete().then(() => {
+        alert("Deleted.");
+        loadEntries(type, `${type}-entries`);
+      });
+    }
+  }
+</script>
+
 </body>
 </html>
