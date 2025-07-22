@@ -39,12 +39,9 @@
     <section id="editFormContainer" class="edit-form" style="display:none;">
       <h2>Edit Entry</h2>
       <form id="editEntryForm">
-        <div>
-          <button type="button" id="editLoreBtn" class="active">Edit Lore</button>
-          <button type="button" id="editStoryBtn">Edit Story</button>
-        </div>
-
-        <div id="editLoreForm">
+        <!-- Removed toggle buttons as requested -->
+        <!-- Lore edit form -->
+        <div id="editLoreForm" style="display:none;">
           <label for="editLoreName">Name:</label>
           <input type="text" id="editLoreName" required />
           <label for="editLoreCategory">Category:</label>
@@ -61,6 +58,7 @@
           <input type="text" id="editLoreReferences" required />
         </div>
 
+        <!-- Story edit form -->
         <div id="editStoryForm" style="display:none;">
           <label for="editStoryTitle">Title:</label>
           <input type="text" id="editStoryTitle" required />
@@ -106,15 +104,14 @@
     const storyEntriesDiv = document.getElementById('storyEntries');
     const editFormContainer = document.getElementById('editFormContainer');
     const editEntryForm = document.getElementById('editEntryForm');
-    const editLoreBtn = document.getElementById('editLoreBtn');
-    const editStoryBtn = document.getElementById('editStoryBtn');
     const editLoreForm = document.getElementById('editLoreForm');
     const editStoryForm = document.getElementById('editStoryForm');
+    const cancelEditBtn = document.getElementById('cancelEdit');
 
     let currentUser = null;
     let currentUsername = null;
     let currentEditingId = null;
-    let currentEditingType = 'lore';
+    let currentEditingType = null; // 'lore' or 'story'
 
     function countWords(text) {
       return text ? text.trim().split(/\s+/).length : 0;
@@ -180,19 +177,17 @@
       editFormContainer.style.display = 'block';
 
       if (type === 'lore') {
-        editLoreBtn.classList.add('active');
-        editStoryBtn.classList.remove('active');
         editLoreForm.style.display = 'block';
         editStoryForm.style.display = 'none';
+
         document.getElementById('editLoreName').value = data.name || '';
         document.getElementById('editLoreCategory').value = data.category || '';
         document.getElementById('editLoreDescription').value = data.description || '';
         document.getElementById('editLoreReferences').value = (data.references || []).join(', ');
       } else {
-        editStoryBtn.classList.add('active');
-        editLoreBtn.classList.remove('active');
-        editStoryForm.style.display = 'block';
         editLoreForm.style.display = 'none';
+        editStoryForm.style.display = 'block';
+
         document.getElementById('editStoryTitle').value = data.title || '';
         document.getElementById('editStoryContent').value = data.content || '';
         document.getElementById('editStoryReferences').value = (data.references || []).join(', ');
@@ -205,47 +200,44 @@
       loadEntries();
     }
 
-    editLoreBtn.addEventListener('click', () => {
-      currentEditingType = 'lore';
-      editLoreBtn.classList.add('active');
-      editStoryBtn.classList.remove('active');
-      editLoreForm.style.display = 'block';
-      editStoryForm.style.display = 'none';
-    });
-
-    editStoryBtn.addEventListener('click', () => {
-      currentEditingType = 'story';
-      editStoryBtn.classList.add('active');
-      editLoreBtn.classList.remove('active');
-      editStoryForm.style.display = 'block';
-      editLoreForm.style.display = 'none';
-    });
-
-    document.getElementById('cancelEdit').addEventListener('click', () => {
+    cancelEditBtn.addEventListener('click', () => {
       editFormContainer.style.display = 'none';
       currentEditingId = null;
+      currentEditingType = null;
     });
 
     editEntryForm.addEventListener('submit', async e => {
       e.preventDefault();
       try {
+        if (!currentEditingId || !currentEditingType) {
+          alert('No entry selected for editing.');
+          return;
+        }
         if (currentEditingType === 'lore') {
           const name = document.getElementById('editLoreName').value.trim();
           const category = document.getElementById('editLoreCategory').value;
           const description = document.getElementById('editLoreDescription').value.trim();
           const references = document.getElementById('editLoreReferences').value.split(',').map(r => r.trim()).filter(r => r);
           const missing = references.filter(r => !description.toLowerCase().includes(r.toLowerCase()));
-          if (missing.length) return alert('Missing references: ' + missing.join(', '));
+          if (missing.length) {
+            alert('Missing references: ' + missing.join(', '));
+            return;
+          }
           await db.collection('lore').doc(currentEditingId).update({ name, category, description, references });
-        } else {
+        } else if (currentEditingType === 'story') {
           const title = document.getElementById('editStoryTitle').value.trim();
           const content = document.getElementById('editStoryContent').value.trim();
           const references = document.getElementById('editStoryReferences').value.split(',').map(r => r.trim()).filter(r => r);
           const missing = references.filter(r => !content.toLowerCase().includes(r.toLowerCase()));
-          if (missing.length) return alert('Missing references: ' + missing.join(', '));
+          if (missing.length) {
+            alert('Missing references: ' + missing.join(', '));
+            return;
+          }
           await db.collection('story').doc(currentEditingId).update({ title, content, references });
         }
         editFormContainer.style.display = 'none';
+        currentEditingId = null;
+        currentEditingType = null;
         loadEntries();
       } catch (err) {
         alert('Error: ' + err.message);
@@ -258,17 +250,16 @@
 
       const batch = db.batch();
 
-      // Update user profile username
       const userRef = db.collection('users').doc(currentUser.uid);
       batch.update(userRef, { username: newName });
 
-      // Update author field in all lore docs by this user
+      // Update author field in lore
       const loreSnapshot = await db.collection('lore').where('author', '==', currentUsername).get();
       loreSnapshot.forEach(doc => {
         batch.update(doc.ref, { author: newName });
       });
 
-      // Update author field in all story docs by this user
+      // Update author field in story
       const storySnapshot = await db.collection('story').where('author', '==', currentUsername).get();
       storySnapshot.forEach(doc => {
         batch.update(doc.ref, { author: newName });
